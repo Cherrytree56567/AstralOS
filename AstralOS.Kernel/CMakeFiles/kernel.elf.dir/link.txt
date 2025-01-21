@@ -1,0 +1,1 @@
+/usr/bin/c++ -static -Bsymbolic -nostdlib -T kernel.ld "-static -Bsymbolic -nostdlib -T kernel.ld" CMakeFiles/obj_lib.dir/src/main.cpp.o -o bin/kernel.elf 

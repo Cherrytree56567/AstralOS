@@ -1,0 +1,3 @@
+# Use LF line endings (Unix-style) for all files
+[*]
+end_of_line = lf

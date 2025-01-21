@@ -1,0 +1,18 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "taskLabel": "Build with CMake",
+      "appliesTo": "/",
+      "type": "command",
+      "command": "cmake",
+      "args": [
+        "--build",
+        ".",
+        "--target",
+        "build"
+      ],
+      "workingDirectory": "${workspaceRoot}"
+    }
+  ]
+}
