@@ -1,0 +1,61 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AstralOS.Bootloader", "AstralOS.Bootloader\AstralOS.Bootloader.vcxproj", "{7BBE4847-A12F-4623-B73E-AD85F9D13334}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AstralOS.Kernel", "AstralOS.Kernel\AstralOS.Kernel.vcxproj", "{DFC28DAC-31C2-452E-977C-2F5A10C29370}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AstralOS.Testing", "AstralOS.Testing\AstralOS.Testing.vcxproj", "{B6E6B0F0-5D8E-4C6B-AF14-1D2A3D231B61}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AstralOS.Bin", "AstralOS.Bin\AstralOS.Bin.vcxproj", "{5B4960FA-51AA-4E9F-BD81-CCA6B846B8E1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7BBE4847-A12F-4623-B73E-AD85F9D13334}.Debug|x64.ActiveCfg = Debug|x64
+		{7BBE4847-A12F-4623-B73E-AD85F9D13334}.Debug|x64.Build.0 = Debug|x64
+		{7BBE4847-A12F-4623-B73E-AD85F9D13334}.Debug|x86.ActiveCfg = Debug|Win32
+		{7BBE4847-A12F-4623-B73E-AD85F9D13334}.Debug|x86.Build.0 = Debug|Win32
+		{7BBE4847-A12F-4623-B73E-AD85F9D13334}.Release|x64.ActiveCfg = Release|x64
+		{7BBE4847-A12F-4623-B73E-AD85F9D13334}.Release|x64.Build.0 = Release|x64
+		{7BBE4847-A12F-4623-B73E-AD85F9D13334}.Release|x86.ActiveCfg = Release|Win32
+		{7BBE4847-A12F-4623-B73E-AD85F9D13334}.Release|x86.Build.0 = Release|Win32
+		{DFC28DAC-31C2-452E-977C-2F5A10C29370}.Debug|x64.ActiveCfg = Debug|x64
+		{DFC28DAC-31C2-452E-977C-2F5A10C29370}.Debug|x64.Build.0 = Debug|x64
+		{DFC28DAC-31C2-452E-977C-2F5A10C29370}.Debug|x86.ActiveCfg = Debug|Win32
+		{DFC28DAC-31C2-452E-977C-2F5A10C29370}.Debug|x86.Build.0 = Debug|Win32
+		{DFC28DAC-31C2-452E-977C-2F5A10C29370}.Release|x64.ActiveCfg = Release|x64
+		{DFC28DAC-31C2-452E-977C-2F5A10C29370}.Release|x64.Build.0 = Release|x64
+		{DFC28DAC-31C2-452E-977C-2F5A10C29370}.Release|x86.ActiveCfg = Release|Win32
+		{DFC28DAC-31C2-452E-977C-2F5A10C29370}.Release|x86.Build.0 = Release|Win32
+		{B6E6B0F0-5D8E-4C6B-AF14-1D2A3D231B61}.Debug|x64.ActiveCfg = Debug|x64
+		{B6E6B0F0-5D8E-4C6B-AF14-1D2A3D231B61}.Debug|x64.Build.0 = Debug|x64
+		{B6E6B0F0-5D8E-4C6B-AF14-1D2A3D231B61}.Debug|x86.ActiveCfg = Debug|Win32
+		{B6E6B0F0-5D8E-4C6B-AF14-1D2A3D231B61}.Debug|x86.Build.0 = Debug|Win32
+		{B6E6B0F0-5D8E-4C6B-AF14-1D2A3D231B61}.Release|x64.ActiveCfg = Release|x64
+		{B6E6B0F0-5D8E-4C6B-AF14-1D2A3D231B61}.Release|x64.Build.0 = Release|x64
+		{B6E6B0F0-5D8E-4C6B-AF14-1D2A3D231B61}.Release|x86.ActiveCfg = Release|Win32
+		{B6E6B0F0-5D8E-4C6B-AF14-1D2A3D231B61}.Release|x86.Build.0 = Release|Win32
+		{5B4960FA-51AA-4E9F-BD81-CCA6B846B8E1}.Debug|x64.ActiveCfg = Debug|x64
+		{5B4960FA-51AA-4E9F-BD81-CCA6B846B8E1}.Debug|x64.Build.0 = Debug|x64
+		{5B4960FA-51AA-4E9F-BD81-CCA6B846B8E1}.Debug|x86.ActiveCfg = Debug|Win32
+		{5B4960FA-51AA-4E9F-BD81-CCA6B846B8E1}.Debug|x86.Build.0 = Debug|Win32
+		{5B4960FA-51AA-4E9F-BD81-CCA6B846B8E1}.Release|x64.ActiveCfg = Release|x64
+		{5B4960FA-51AA-4E9F-BD81-CCA6B846B8E1}.Release|x64.Build.0 = Release|x64
+		{5B4960FA-51AA-4E9F-BD81-CCA6B846B8E1}.Release|x86.ActiveCfg = Release|Win32
+		{5B4960FA-51AA-4E9F-BD81-CCA6B846B8E1}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {34115B28-3537-4D25-B681-ACB7DB09A7FE}
+	EndGlobalSection
+EndGlobal

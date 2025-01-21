@@ -1,0 +1,6 @@
+/mnt/d/OS/CMakeFiles/init.dir
+/mnt/d/OS/CMakeFiles/build.dir
+/mnt/d/OS/CMakeFiles/run.dir
+/mnt/d/OS/CMakeFiles/_clean.dir
+/mnt/d/OS/CMakeFiles/edit_cache.dir
+/mnt/d/OS/CMakeFiles/rebuild_cache.dir

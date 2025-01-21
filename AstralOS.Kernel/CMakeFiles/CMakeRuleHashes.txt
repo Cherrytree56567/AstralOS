@@ -1,0 +1,14 @@
+# Hashes of file build rules.
+2e11c63bc4a3464227f8fb5d1bda7cb7 CMakeFiles/_clean
+2861702d992a0ade0f96bdea9334c652 CMakeFiles/build
+2cc2fc3b2d5b9ad05813293d11a05393 CMakeFiles/init
+e7b5592ede70583f5717460b72ba69c7 obj/BasicConsole.o
+f624680c3f72663c64cd476fd95c7cad obj/Bitmap.o
+2dbf5340c452453115b9a8af775406c2 obj/EFIMemoryMap.o
+50a4a35d01b699ff7b2c68dba94dbeb6 obj/KernelServices.o
+8f092edee316cfc545bc1602538f07d2 obj/PageFrameAllocator.o
+202d8c6d66d84ec592fee61a224dc80c obj/PageMapIndexer.o
+eba8dd869367738d26e2bf36545c4d21 obj/PageTableManager.o
+756a04b055e0142beab8b9e1eb757e3a obj/Paging.o
+5cebb1f6a8fb0af972de59344177d9a0 obj/cstr.o
+10e244ace027698208c7fb115a974484 obj/main.o
