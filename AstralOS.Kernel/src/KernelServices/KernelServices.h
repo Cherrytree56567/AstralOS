@@ -16,9 +16,7 @@ public:
 	
 	BasicConsole basicConsole;
 	PageFrameAllocator pageFrameAllocator;
-	PageTableManager* pageTableManager;
-
-private:
+	PageTableManager pageTableManager;
 	PageTable* PML4;
 };
 

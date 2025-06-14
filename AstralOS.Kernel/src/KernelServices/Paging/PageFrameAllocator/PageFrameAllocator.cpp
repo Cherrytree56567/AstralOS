@@ -5,6 +5,7 @@ PageFrameAllocator::PageFrameAllocator() {
 	freeMemory = 0;
 	reservedMemory = 0;
 }
+
 void PageFrameAllocator::ReadEFIMemoryMap(EFI_MEMORY_DESCRIPTOR* map, size_t MapSize, size_t MapDescSize) {
     if (initialized) return;
 
@@ -22,12 +23,22 @@ void PageFrameAllocator::ReadEFIMemoryMap(EFI_MEMORY_DESCRIPTOR* map, size_t Map
     for (size_t i = 0; i < mMapSize / mMapDescSize; i++) {
         EFI_MEMORY_DESCRIPTOR* descriptor = (EFI_MEMORY_DESCRIPTOR*)((uint8_t*)map + (i * mMapDescSize));
 
-        if (descriptor->Type == 7) { // descriptor->type = EfiConventionalMemory
+        if (descriptor->Type == EfiConventionalMemory) { // descriptor->type = EfiConventionalMemory
             if (descriptor->NumberOfPages * 4096 > largestFreeMemSegSize) {
                 largestFreeMemSeg = (void*)descriptor->PhysicalStart;
                 largestFreeMemSegSize = descriptor->NumberOfPages * 4096;
             }
         }
+    }
+
+    if (largestFreeMemSeg == NULL) {
+        basicConsole->Println("No suitable memory segment found for bitmap initialization.");
+        initialized = false;
+        return;
+    } else {
+        basicConsole->Println("Largest free memory segment found for bitmap initialization.");
+        basicConsole->Println(to_hstring((uint64_t)largestFreeMemSeg));
+        basicConsole->Println(to_string(largestFreeMemSegSize));
     }
 
     uint64_t mMapEntries = mMapSize / mMapDescSize;
@@ -40,7 +51,7 @@ void PageFrameAllocator::ReadEFIMemoryMap(EFI_MEMORY_DESCRIPTOR* map, size_t Map
 
     for (int i = 0; i < mMapEntries; i++) {
         EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((uint64_t)mMap + (i * mMapDescSize));
-        if (desc->Type != EfiConventionalMemory && desc->Type != EfiBootServicesCode && desc->Type != EfiBootServicesData) { // not efiConventionalMemory
+        if (desc->Type != EfiConventionalMemory) { // not efiConventionalMemory
             ReservePages((void*)desc->PhysicalStart, desc->NumberOfPages);
         }
     }

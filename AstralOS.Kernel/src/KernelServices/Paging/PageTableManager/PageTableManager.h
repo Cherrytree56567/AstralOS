@@ -1,6 +1,8 @@
 #pragma once
 #include "../../Paging/Paging.h"
 #include "../../Paging/PageFrameAllocator/PageFrameAllocator.h"
+#include "../../BasicConsole/BasicConsole.h"
+#include "../../../cstr/cstr.h"
 #include "PageMapIndexer/PageMapIndexer.h"
 
 /*
@@ -8,10 +10,13 @@
 */
 class PageTableManager {
 public:
-    PageTableManager(PageTable* PML4Address, PageFrameAllocator *pfa);
-    PageTable* PML4;
+    PageTableManager() {}
     void MapMemory(void* virtualMemory, void* physicalMemory);
+    void Initialize(PageTable* PML4Address, PageFrameAllocator *pfa, BasicConsole* console);
 
 private:
-	PageFrameAllocator* pfa;
+	PageFrameAllocator* pageFrameAlloc;
+    PageTable* PML4;
+    BasicConsole* basicConsole;
+    bool initialized = false;
 };
