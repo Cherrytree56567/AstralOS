@@ -304,9 +304,25 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
             UINTN MapSize, MapKey;
             UINTN DescriptorSize;
             UINT32 DescriptorVersion;
-            uefi_call_wrapper(BS->GetMemoryMap, 5, &MapSize, Map, &MapKey, &DescriptorSize, &DescriptorVersion);
-            uefi_call_wrapper(BS->AllocatePool, 3, EfiLoaderData, MapSize, (void**)&Map);
-            uefi_call_wrapper(BS->GetMemoryMap, 5, &MapSize, Map, &MapKey, &DescriptorSize, &DescriptorVersion);
+            // First call to get size
+            Status = uefi_call_wrapper(BS->GetMemoryMap, 5, &MapSize, Map, &MapKey, &DescriptorSize, &DescriptorVersion);
+
+            // Add some buffer room BEFORE allocating
+            MapSize += 2 * DescriptorSize;
+
+            // Allocate map
+            Status = uefi_call_wrapper(BS->AllocatePool, 3, EfiLoaderData, MapSize, (void**)&Map);
+            if (EFI_ERROR(Status)) {
+                Print(L"Failed to allocate memory map: %r\n", Status);
+                return Status;
+            }
+
+            // Actual call
+            Status = uefi_call_wrapper(BS->GetMemoryMap, 5, &MapSize, Map, &MapKey, &DescriptorSize, &DescriptorVersion);
+            if (EFI_ERROR(Status)) {
+                Print(L"Failed to get memory map: %r\n", Status);
+                return Status;
+            }
 
             BootInfo bi;
 			bi.pFramebuffer = &framebuffer;

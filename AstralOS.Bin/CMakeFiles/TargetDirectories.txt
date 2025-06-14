@@ -1,5 +1,5 @@
-/mnt/d/OS/AstralOS.Bin/CMakeFiles/init.dir
-/mnt/d/OS/AstralOS.Bin/CMakeFiles/build.dir
-/mnt/d/OS/AstralOS.Bin/CMakeFiles/_clean.dir
-/mnt/d/OS/AstralOS.Bin/CMakeFiles/edit_cache.dir
-/mnt/d/OS/AstralOS.Bin/CMakeFiles/rebuild_cache.dir
+/mnt/d/AstralOS/AstralOS.Bin/CMakeFiles/init.dir
+/mnt/d/AstralOS/AstralOS.Bin/CMakeFiles/build.dir
+/mnt/d/AstralOS/AstralOS.Bin/CMakeFiles/_clean.dir
+/mnt/d/AstralOS/AstralOS.Bin/CMakeFiles/edit_cache.dir
+/mnt/d/AstralOS/AstralOS.Bin/CMakeFiles/rebuild_cache.dir

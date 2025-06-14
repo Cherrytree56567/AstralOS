@@ -1,10 +1,16 @@
 #pragma once
 #include "EFIMemoryMap/EFIMemoryMap.h"
 #include "Bitmap/Bitmap.h"
+#include "../../BasicConsole/BasicConsole.h"
+#include "../../../cstr/cstr.h"
 
 class PageFrameAllocator {
 public:
     PageFrameAllocator();
+
+    void Initialise(BasicConsole* console) {
+        this->basicConsole = console;
+    }
 
     void ReadEFIMemoryMap(EFI_MEMORY_DESCRIPTOR* mMap, size_t mMapSize, size_t mMapDescSize);
     void LockPage(void* address);
@@ -32,4 +38,5 @@ private:
     uint64_t freeMemory;
     uint64_t reservedMemory;
     uint64_t usedMemory;
+    BasicConsole* basicConsole;
 };
