@@ -41,9 +41,11 @@ add_custom_target(init
     COMMENT "Initializing Kernel"
 )
 
+set(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/linker.ld")
+
 add_custom_target(build
     DEPENDS ${OBJ_FILES}
-    COMMAND ${LD} -static -Bsymbolic -nostdlib -Ttext 0x1000 -o ${OBJ_DIR}/kernel.elf ${OBJ_FILES}
+    COMMAND ${LD} -static -Bsymbolic -nostdlib -T ${LINKER_SCRIPT} -o ${OBJ_DIR}/kernel.elf ${OBJ_FILES}
     COMMAND cp ${OBJ_DIR}/kernel.elf ${BIN_DIR}/AstralOS/System64/kernel.elf
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Building Kernel: ${LD} ${LDFLAGS} -o ${OBJ_DIR}/kernel.elf ${OBJ_FILES}"

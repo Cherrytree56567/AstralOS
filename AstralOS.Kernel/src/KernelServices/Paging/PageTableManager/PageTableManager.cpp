@@ -1,18 +1,26 @@
 #include "PageTableManager.h"
 
-PageTableManager::PageTableManager(PageTable* PML4Address, PageFrameAllocator *pfa) {
+void PageTableManager::Initialize(PageTable* PML4Address, PageFrameAllocator *pfa, BasicConsole* console) {
     this->PML4 = PML4Address;
-	this->pfa = pfa;
+    this->pageFrameAlloc = pfa;
+    this->basicConsole = console;
+    this->initialized = true;
 }
 
 void PageTableManager::MapMemory(void* virtualMemory, void* physicalMemory) {
+    if (!initialized) {
+        basicConsole->Println("PageTableManager not initialized, cannot map memory.");
+        basicConsole->Println("Did you call Initialize()?");
+        return;
+    }
+
     PageMapIndexer indexer = PageMapIndexer((uint64_t)virtualMemory);
     PageTableEntry PDE;
 
     PDE = PML4->entries[indexer.PDP_i];
     PageTable* PDP;
     if (!PDE.Present) {
-        PDP = (PageTable*)pfa->RequestPage();
+        PDP = (PageTable*)pageFrameAlloc->RequestPage();
         memset(PDP, 0, 0x1000);
         PDE.Address = (uint64_t)PDP >> 12;
         PDE.Present = true;
@@ -28,7 +36,7 @@ void PageTableManager::MapMemory(void* virtualMemory, void* physicalMemory) {
     PDE = PDP->entries[indexer.PD_i];
     PageTable* PD;
     if (!PDE.Present) {
-        PD = (PageTable*)pfa->RequestPage();
+        PD = (PageTable*)pageFrameAlloc->RequestPage();
         memset(PD, 0, 0x1000);
         PDE.Address = (uint64_t)PD >> 12;
         PDE.Present = true;
@@ -43,7 +51,7 @@ void PageTableManager::MapMemory(void* virtualMemory, void* physicalMemory) {
     PDE = PD->entries[indexer.PT_i];
     PageTable* PT;
     if (!PDE.Present) {
-        PT = (PageTable*)pfa->RequestPage();
+        PT = (PageTable*)pageFrameAlloc->RequestPage();
         memset(PT, 0, 0x1000);
         PDE.Address = (uint64_t)PT >> 12;
         PDE.Present = true;
