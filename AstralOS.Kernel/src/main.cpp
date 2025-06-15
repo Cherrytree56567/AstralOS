@@ -50,30 +50,31 @@ extern "C" int _start(BootInfo* pBootInfo) {
 	kernelServices.pageFrameAllocator.ReadEFIMemoryMap(pBootInfo->mMap, pBootInfo->mMapSize, pBootInfo->mMapDescSize);
 	kernelServices.basicConsole.Println("Memory Map Read");
 
-    kernelServices.pageFrameAllocator.LockPages((void*)kernel_start, kernelPages);
+    kernelServices.pageFrameAllocator.LockPages(&_kernel_start, kernelPages);
     kernelServices.basicConsole.Println("Kernel Pages Locked");
 
-    PageTable* PML4 = (PageTable*)kernelServices.pageFrameAllocator.RequestPage();
-	kernelServices.PML4 = PML4;
+    kernelServices.PML4 = (PageTable*)kernelServices.pageFrameAllocator.RequestPage();
 	memset(kernelServices.PML4, 0, 0x1000);
-    kernelServices.pageTableManager.Initialize(PML4, &kernelServices.pageFrameAllocator, &kernelServices.basicConsole);
+    kernelServices.pageTableManager.Initialize(kernelServices.PML4, &kernelServices.pageFrameAllocator, &kernelServices.basicConsole);
     kernelServices.basicConsole.Println("Page Table Manager Created");
-    
-    for (uint64_t t = 0; t < GetMemorySize(pBootInfo->mMap, mMapEntries, pBootInfo->mMapDescSize); t += 0x1000){
-        kernelServices.pageTableManager.MapMemory((void*)t, (void*)t);
-        if (t > 200000000) {
-            kernelServices.basicConsole.Print(to_hstring(t));
-        }
-    }
-    kernelServices.basicConsole.Println("Memory Mapped");
+
     kernelServices.basicConsole.Print("Free RAM: ");
     kernelServices.basicConsole.Println(to_string(kernelServices.pageFrameAllocator.GetFreeRAM()));
-    
+
+    for (uint64_t t = 0; t < GetMemorySize(pBootInfo->mMap, mMapEntries, pBootInfo->mMapDescSize); t+= 0x1000){
+        kernelServices.pageTableManager.MapMemory((void*)t, (void*)t);
+    }
+    kernelServices.basicConsole.Println("Memory Mapped");
+
+    kernelServices.basicConsole.Print("Framebuffer base: ");
+    kernelServices.basicConsole.Println(to_hstring((uint64_t)pBootInfo->pFramebuffer->BaseAddress));
+    kernelServices.basicConsole.Print("Framebuffer size: ");
+    kernelServices.basicConsole.Println(to_hstring((uint64_t)pBootInfo->pFramebuffer->BufferSize));
+
     uint64_t fbBase = (uint64_t)pBootInfo->pFramebuffer->BaseAddress;
     uint64_t fbSize = (uint64_t)pBootInfo->pFramebuffer->BufferSize + 0x1000;
     for (uint64_t t = fbBase; t < fbBase + fbSize; t += 4096) {
         kernelServices.pageTableManager.MapMemory((void*)t, (void*)t);
-		kernelServices.basicConsole.Println("2");
     }
 /*
     __asm__("mov %0, %%cr3" : : "r" (kernelServices.pageTableManager->PML4));
