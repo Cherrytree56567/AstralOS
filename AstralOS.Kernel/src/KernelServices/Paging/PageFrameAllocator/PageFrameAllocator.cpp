@@ -38,7 +38,7 @@ void PageFrameAllocator::ReadEFIMemoryMap(EFI_MEMORY_DESCRIPTOR* map, size_t Map
     } else {
         basicConsole->Println("Largest free memory segment found for bitmap initialization.");
         basicConsole->Println(to_hstring((uint64_t)largestFreeMemSeg));
-        basicConsole->Println(to_string(largestFreeMemSegSize));
+        basicConsole->Println(to_string((uint64_t)largestFreeMemSeg));
     }
 
     uint64_t mMapEntries = mMapSize / mMapDescSize;
@@ -48,6 +48,8 @@ void PageFrameAllocator::ReadEFIMemoryMap(EFI_MEMORY_DESCRIPTOR* map, size_t Map
     uint64_t bitmapSize = memorySize / 4096 / 8 + 1;
 
     InitBitmap(bitmapSize, largestFreeMemSeg);
+
+    LockPages(page_bitmap.buffer, (page_bitmap.size + 4095) / 4096);
 
     for (int i = 0; i < mMapEntries; i++) {
         EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((uint64_t)mMap + (i * mMapDescSize));
