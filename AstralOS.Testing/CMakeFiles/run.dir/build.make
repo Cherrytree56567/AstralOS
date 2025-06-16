@@ -68,7 +68,7 @@ include CMakeFiles/run.dir/progress.make
 
 CMakeFiles/run:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Testing/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Running Testing"
-	cp ../AstralOS.Bin/bin/AstralOS.qcow2 AstralOS.qcow2 && sudo qemu-system-x86_64 -drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE_4M.fd -drive if=pflash,format=raw,file=/usr/share/OVMF/OVMF_VARS_4M.fd -drive file=AstralOS.qcow2,format=raw
+	cp ../AstralOS.Bin/bin/AstralOS.qcow2 AstralOS.qcow2 && sudo qemu-system-x86_64 -m 256M -cpu qemu64 -drive if=pflash,format=raw,unit=0,file="../OVMFbin/OVMF_CODE-pure-efi.fd",readonly=on -drive if=pflash,format=raw,unit=1,file="../OVMFbin/OVMF_VARS-pure-efi.fd" -net none -drive file=AstralOS.qcow2,format=raw
 
 run: CMakeFiles/run
 run: CMakeFiles/run.dir/build.make
