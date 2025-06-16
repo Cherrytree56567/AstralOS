@@ -17,16 +17,18 @@ void PageFrameAllocator::ReadEFIMemoryMap(EFI_MEMORY_DESCRIPTOR* map, size_t Map
 
 	total_pages = GetMemorySize(mMap, mMapSize, mMapDescSize) / 4096;
 
+    uint64_t mMapEntries = mMapSize / mMapDescSize;
+
     void* largestFreeMemSeg = NULL;
     size_t largestFreeMemSegSize = 0;
 
-    for (size_t i = 0; i < mMapSize / mMapDescSize; i++) {
-        EFI_MEMORY_DESCRIPTOR* descriptor = (EFI_MEMORY_DESCRIPTOR*)((uint8_t*)map + (i * mMapDescSize));
-
-        if (descriptor->Type == EfiConventionalMemory) { // descriptor->type = EfiConventionalMemory
-            if (descriptor->NumberOfPages * 4096 > largestFreeMemSegSize) {
-                largestFreeMemSeg = (void*)descriptor->PhysicalStart;
-                largestFreeMemSegSize = descriptor->NumberOfPages * 4096;
+    for (int i = 0; i < mMapEntries; i++){
+        EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((uint64_t)mMap + (i * mMapDescSize));
+        if (desc->Type == 7){ // type = EfiConventionalMemory
+            if (desc->NumberOfPages * 4096 > largestFreeMemSegSize)
+            {
+                largestFreeMemSeg = (void*)desc->PhysicalStart;
+                largestFreeMemSegSize = desc->NumberOfPages * 4096;
             }
         }
     }
@@ -35,13 +37,7 @@ void PageFrameAllocator::ReadEFIMemoryMap(EFI_MEMORY_DESCRIPTOR* map, size_t Map
         basicConsole->Println("No suitable memory segment found for bitmap initialization.");
         initialized = false;
         return;
-    } else {
-        basicConsole->Println("Largest free memory segment found for bitmap initialization.");
-        basicConsole->Println(to_hstring((uint64_t)largestFreeMemSeg));
-        basicConsole->Println(to_string((uint64_t)largestFreeMemSeg));
     }
-
-    uint64_t mMapEntries = mMapSize / mMapDescSize;
 
     uint64_t memorySize = GetMemorySize(mMap, mMapEntries, mMapDescSize);
     freeMemory = memorySize;
@@ -70,9 +66,13 @@ void PageFrameAllocator::InitBitmap(size_t bitmapSize, void* bufferAddress) {
 void PageFrameAllocator::LockPage(void* address) {
     uint64_t index = (uint64_t)address / 4096;
     if (page_bitmap[index] == true) return;
-    page_bitmap.Set(index, true);
-    freeMemory -= 4096;
-    usedMemory += 4096;
+    if (page_bitmap.Set(index, true)) {
+        freeMemory -= 4096;
+        usedMemory += 4096;
+    }  else {
+        basicConsole->Print("Failed to lock page at address: ");
+        basicConsole->Println(to_hstring((uint64_t)address));
+    }
 }
 
 void PageFrameAllocator::LockPages(void* address, uint64_t pageCount) {
@@ -87,9 +87,13 @@ void PageFrameAllocator::LockPages(void* address, uint64_t pageCount) {
 void PageFrameAllocator::FreePage(void* address) {
     uint64_t index = (uint64_t)address / 4096;
     if (page_bitmap[index] == false) return;
-    page_bitmap.Set(index, false);
-    freeMemory += 4096;
-    usedMemory -= 4096;
+    if (page_bitmap.Set(index, false)) {
+        freeMemory += 4096;
+        usedMemory -= 4096;
+    } else {
+        basicConsole->Print("Failed to free page at address: ");
+        basicConsole->Println(to_hstring((uint64_t)address));
+    }
 }
 
 void PageFrameAllocator::FreePages(void* address, uint64_t pageCount) {
@@ -104,9 +108,13 @@ void PageFrameAllocator::FreePages(void* address, uint64_t pageCount) {
 void PageFrameAllocator::ReservePage(void* address) {
     uint64_t index = (uint64_t)address / 4096;
     if (page_bitmap[index] == true) return;
-    page_bitmap.Set(index, true);
-    freeMemory -= 4096;
-    reservedMemory += 4096;
+    if (page_bitmap.Set(index, true)) {
+        freeMemory -= 4096;
+        reservedMemory += 4096;
+    } else {
+        basicConsole->Print("Failed to reserve page at address: ");
+        basicConsole->Println(to_hstring((uint64_t)address));
+    }
 }
 
 void PageFrameAllocator::ReservePages(void* address, uint64_t pageCount) {
@@ -121,9 +129,13 @@ void PageFrameAllocator::ReservePages(void* address, uint64_t pageCount) {
 void PageFrameAllocator::UnReservePage(void* address) {
     uint64_t index = (uint64_t)address / 4096;
     if (page_bitmap[index] == false) return;
-    page_bitmap.Set(index, false);
-    freeMemory += 4096;
-    reservedMemory -= 4096;
+    if (page_bitmap.Set(index, false)) {
+        freeMemory += 4096;
+        reservedMemory -= 4096;
+    } else {
+        basicConsole->Print("Failed to unreserve page at address: ");
+        basicConsole->Println(to_hstring((uint64_t)address));
+    }
 }
 
 void PageFrameAllocator::UnReservePages(void* address, uint64_t pageCount) {
@@ -138,9 +150,11 @@ void PageFrameAllocator::UnReservePages(void* address, uint64_t pageCount) {
 uint64_t PageFrameAllocator::GetFreeRAM() {
     return freeMemory;
 }
+
 uint64_t PageFrameAllocator::GetUsedRAM() {
     return usedMemory;
 }
+
 uint64_t PageFrameAllocator::GetReservedRAM() {
     return reservedMemory;
 }
