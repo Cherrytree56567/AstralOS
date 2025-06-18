@@ -3,6 +3,7 @@ file(REMOVE_RECURSE
   "obj/BasicConsole.o"
   "obj/Bitmap.o"
   "obj/EFIMemoryMap.o"
+  "obj/GDT.o"
   "obj/KernelServices.o"
   "obj/KernelUtils.o"
   "obj/PageFrameAllocator.o"
