@@ -7,7 +7,7 @@ extern "C" int _start(BootInfo* pBootInfo) {
 
     memset(pBootInfo->pFramebuffer->BaseAddress, 0, pBootInfo->pFramebuffer->BufferSize);
     kernelServices.basicConsole.Println("Framebuffer Cleared");
-/*
+
     kernelServices.pageTableManager.MapMemory((void*)0x600000000, (void*)0x80000);
 	kernelServices.basicConsole.Println("Mapped 0x600000000 to 0x80000");
 
@@ -15,7 +15,6 @@ extern "C" int _start(BootInfo* pBootInfo) {
     *test = 26;
 
     kernelServices.basicConsole.Println(to_string(*test));
-*/
 
     while (true) {
         
