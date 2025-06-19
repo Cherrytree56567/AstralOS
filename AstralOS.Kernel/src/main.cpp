@@ -1,6 +1,10 @@
 #include "KernelUtils.h"
 
 extern "C" int _start(BootInfo* pBootInfo) {
+    /*
+     * Disable Interrupts
+    */
+    asm volatile("cli" ::: "memory");
 	KernelServices kernelServices(pBootInfo);
 
     InitializePaging(&kernelServices, pBootInfo);
@@ -15,6 +19,19 @@ extern "C" int _start(BootInfo* pBootInfo) {
     *test = 26;
 
     kernelServices.basicConsole.Println(to_string(*test));
+
+    kernelServices.gdt->Create64BitGDT();
+
+    uint16_t cs;
+    asm volatile ("mov %%cs, %0" : "=r" (cs));
+
+    uint16_t ds;
+    asm volatile ("mov %%ds, %0" : "=r" (ds));
+
+    kernelServices.basicConsole.Print("GDT Reg: CS = ");
+    kernelServices.basicConsole.Print(to_hstring(cs));
+    kernelServices.basicConsole.Print(", DS = ");
+    kernelServices.basicConsole.Println(to_hstring(ds));
 
     while (true) {
         
