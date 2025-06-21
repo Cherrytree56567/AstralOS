@@ -20,7 +20,7 @@ extern "C" int _start(BootInfo* pBootInfo) {
 
     kernelServices.basicConsole.Println(to_string(*test));
 
-    kernelServices.gdt->Create64BitGDT();
+    kernelServices.gdt.Create64BitGDT();
 
     uint16_t cs;
     asm volatile ("mov %%cs, %0" : "=r" (cs));
@@ -32,6 +32,8 @@ extern "C" int _start(BootInfo* pBootInfo) {
     kernelServices.basicConsole.Print(to_hstring(cs));
     kernelServices.basicConsole.Print(", DS = ");
     kernelServices.basicConsole.Println(to_hstring(ds));
+
+    InitializeIDT(&kernelServices, pBootInfo);
 
     while (true) {
         

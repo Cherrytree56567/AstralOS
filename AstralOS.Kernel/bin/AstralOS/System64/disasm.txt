@@ -1,0 +1,2788 @@
+
+kernel.elf:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000001000 <_kernel_start>:
+    1000:	e8 00 08 00 00       	call   1805 <exception_handler>
+    1005:	cf                   	iret
+
+0000000000001006 <_ZN12BasicConsoleC1EP11FrameBuffer>:
+    1006:	f3 0f 1e fa          	endbr64
+    100a:	55                   	push   %rbp
+    100b:	48 89 e5             	mov    %rsp,%rbp
+    100e:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    1012:	48 89 75 f0          	mov    %rsi,-0x10(%rbp)
+    1016:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    101a:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
+    101e:	48 89 50 08          	mov    %rdx,0x8(%rax)
+    1022:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1026:	c7 00 0a 00 00 00    	movl   $0xa,(%rax)
+    102c:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1030:	c7 40 04 0a 00 00 00 	movl   $0xa,0x4(%rax)
+    1037:	90                   	nop
+    1038:	5d                   	pop    %rbp
+    1039:	c3                   	ret
+
+000000000000103a <_ZN12BasicConsole7putCharEjcjj>:
+    103a:	f3 0f 1e fa          	endbr64
+    103e:	55                   	push   %rbp
+    103f:	48 89 e5             	mov    %rsp,%rbp
+    1042:	48 89 7d c8          	mov    %rdi,-0x38(%rbp)
+    1046:	89 75 c4             	mov    %esi,-0x3c(%rbp)
+    1049:	89 d0                	mov    %edx,%eax
+    104b:	89 4d bc             	mov    %ecx,-0x44(%rbp)
+    104e:	44 89 45 b8          	mov    %r8d,-0x48(%rbp)
+    1052:	88 45 c0             	mov    %al,-0x40(%rbp)
+    1055:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
+    1059:	48 8b 40 08          	mov    0x8(%rax),%rax
+    105d:	48 8b 00             	mov    (%rax),%rax
+    1060:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
+    1064:	80 7d c0 00          	cmpb   $0x0,-0x40(%rbp)
+    1068:	0f 88 df 00 00 00    	js     114d <_ZN12BasicConsole7putCharEjcjj+0x113>
+    106e:	0f be 45 c0          	movsbl -0x40(%rbp),%eax
+    1072:	c1 e0 04             	shl    $0x4,%eax
+    1075:	48 98                	cltq
+    1077:	48 8d 15 82 2f 00 00 	lea    0x2f82(%rip),%rdx        # 4000 <_ZL4font>
+    107e:	48 01 d0             	add    %rdx,%rax
+    1081:	48 89 45 e0          	mov    %rax,-0x20(%rbp)
+    1085:	48 c7 45 f8 00 00 00 	movq   $0x0,-0x8(%rbp)
+    108c:	00 
+    108d:	e9 ae 00 00 00       	jmp    1140 <_ZN12BasicConsole7putCharEjcjj+0x106>
+    1092:	48 c7 45 f0 00 00 00 	movq   $0x0,-0x10(%rbp)
+    1099:	00 
+    109a:	e9 91 00 00 00       	jmp    1130 <_ZN12BasicConsole7putCharEjcjj+0xf6>
+    109f:	48 8b 55 e0          	mov    -0x20(%rbp),%rdx
+    10a3:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    10a7:	48 01 d0             	add    %rdx,%rax
+    10aa:	0f b6 00             	movzbl (%rax),%eax
+    10ad:	0f b6 c0             	movzbl %al,%eax
+    10b0:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
+    10b4:	be 80 00 00 00       	mov    $0x80,%esi
+    10b9:	89 d1                	mov    %edx,%ecx
+    10bb:	d3 fe                	sar    %cl,%esi
+    10bd:	89 f2                	mov    %esi,%edx
+    10bf:	21 d0                	and    %edx,%eax
+    10c1:	85 c0                	test   %eax,%eax
+    10c3:	74 66                	je     112b <_ZN12BasicConsole7putCharEjcjj+0xf1>
+    10c5:	8b 55 bc             	mov    -0x44(%rbp),%edx
+    10c8:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    10cc:	48 8d 0c 02          	lea    (%rdx,%rax,1),%rcx
+    10d0:	8b 55 b8             	mov    -0x48(%rbp),%edx
+    10d3:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    10d7:	48 01 c2             	add    %rax,%rdx
+    10da:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
+    10de:	48 8b 40 08          	mov    0x8(%rax),%rax
+    10e2:	8b 40 18             	mov    0x18(%rax),%eax
+    10e5:	89 c0                	mov    %eax,%eax
+    10e7:	48 0f af c2          	imul   %rdx,%rax
+    10eb:	48 01 c8             	add    %rcx,%rax
+    10ee:	48 89 45 d8          	mov    %rax,-0x28(%rbp)
+    10f2:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
+    10f6:	48 8b 40 08          	mov    0x8(%rax),%rax
+    10fa:	8b 50 10             	mov    0x10(%rax),%edx
+    10fd:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
+    1101:	48 8b 40 08          	mov    0x8(%rax),%rax
+    1105:	8b 40 14             	mov    0x14(%rax),%eax
+    1108:	0f af c2             	imul   %edx,%eax
+    110b:	89 c0                	mov    %eax,%eax
+    110d:	48 39 45 d8          	cmp    %rax,-0x28(%rbp)
+    1111:	73 18                	jae    112b <_ZN12BasicConsole7putCharEjcjj+0xf1>
+    1113:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1117:	48 8d 14 85 00 00 00 	lea    0x0(,%rax,4),%rdx
+    111e:	00 
+    111f:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1123:	48 01 c2             	add    %rax,%rdx
+    1126:	8b 45 c4             	mov    -0x3c(%rbp),%eax
+    1129:	89 02                	mov    %eax,(%rdx)
+    112b:	48 83 45 f0 01       	addq   $0x1,-0x10(%rbp)
+    1130:	48 83 7d f0 07       	cmpq   $0x7,-0x10(%rbp)
+    1135:	0f 86 64 ff ff ff    	jbe    109f <_ZN12BasicConsole7putCharEjcjj+0x65>
+    113b:	48 83 45 f8 01       	addq   $0x1,-0x8(%rbp)
+    1140:	48 83 7d f8 0f       	cmpq   $0xf,-0x8(%rbp)
+    1145:	0f 86 47 ff ff ff    	jbe    1092 <_ZN12BasicConsole7putCharEjcjj+0x58>
+    114b:	eb 01                	jmp    114e <_ZN12BasicConsole7putCharEjcjj+0x114>
+    114d:	90                   	nop
+    114e:	5d                   	pop    %rbp
+    114f:	c3                   	ret
+
+0000000000001150 <_ZN12BasicConsole5PrintEPKcj>:
+    1150:	f3 0f 1e fa          	endbr64
+    1154:	55                   	push   %rbp
+    1155:	48 89 e5             	mov    %rsp,%rbp
+    1158:	48 83 ec 28          	sub    $0x28,%rsp
+    115c:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    1160:	48 89 75 e0          	mov    %rsi,-0x20(%rbp)
+    1164:	89 55 dc             	mov    %edx,-0x24(%rbp)
+    1167:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    116b:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    116f:	e9 98 00 00 00       	jmp    120c <_ZN12BasicConsole5PrintEPKcj+0xbc>
+    1174:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1178:	0f b6 00             	movzbl (%rax),%eax
+    117b:	3c 0a                	cmp    $0xa,%al
+    117d:	75 1d                	jne    119c <_ZN12BasicConsole5PrintEPKcj+0x4c>
+    117f:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1183:	c7 00 0a 00 00 00    	movl   $0xa,(%rax)
+    1189:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    118d:	8b 40 04             	mov    0x4(%rax),%eax
+    1190:	8d 50 10             	lea    0x10(%rax),%edx
+    1193:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1197:	89 50 04             	mov    %edx,0x4(%rax)
+    119a:	eb 6b                	jmp    1207 <_ZN12BasicConsole5PrintEPKcj+0xb7>
+    119c:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    11a0:	8b 78 04             	mov    0x4(%rax),%edi
+    11a3:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    11a7:	8b 08                	mov    (%rax),%ecx
+    11a9:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    11ad:	0f b6 00             	movzbl (%rax),%eax
+    11b0:	0f be d0             	movsbl %al,%edx
+    11b3:	8b 75 dc             	mov    -0x24(%rbp),%esi
+    11b6:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    11ba:	41 89 f8             	mov    %edi,%r8d
+    11bd:	48 89 c7             	mov    %rax,%rdi
+    11c0:	e8 75 fe ff ff       	call   103a <_ZN12BasicConsole7putCharEjcjj>
+    11c5:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    11c9:	8b 00                	mov    (%rax),%eax
+    11cb:	8d 50 08             	lea    0x8(%rax),%edx
+    11ce:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    11d2:	89 10                	mov    %edx,(%rax)
+    11d4:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    11d8:	8b 00                	mov    (%rax),%eax
+    11da:	8d 50 0a             	lea    0xa(%rax),%edx
+    11dd:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    11e1:	48 8b 40 08          	mov    0x8(%rax),%rax
+    11e5:	8b 40 10             	mov    0x10(%rax),%eax
+    11e8:	39 d0                	cmp    %edx,%eax
+    11ea:	73 1b                	jae    1207 <_ZN12BasicConsole5PrintEPKcj+0xb7>
+    11ec:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    11f0:	c7 00 0a 00 00 00    	movl   $0xa,(%rax)
+    11f6:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    11fa:	8b 40 04             	mov    0x4(%rax),%eax
+    11fd:	8d 50 10             	lea    0x10(%rax),%edx
+    1200:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1204:	89 50 04             	mov    %edx,0x4(%rax)
+    1207:	48 83 45 f8 01       	addq   $0x1,-0x8(%rbp)
+    120c:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1210:	0f b6 00             	movzbl (%rax),%eax
+    1213:	84 c0                	test   %al,%al
+    1215:	0f 85 59 ff ff ff    	jne    1174 <_ZN12BasicConsole5PrintEPKcj+0x24>
+    121b:	90                   	nop
+    121c:	90                   	nop
+    121d:	c9                   	leave
+    121e:	c3                   	ret
+    121f:	90                   	nop
+
+0000000000001220 <_ZN12BasicConsole7PrintlnEPKcj>:
+    1220:	f3 0f 1e fa          	endbr64
+    1224:	55                   	push   %rbp
+    1225:	48 89 e5             	mov    %rsp,%rbp
+    1228:	48 83 ec 28          	sub    $0x28,%rsp
+    122c:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    1230:	48 89 75 e0          	mov    %rsi,-0x20(%rbp)
+    1234:	89 55 dc             	mov    %edx,-0x24(%rbp)
+    1237:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    123b:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    123f:	e9 98 00 00 00       	jmp    12dc <_ZN12BasicConsole7PrintlnEPKcj+0xbc>
+    1244:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1248:	0f b6 00             	movzbl (%rax),%eax
+    124b:	3c 0a                	cmp    $0xa,%al
+    124d:	75 1d                	jne    126c <_ZN12BasicConsole7PrintlnEPKcj+0x4c>
+    124f:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1253:	c7 00 0a 00 00 00    	movl   $0xa,(%rax)
+    1259:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    125d:	8b 40 04             	mov    0x4(%rax),%eax
+    1260:	8d 50 10             	lea    0x10(%rax),%edx
+    1263:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1267:	89 50 04             	mov    %edx,0x4(%rax)
+    126a:	eb 6b                	jmp    12d7 <_ZN12BasicConsole7PrintlnEPKcj+0xb7>
+    126c:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1270:	8b 78 04             	mov    0x4(%rax),%edi
+    1273:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1277:	8b 08                	mov    (%rax),%ecx
+    1279:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    127d:	0f b6 00             	movzbl (%rax),%eax
+    1280:	0f be d0             	movsbl %al,%edx
+    1283:	8b 75 dc             	mov    -0x24(%rbp),%esi
+    1286:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    128a:	41 89 f8             	mov    %edi,%r8d
+    128d:	48 89 c7             	mov    %rax,%rdi
+    1290:	e8 a5 fd ff ff       	call   103a <_ZN12BasicConsole7putCharEjcjj>
+    1295:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1299:	8b 00                	mov    (%rax),%eax
+    129b:	8d 50 08             	lea    0x8(%rax),%edx
+    129e:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    12a2:	89 10                	mov    %edx,(%rax)
+    12a4:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    12a8:	8b 00                	mov    (%rax),%eax
+    12aa:	8d 50 0a             	lea    0xa(%rax),%edx
+    12ad:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    12b1:	48 8b 40 08          	mov    0x8(%rax),%rax
+    12b5:	8b 40 10             	mov    0x10(%rax),%eax
+    12b8:	39 d0                	cmp    %edx,%eax
+    12ba:	73 1b                	jae    12d7 <_ZN12BasicConsole7PrintlnEPKcj+0xb7>
+    12bc:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    12c0:	c7 00 0a 00 00 00    	movl   $0xa,(%rax)
+    12c6:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    12ca:	8b 40 04             	mov    0x4(%rax),%eax
+    12cd:	8d 50 10             	lea    0x10(%rax),%edx
+    12d0:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    12d4:	89 50 04             	mov    %edx,0x4(%rax)
+    12d7:	48 83 45 f8 01       	addq   $0x1,-0x8(%rbp)
+    12dc:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    12e0:	0f b6 00             	movzbl (%rax),%eax
+    12e3:	84 c0                	test   %al,%al
+    12e5:	0f 85 59 ff ff ff    	jne    1244 <_ZN12BasicConsole7PrintlnEPKcj+0x24>
+    12eb:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    12ef:	c7 00 0a 00 00 00    	movl   $0xa,(%rax)
+    12f5:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    12f9:	8b 40 04             	mov    0x4(%rax),%eax
+    12fc:	8d 50 10             	lea    0x10(%rax),%edx
+    12ff:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1303:	89 50 04             	mov    %edx,0x4(%rax)
+    1306:	90                   	nop
+    1307:	c9                   	leave
+    1308:	c3                   	ret
+    1309:	90                   	nop
+
+000000000000130a <_ZN10AccessByte14setAccessedBitEb>:
+    130a:	f3 0f 1e fa          	endbr64
+    130e:	55                   	push   %rbp
+    130f:	48 89 e5             	mov    %rsp,%rbp
+    1312:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    1316:	89 f0                	mov    %esi,%eax
+    1318:	88 45 f4             	mov    %al,-0xc(%rbp)
+    131b:	80 7d f4 00          	cmpb   $0x0,-0xc(%rbp)
+    131f:	74 14                	je     1335 <_ZN10AccessByte14setAccessedBitEb+0x2b>
+    1321:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1325:	0f b6 00             	movzbl (%rax),%eax
+    1328:	83 c8 01             	or     $0x1,%eax
+    132b:	89 c2                	mov    %eax,%edx
+    132d:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1331:	88 10                	mov    %dl,(%rax)
+    1333:	eb 12                	jmp    1347 <_ZN10AccessByte14setAccessedBitEb+0x3d>
+    1335:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1339:	0f b6 00             	movzbl (%rax),%eax
+    133c:	83 e0 fe             	and    $0xfffffffe,%eax
+    133f:	89 c2                	mov    %eax,%edx
+    1341:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1345:	88 10                	mov    %dl,(%rax)
+    1347:	90                   	nop
+    1348:	5d                   	pop    %rbp
+    1349:	c3                   	ret
+
+000000000000134a <_ZN10AccessByte5setRWEb>:
+    134a:	f3 0f 1e fa          	endbr64
+    134e:	55                   	push   %rbp
+    134f:	48 89 e5             	mov    %rsp,%rbp
+    1352:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    1356:	89 f0                	mov    %esi,%eax
+    1358:	88 45 f4             	mov    %al,-0xc(%rbp)
+    135b:	80 7d f4 00          	cmpb   $0x0,-0xc(%rbp)
+    135f:	74 14                	je     1375 <_ZN10AccessByte5setRWEb+0x2b>
+    1361:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1365:	0f b6 00             	movzbl (%rax),%eax
+    1368:	83 c8 02             	or     $0x2,%eax
+    136b:	89 c2                	mov    %eax,%edx
+    136d:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1371:	88 10                	mov    %dl,(%rax)
+    1373:	eb 12                	jmp    1387 <_ZN10AccessByte5setRWEb+0x3d>
+    1375:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1379:	0f b6 00             	movzbl (%rax),%eax
+    137c:	83 e0 fd             	and    $0xfffffffd,%eax
+    137f:	89 c2                	mov    %eax,%edx
+    1381:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1385:	88 10                	mov    %dl,(%rax)
+    1387:	90                   	nop
+    1388:	5d                   	pop    %rbp
+    1389:	c3                   	ret
+
+000000000000138a <_ZN10AccessByte5setDCEb>:
+    138a:	f3 0f 1e fa          	endbr64
+    138e:	55                   	push   %rbp
+    138f:	48 89 e5             	mov    %rsp,%rbp
+    1392:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    1396:	89 f0                	mov    %esi,%eax
+    1398:	88 45 f4             	mov    %al,-0xc(%rbp)
+    139b:	80 7d f4 00          	cmpb   $0x0,-0xc(%rbp)
+    139f:	74 14                	je     13b5 <_ZN10AccessByte5setDCEb+0x2b>
+    13a1:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    13a5:	0f b6 00             	movzbl (%rax),%eax
+    13a8:	83 c8 04             	or     $0x4,%eax
+    13ab:	89 c2                	mov    %eax,%edx
+    13ad:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    13b1:	88 10                	mov    %dl,(%rax)
+    13b3:	eb 12                	jmp    13c7 <_ZN10AccessByte5setDCEb+0x3d>
+    13b5:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    13b9:	0f b6 00             	movzbl (%rax),%eax
+    13bc:	83 e0 fb             	and    $0xfffffffb,%eax
+    13bf:	89 c2                	mov    %eax,%edx
+    13c1:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    13c5:	88 10                	mov    %dl,(%rax)
+    13c7:	90                   	nop
+    13c8:	5d                   	pop    %rbp
+    13c9:	c3                   	ret
+
+00000000000013ca <_ZN10AccessByte4setEEb>:
+    13ca:	f3 0f 1e fa          	endbr64
+    13ce:	55                   	push   %rbp
+    13cf:	48 89 e5             	mov    %rsp,%rbp
+    13d2:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    13d6:	89 f0                	mov    %esi,%eax
+    13d8:	88 45 f4             	mov    %al,-0xc(%rbp)
+    13db:	80 7d f4 00          	cmpb   $0x0,-0xc(%rbp)
+    13df:	74 14                	je     13f5 <_ZN10AccessByte4setEEb+0x2b>
+    13e1:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    13e5:	0f b6 00             	movzbl (%rax),%eax
+    13e8:	83 c8 08             	or     $0x8,%eax
+    13eb:	89 c2                	mov    %eax,%edx
+    13ed:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    13f1:	88 10                	mov    %dl,(%rax)
+    13f3:	eb 12                	jmp    1407 <_ZN10AccessByte4setEEb+0x3d>
+    13f5:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    13f9:	0f b6 00             	movzbl (%rax),%eax
+    13fc:	83 e0 f7             	and    $0xfffffff7,%eax
+    13ff:	89 c2                	mov    %eax,%edx
+    1401:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1405:	88 10                	mov    %dl,(%rax)
+    1407:	90                   	nop
+    1408:	5d                   	pop    %rbp
+    1409:	c3                   	ret
+
+000000000000140a <_ZN10AccessByte4setSEb>:
+    140a:	f3 0f 1e fa          	endbr64
+    140e:	55                   	push   %rbp
+    140f:	48 89 e5             	mov    %rsp,%rbp
+    1412:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    1416:	89 f0                	mov    %esi,%eax
+    1418:	88 45 f4             	mov    %al,-0xc(%rbp)
+    141b:	80 7d f4 00          	cmpb   $0x0,-0xc(%rbp)
+    141f:	74 14                	je     1435 <_ZN10AccessByte4setSEb+0x2b>
+    1421:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1425:	0f b6 00             	movzbl (%rax),%eax
+    1428:	83 c8 10             	or     $0x10,%eax
+    142b:	89 c2                	mov    %eax,%edx
+    142d:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1431:	88 10                	mov    %dl,(%rax)
+    1433:	eb 12                	jmp    1447 <_ZN10AccessByte4setSEb+0x3d>
+    1435:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1439:	0f b6 00             	movzbl (%rax),%eax
+    143c:	83 e0 ef             	and    $0xffffffef,%eax
+    143f:	89 c2                	mov    %eax,%edx
+    1441:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1445:	88 10                	mov    %dl,(%rax)
+    1447:	90                   	nop
+    1448:	5d                   	pop    %rbp
+    1449:	c3                   	ret
+
+000000000000144a <_ZN10AccessByte6setDPLEh>:
+    144a:	f3 0f 1e fa          	endbr64
+    144e:	55                   	push   %rbp
+    144f:	48 89 e5             	mov    %rsp,%rbp
+    1452:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    1456:	89 f0                	mov    %esi,%eax
+    1458:	88 45 f4             	mov    %al,-0xc(%rbp)
+    145b:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    145f:	0f b6 00             	movzbl (%rax),%eax
+    1462:	83 e0 9f             	and    $0xffffff9f,%eax
+    1465:	89 c2                	mov    %eax,%edx
+    1467:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    146b:	88 10                	mov    %dl,(%rax)
+    146d:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1471:	0f b6 00             	movzbl (%rax),%eax
+    1474:	89 c2                	mov    %eax,%edx
+    1476:	0f b6 45 f4          	movzbl -0xc(%rbp),%eax
+    147a:	c1 e0 05             	shl    $0x5,%eax
+    147d:	83 e0 60             	and    $0x60,%eax
+    1480:	09 d0                	or     %edx,%eax
+    1482:	89 c2                	mov    %eax,%edx
+    1484:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1488:	88 10                	mov    %dl,(%rax)
+    148a:	90                   	nop
+    148b:	5d                   	pop    %rbp
+    148c:	c3                   	ret
+    148d:	90                   	nop
+
+000000000000148e <_ZN10AccessByte4setPEb>:
+    148e:	f3 0f 1e fa          	endbr64
+    1492:	55                   	push   %rbp
+    1493:	48 89 e5             	mov    %rsp,%rbp
+    1496:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    149a:	89 f0                	mov    %esi,%eax
+    149c:	88 45 f4             	mov    %al,-0xc(%rbp)
+    149f:	80 7d f4 00          	cmpb   $0x0,-0xc(%rbp)
+    14a3:	74 14                	je     14b9 <_ZN10AccessByte4setPEb+0x2b>
+    14a5:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    14a9:	0f b6 00             	movzbl (%rax),%eax
+    14ac:	83 c8 80             	or     $0xffffff80,%eax
+    14af:	89 c2                	mov    %eax,%edx
+    14b1:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    14b5:	88 10                	mov    %dl,(%rax)
+    14b7:	eb 12                	jmp    14cb <_ZN10AccessByte4setPEb+0x3d>
+    14b9:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    14bd:	0f b6 00             	movzbl (%rax),%eax
+    14c0:	83 e0 7f             	and    $0x7f,%eax
+    14c3:	89 c2                	mov    %eax,%edx
+    14c5:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    14c9:	88 10                	mov    %dl,(%rax)
+    14cb:	90                   	nop
+    14cc:	5d                   	pop    %rbp
+    14cd:	c3                   	ret
+
+00000000000014ce <_ZN16SystemAccessByte7setTypeEh>:
+    14ce:	f3 0f 1e fa          	endbr64
+    14d2:	55                   	push   %rbp
+    14d3:	48 89 e5             	mov    %rsp,%rbp
+    14d6:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    14da:	89 f0                	mov    %esi,%eax
+    14dc:	88 45 f4             	mov    %al,-0xc(%rbp)
+    14df:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    14e3:	0f b6 00             	movzbl (%rax),%eax
+    14e6:	83 e0 f0             	and    $0xfffffff0,%eax
+    14e9:	89 c2                	mov    %eax,%edx
+    14eb:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    14ef:	88 10                	mov    %dl,(%rax)
+    14f1:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    14f5:	0f b6 10             	movzbl (%rax),%edx
+    14f8:	0f b6 45 f4          	movzbl -0xc(%rbp),%eax
+    14fc:	83 e0 0f             	and    $0xf,%eax
+    14ff:	09 c2                	or     %eax,%edx
+    1501:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1505:	88 10                	mov    %dl,(%rax)
+    1507:	90                   	nop
+    1508:	5d                   	pop    %rbp
+    1509:	c3                   	ret
+
+000000000000150a <_ZN16SystemAccessByte4setSEb>:
+    150a:	f3 0f 1e fa          	endbr64
+    150e:	55                   	push   %rbp
+    150f:	48 89 e5             	mov    %rsp,%rbp
+    1512:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    1516:	89 f0                	mov    %esi,%eax
+    1518:	88 45 f4             	mov    %al,-0xc(%rbp)
+    151b:	80 7d f4 00          	cmpb   $0x0,-0xc(%rbp)
+    151f:	74 14                	je     1535 <_ZN16SystemAccessByte4setSEb+0x2b>
+    1521:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1525:	0f b6 00             	movzbl (%rax),%eax
+    1528:	83 c8 10             	or     $0x10,%eax
+    152b:	89 c2                	mov    %eax,%edx
+    152d:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1531:	88 10                	mov    %dl,(%rax)
+    1533:	eb 12                	jmp    1547 <_ZN16SystemAccessByte4setSEb+0x3d>
+    1535:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1539:	0f b6 00             	movzbl (%rax),%eax
+    153c:	83 e0 ef             	and    $0xffffffef,%eax
+    153f:	89 c2                	mov    %eax,%edx
+    1541:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1545:	88 10                	mov    %dl,(%rax)
+    1547:	90                   	nop
+    1548:	5d                   	pop    %rbp
+    1549:	c3                   	ret
+
+000000000000154a <_ZN16SystemAccessByte6setDPLEh>:
+    154a:	f3 0f 1e fa          	endbr64
+    154e:	55                   	push   %rbp
+    154f:	48 89 e5             	mov    %rsp,%rbp
+    1552:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    1556:	89 f0                	mov    %esi,%eax
+    1558:	88 45 f4             	mov    %al,-0xc(%rbp)
+    155b:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    155f:	0f b6 00             	movzbl (%rax),%eax
+    1562:	83 e0 9f             	and    $0xffffff9f,%eax
+    1565:	89 c2                	mov    %eax,%edx
+    1567:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    156b:	88 10                	mov    %dl,(%rax)
+    156d:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1571:	0f b6 00             	movzbl (%rax),%eax
+    1574:	89 c2                	mov    %eax,%edx
+    1576:	0f b6 45 f4          	movzbl -0xc(%rbp),%eax
+    157a:	c1 e0 05             	shl    $0x5,%eax
+    157d:	83 e0 60             	and    $0x60,%eax
+    1580:	09 d0                	or     %edx,%eax
+    1582:	89 c2                	mov    %eax,%edx
+    1584:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1588:	88 10                	mov    %dl,(%rax)
+    158a:	90                   	nop
+    158b:	5d                   	pop    %rbp
+    158c:	c3                   	ret
+    158d:	90                   	nop
+
+000000000000158e <_ZN16SystemAccessByte4setPEb>:
+    158e:	f3 0f 1e fa          	endbr64
+    1592:	55                   	push   %rbp
+    1593:	48 89 e5             	mov    %rsp,%rbp
+    1596:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    159a:	89 f0                	mov    %esi,%eax
+    159c:	88 45 f4             	mov    %al,-0xc(%rbp)
+    159f:	80 7d f4 00          	cmpb   $0x0,-0xc(%rbp)
+    15a3:	74 14                	je     15b9 <_ZN16SystemAccessByte4setPEb+0x2b>
+    15a5:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    15a9:	0f b6 00             	movzbl (%rax),%eax
+    15ac:	83 c8 80             	or     $0xffffff80,%eax
+    15af:	89 c2                	mov    %eax,%edx
+    15b1:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    15b5:	88 10                	mov    %dl,(%rax)
+    15b7:	eb 12                	jmp    15cb <_ZN16SystemAccessByte4setPEb+0x3d>
+    15b9:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    15bd:	0f b6 00             	movzbl (%rax),%eax
+    15c0:	83 e0 7f             	and    $0x7f,%eax
+    15c3:	89 c2                	mov    %eax,%edx
+    15c5:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    15c9:	88 10                	mov    %dl,(%rax)
+    15cb:	90                   	nop
+    15cc:	5d                   	pop    %rbp
+    15cd:	c3                   	ret
+
+00000000000015ce <_ZN3GDT10InitializeEP12BasicConsole>:
+    15ce:	f3 0f 1e fa          	endbr64
+    15d2:	55                   	push   %rbp
+    15d3:	48 89 e5             	mov    %rsp,%rbp
+    15d6:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    15da:	48 89 75 f0          	mov    %rsi,-0x10(%rbp)
+    15de:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    15e2:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
+    15e6:	48 89 10             	mov    %rdx,(%rax)
+    15e9:	90                   	nop
+    15ea:	5d                   	pop    %rbp
+    15eb:	c3                   	ret
+
+00000000000015ec <_ZN3GDT14Create64BitGDTEv>:
+    15ec:	f3 0f 1e fa          	endbr64
+    15f0:	55                   	push   %rbp
+    15f1:	48 89 e5             	mov    %rsp,%rbp
+    15f4:	48 83 ec 20          	sub    $0x20,%rsp
+    15f8:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    15fc:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1600:	48 83 c0 08          	add    $0x8,%rax
+    1604:	41 b8 00 00 00 00    	mov    $0x0,%r8d
+    160a:	b9 00 00 00 00       	mov    $0x0,%ecx
+    160f:	ba 00 00 00 00       	mov    $0x0,%edx
+    1614:	be 00 00 00 00       	mov    $0x0,%esi
+    1619:	48 89 c7             	mov    %rax,%rdi
+    161c:	e8 1b 01 00 00       	call   173c <_ZN17SegmentDescriptor3setEjjhh>
+    1621:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1625:	48 83 c0 10          	add    $0x10,%rax
+    1629:	41 b8 0a 00 00 00    	mov    $0xa,%r8d
+    162f:	b9 9a 00 00 00       	mov    $0x9a,%ecx
+    1634:	ba ff ff 0f 00       	mov    $0xfffff,%edx
+    1639:	be 00 00 00 00       	mov    $0x0,%esi
+    163e:	48 89 c7             	mov    %rax,%rdi
+    1641:	e8 f6 00 00 00       	call   173c <_ZN17SegmentDescriptor3setEjjhh>
+    1646:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    164a:	48 83 c0 18          	add    $0x18,%rax
+    164e:	41 b8 0c 00 00 00    	mov    $0xc,%r8d
+    1654:	b9 92 00 00 00       	mov    $0x92,%ecx
+    1659:	ba ff ff 0f 00       	mov    $0xfffff,%edx
+    165e:	be 00 00 00 00       	mov    $0x0,%esi
+    1663:	48 89 c7             	mov    %rax,%rdi
+    1666:	e8 d1 00 00 00       	call   173c <_ZN17SegmentDescriptor3setEjjhh>
+    166b:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    166f:	48 83 c0 20          	add    $0x20,%rax
+    1673:	41 b8 0a 00 00 00    	mov    $0xa,%r8d
+    1679:	b9 fa 00 00 00       	mov    $0xfa,%ecx
+    167e:	ba ff ff 0f 00       	mov    $0xfffff,%edx
+    1683:	be 00 00 00 00       	mov    $0x0,%esi
+    1688:	48 89 c7             	mov    %rax,%rdi
+    168b:	e8 ac 00 00 00       	call   173c <_ZN17SegmentDescriptor3setEjjhh>
+    1690:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1694:	48 83 c0 28          	add    $0x28,%rax
+    1698:	41 b8 0c 00 00 00    	mov    $0xc,%r8d
+    169e:	b9 f2 00 00 00       	mov    $0xf2,%ecx
+    16a3:	ba ff ff 0f 00       	mov    $0xfffff,%edx
+    16a8:	be 00 00 00 00       	mov    $0x0,%esi
+    16ad:	48 89 c7             	mov    %rax,%rdi
+    16b0:	e8 87 00 00 00       	call   173c <_ZN17SegmentDescriptor3setEjjhh>
+    16b5:	48 c7 45 f6 00 00 00 	movq   $0x0,-0xa(%rbp)
+    16bc:	00 
+    16bd:	66 c7 45 fe 00 00    	movw   $0x0,-0x2(%rbp)
+    16c3:	66 c7 45 f6 27 00    	movw   $0x27,-0xa(%rbp)
+    16c9:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    16cd:	48 83 c0 08          	add    $0x8,%rax
+    16d1:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    16d5:	48 8d 55 f6          	lea    -0xa(%rbp),%rdx
+    16d9:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    16dd:	48 89 d6             	mov    %rdx,%rsi
+    16e0:	48 89 c7             	mov    %rax,%rdi
+    16e3:	e8 10 00 00 00       	call   16f8 <_ZN3GDT8load_gdtEPv>
+    16e8:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    16ec:	48 89 c7             	mov    %rax,%rdi
+    16ef:	e8 1e 00 00 00       	call   1712 <_ZN3GDT15reload_segmentsEv>
+    16f4:	90                   	nop
+    16f5:	c9                   	leave
+    16f6:	c3                   	ret
+    16f7:	90                   	nop
+
+00000000000016f8 <_ZN3GDT8load_gdtEPv>:
+    16f8:	f3 0f 1e fa          	endbr64
+    16fc:	55                   	push   %rbp
+    16fd:	48 89 e5             	mov    %rsp,%rbp
+    1700:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    1704:	48 89 75 f0          	mov    %rsi,-0x10(%rbp)
+    1708:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    170c:	0f 01 10             	lgdt   (%rax)
+    170f:	90                   	nop
+    1710:	5d                   	pop    %rbp
+    1711:	c3                   	ret
+
+0000000000001712 <_ZN3GDT15reload_segmentsEv>:
+    1712:	f3 0f 1e fa          	endbr64
+    1716:	55                   	push   %rbp
+    1717:	48 89 e5             	mov    %rsp,%rbp
+    171a:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    171e:	66 b8 10 00          	mov    $0x10,%ax
+    1722:	8e d8                	mov    %eax,%ds
+    1724:	8e c0                	mov    %eax,%es
+    1726:	8e d0                	mov    %eax,%ss
+    1728:	8e e0                	mov    %eax,%fs
+    172a:	8e e8                	mov    %eax,%gs
+    172c:	6a 08                	push   $0x8
+    172e:	48 8d 05 03 00 00 00 	lea    0x3(%rip),%rax        # 1738 <_ZN3GDT15reload_segmentsEv+0x26>
+    1735:	50                   	push   %rax
+    1736:	48 cb                	lretq
+    1738:	90                   	nop
+    1739:	5d                   	pop    %rbp
+    173a:	c3                   	ret
+    173b:	90                   	nop
+
+000000000000173c <_ZN17SegmentDescriptor3setEjjhh>:
+    173c:	f3 0f 1e fa          	endbr64
+    1740:	55                   	push   %rbp
+    1741:	48 89 e5             	mov    %rsp,%rbp
+    1744:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    1748:	89 75 f4             	mov    %esi,-0xc(%rbp)
+    174b:	89 55 f0             	mov    %edx,-0x10(%rbp)
+    174e:	89 c8                	mov    %ecx,%eax
+    1750:	44 89 c2             	mov    %r8d,%edx
+    1753:	88 45 ec             	mov    %al,-0x14(%rbp)
+    1756:	89 d0                	mov    %edx,%eax
+    1758:	88 45 e8             	mov    %al,-0x18(%rbp)
+    175b:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    175f:	48 c7 00 00 00 00 00 	movq   $0x0,(%rax)
+    1766:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    176a:	48 8b 10             	mov    (%rax),%rdx
+    176d:	8b 45 f0             	mov    -0x10(%rbp),%eax
+    1770:	0f b7 c0             	movzwl %ax,%eax
+    1773:	48 09 c2             	or     %rax,%rdx
+    1776:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    177a:	48 89 10             	mov    %rdx,(%rax)
+    177d:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1781:	48 8b 10             	mov    (%rax),%rdx
+    1784:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1788:	48 89 10             	mov    %rdx,(%rax)
+    178b:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    178f:	48 8b 00             	mov    (%rax),%rax
+    1792:	8b 55 f4             	mov    -0xc(%rbp),%edx
+    1795:	c1 e2 10             	shl    $0x10,%edx
+    1798:	89 d2                	mov    %edx,%edx
+    179a:	48 09 c2             	or     %rax,%rdx
+    179d:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    17a1:	48 89 10             	mov    %rdx,(%rax)
+    17a4:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    17a8:	48 8b 10             	mov    (%rax),%rdx
+    17ab:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    17af:	48 89 10             	mov    %rdx,(%rax)
+    17b2:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    17b6:	48 8b 10             	mov    (%rax),%rdx
+    17b9:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    17bd:	48 89 10             	mov    %rdx,(%rax)
+    17c0:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    17c4:	48 8b 00             	mov    (%rax),%rax
+    17c7:	0f b6 55 ec          	movzbl -0x14(%rbp),%edx
+    17cb:	48 c1 e2 28          	shl    $0x28,%rdx
+    17cf:	48 09 c2             	or     %rax,%rdx
+    17d2:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    17d6:	48 89 10             	mov    %rdx,(%rax)
+    17d9:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    17dd:	48 8b 00             	mov    (%rax),%rax
+    17e0:	0f b6 55 e8          	movzbl -0x18(%rbp),%edx
+    17e4:	48 89 d1             	mov    %rdx,%rcx
+    17e7:	48 c1 e1 34          	shl    $0x34,%rcx
+    17eb:	48 ba 00 00 00 00 00 	movabs $0xf0000000000000,%rdx
+    17f2:	00 f0 00 
+    17f5:	48 21 ca             	and    %rcx,%rdx
+    17f8:	48 09 c2             	or     %rax,%rdx
+    17fb:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    17ff:	48 89 10             	mov    %rdx,(%rax)
+    1802:	90                   	nop
+    1803:	5d                   	pop    %rbp
+    1804:	c3                   	ret
+
+0000000000001805 <exception_handler>:
+    1805:	f3 0f 1e fa          	endbr64
+    1809:	55                   	push   %rbp
+    180a:	48 89 e5             	mov    %rsp,%rbp
+    180d:	48 8b 05 ec c7 00 00 	mov    0xc7ec(%rip),%rax        # e000 <ks>
+    1814:	48 89 c1             	mov    %rax,%rcx
+    1817:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    181c:	48 8d 05 dd 57 00 00 	lea    0x57dd(%rip),%rax        # 7000 <_ZL4font+0x1000>
+    1823:	48 89 c6             	mov    %rax,%rsi
+    1826:	48 89 cf             	mov    %rcx,%rdi
+    1829:	e8 22 f9 ff ff       	call   1150 <_ZN12BasicConsole5PrintEPKcj>
+    182e:	fa                   	cli
+    182f:	f4                   	hlt
+    1830:	eb fc                	jmp    182e <exception_handler+0x29>
+
+0000000000001832 <_ZN14KernelServicesC1EP8BootInfo>:
+    1832:	f3 0f 1e fa          	endbr64
+    1836:	55                   	push   %rbp
+    1837:	48 89 e5             	mov    %rsp,%rbp
+    183a:	48 83 ec 10          	sub    $0x10,%rsp
+    183e:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    1842:	48 89 75 f0          	mov    %rsi,-0x10(%rbp)
+    1846:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    184a:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
+    184e:	48 8b 12             	mov    (%rdx),%rdx
+    1851:	48 89 d6             	mov    %rdx,%rsi
+    1854:	48 89 c7             	mov    %rax,%rdi
+    1857:	e8 aa f7 ff ff       	call   1006 <_ZN12BasicConsoleC1EP11FrameBuffer>
+    185c:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1860:	48 83 c0 10          	add    $0x10,%rax
+    1864:	48 89 c7             	mov    %rax,%rdi
+    1867:	e8 a4 02 00 00       	call   1b10 <_ZN18PageFrameAllocatorC1Ev>
+    186c:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1870:	48 83 c0 68          	add    $0x68,%rax
+    1874:	48 89 c7             	mov    %rax,%rdi
+    1877:	e8 72 00 00 00       	call   18ee <_ZN16PageTableManagerC1Ev>
+    187c:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1880:	48 05 90 00 00 00    	add    $0x90,%rax
+    1886:	48 89 c7             	mov    %rax,%rdi
+    1889:	e8 78 00 00 00       	call   1906 <_ZN3GDTC1Ev>
+    188e:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1892:	48 8d 50 10          	lea    0x10(%rax),%rdx
+    1896:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    189a:	48 89 c6             	mov    %rax,%rsi
+    189d:	48 89 d7             	mov    %rdx,%rdi
+    18a0:	e8 29 00 00 00       	call   18ce <_ZN18PageFrameAllocator10InitialiseEP12BasicConsole>
+    18a5:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    18a9:	48 8d 90 90 00 00 00 	lea    0x90(%rax),%rdx
+    18b0:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    18b4:	48 89 c6             	mov    %rax,%rsi
+    18b7:	48 89 d7             	mov    %rdx,%rdi
+    18ba:	e8 0f fd ff ff       	call   15ce <_ZN3GDT10InitializeEP12BasicConsole>
+    18bf:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    18c3:	48 89 05 36 c7 00 00 	mov    %rax,0xc736(%rip)        # e000 <ks>
+    18ca:	90                   	nop
+    18cb:	c9                   	leave
+    18cc:	c3                   	ret
+    18cd:	90                   	nop
+
+00000000000018ce <_ZN18PageFrameAllocator10InitialiseEP12BasicConsole>:
+    18ce:	f3 0f 1e fa          	endbr64
+    18d2:	55                   	push   %rbp
+    18d3:	48 89 e5             	mov    %rsp,%rbp
+    18d6:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    18da:	48 89 75 f0          	mov    %rsi,-0x10(%rbp)
+    18de:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    18e2:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
+    18e6:	48 89 50 50          	mov    %rdx,0x50(%rax)
+    18ea:	90                   	nop
+    18eb:	5d                   	pop    %rbp
+    18ec:	c3                   	ret
+    18ed:	90                   	nop
+
+00000000000018ee <_ZN16PageTableManagerC1Ev>:
+    18ee:	f3 0f 1e fa          	endbr64
+    18f2:	55                   	push   %rbp
+    18f3:	48 89 e5             	mov    %rsp,%rbp
+    18f6:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    18fa:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    18fe:	c6 40 18 00          	movb   $0x0,0x18(%rax)
+    1902:	90                   	nop
+    1903:	5d                   	pop    %rbp
+    1904:	c3                   	ret
+    1905:	90                   	nop
+
+0000000000001906 <_ZN3GDTC1Ev>:
+    1906:	f3 0f 1e fa          	endbr64
+    190a:	55                   	push   %rbp
+    190b:	48 89 e5             	mov    %rsp,%rbp
+    190e:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    1912:	90                   	nop
+    1913:	5d                   	pop    %rbp
+    1914:	c3                   	ret
+    1915:	90                   	nop
+
+0000000000001916 <_ZN6BitmapixEm>:
+    1916:	f3 0f 1e fa          	endbr64
+    191a:	55                   	push   %rbp
+    191b:	48 89 e5             	mov    %rsp,%rbp
+    191e:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    1922:	48 89 75 e0          	mov    %rsi,-0x20(%rbp)
+    1926:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    192a:	48 8b 40 08          	mov    0x8(%rax),%rax
+    192e:	48 c1 e0 03          	shl    $0x3,%rax
+    1932:	48 3b 45 e0          	cmp    -0x20(%rbp),%rax
+    1936:	73 07                	jae    193f <_ZN6BitmapixEm+0x29>
+    1938:	b8 00 00 00 00       	mov    $0x0,%eax
+    193d:	eb 4c                	jmp    198b <_ZN6BitmapixEm+0x75>
+    193f:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    1943:	48 c1 e8 03          	shr    $0x3,%rax
+    1947:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    194b:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    194f:	83 e0 07             	and    $0x7,%eax
+    1952:	88 45 f7             	mov    %al,-0x9(%rbp)
+    1955:	0f b6 45 f7          	movzbl -0x9(%rbp),%eax
+    1959:	ba 80 00 00 00       	mov    $0x80,%edx
+    195e:	89 c1                	mov    %eax,%ecx
+    1960:	d3 fa                	sar    %cl,%edx
+    1962:	89 d0                	mov    %edx,%eax
+    1964:	88 45 f6             	mov    %al,-0xa(%rbp)
+    1967:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    196b:	48 8b 10             	mov    (%rax),%rdx
+    196e:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1972:	48 01 d0             	add    %rdx,%rax
+    1975:	0f b6 00             	movzbl (%rax),%eax
+    1978:	22 45 f6             	and    -0xa(%rbp),%al
+    197b:	84 c0                	test   %al,%al
+    197d:	74 07                	je     1986 <_ZN6BitmapixEm+0x70>
+    197f:	b8 01 00 00 00       	mov    $0x1,%eax
+    1984:	eb 05                	jmp    198b <_ZN6BitmapixEm+0x75>
+    1986:	b8 00 00 00 00       	mov    $0x0,%eax
+    198b:	5d                   	pop    %rbp
+    198c:	c3                   	ret
+    198d:	90                   	nop
+
+000000000000198e <_ZN6Bitmap3SetEmb>:
+    198e:	f3 0f 1e fa          	endbr64
+    1992:	55                   	push   %rbp
+    1993:	48 89 e5             	mov    %rsp,%rbp
+    1996:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    199a:	48 89 75 e0          	mov    %rsi,-0x20(%rbp)
+    199e:	89 d0                	mov    %edx,%eax
+    19a0:	88 45 dc             	mov    %al,-0x24(%rbp)
+    19a3:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    19a7:	48 8b 40 08          	mov    0x8(%rax),%rax
+    19ab:	48 c1 e0 03          	shl    $0x3,%rax
+    19af:	48 3b 45 e0          	cmp    -0x20(%rbp),%rax
+    19b3:	73 0a                	jae    19bf <_ZN6Bitmap3SetEmb+0x31>
+    19b5:	b8 00 00 00 00       	mov    $0x0,%eax
+    19ba:	e9 86 00 00 00       	jmp    1a45 <_ZN6Bitmap3SetEmb+0xb7>
+    19bf:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    19c3:	48 c1 e8 03          	shr    $0x3,%rax
+    19c7:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    19cb:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    19cf:	83 e0 07             	and    $0x7,%eax
+    19d2:	88 45 f7             	mov    %al,-0x9(%rbp)
+    19d5:	0f b6 45 f7          	movzbl -0x9(%rbp),%eax
+    19d9:	ba 80 00 00 00       	mov    $0x80,%edx
+    19de:	89 c1                	mov    %eax,%ecx
+    19e0:	d3 fa                	sar    %cl,%edx
+    19e2:	89 d0                	mov    %edx,%eax
+    19e4:	88 45 f6             	mov    %al,-0xa(%rbp)
+    19e7:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    19eb:	48 8b 10             	mov    (%rax),%rdx
+    19ee:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    19f2:	48 01 d0             	add    %rdx,%rax
+    19f5:	0f b6 00             	movzbl (%rax),%eax
+    19f8:	89 c2                	mov    %eax,%edx
+    19fa:	0f b6 45 f6          	movzbl -0xa(%rbp),%eax
+    19fe:	f7 d0                	not    %eax
+    1a00:	89 d1                	mov    %edx,%ecx
+    1a02:	21 c1                	and    %eax,%ecx
+    1a04:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1a08:	48 8b 10             	mov    (%rax),%rdx
+    1a0b:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1a0f:	48 01 d0             	add    %rdx,%rax
+    1a12:	89 ca                	mov    %ecx,%edx
+    1a14:	88 10                	mov    %dl,(%rax)
+    1a16:	80 7d dc 00          	cmpb   $0x0,-0x24(%rbp)
+    1a1a:	74 24                	je     1a40 <_ZN6Bitmap3SetEmb+0xb2>
+    1a1c:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1a20:	48 8b 10             	mov    (%rax),%rdx
+    1a23:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1a27:	48 01 d0             	add    %rdx,%rax
+    1a2a:	0f b6 00             	movzbl (%rax),%eax
+    1a2d:	48 8b 55 e8          	mov    -0x18(%rbp),%rdx
+    1a31:	48 8b 0a             	mov    (%rdx),%rcx
+    1a34:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
+    1a38:	48 01 ca             	add    %rcx,%rdx
+    1a3b:	0a 45 f6             	or     -0xa(%rbp),%al
+    1a3e:	88 02                	mov    %al,(%rdx)
+    1a40:	b8 01 00 00 00       	mov    $0x1,%eax
+    1a45:	5d                   	pop    %rbp
+    1a46:	c3                   	ret
+
+0000000000001a47 <_Z13GetMemorySizeP21EFI_MEMORY_DESCRIPTORmm>:
+    1a47:	f3 0f 1e fa          	endbr64
+    1a4b:	55                   	push   %rbp
+    1a4c:	48 89 e5             	mov    %rsp,%rbp
+    1a4f:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    1a53:	48 89 75 e0          	mov    %rsi,-0x20(%rbp)
+    1a57:	48 89 55 d8          	mov    %rdx,-0x28(%rbp)
+    1a5b:	48 8b 05 a6 c5 00 00 	mov    0xc5a6(%rip),%rax        # e008 <_ZZ13GetMemorySizeP21EFI_MEMORY_DESCRIPTORmmE15memorySizeBytes>
+    1a62:	48 85 c0             	test   %rax,%rax
+    1a65:	74 09                	je     1a70 <_Z13GetMemorySizeP21EFI_MEMORY_DESCRIPTORmm+0x29>
+    1a67:	48 8b 05 9a c5 00 00 	mov    0xc59a(%rip),%rax        # e008 <_ZZ13GetMemorySizeP21EFI_MEMORY_DESCRIPTORmmE15memorySizeBytes>
+    1a6e:	eb 57                	jmp    1ac7 <_Z13GetMemorySizeP21EFI_MEMORY_DESCRIPTORmm+0x80>
+    1a70:	c7 45 fc 00 00 00 00 	movl   $0x0,-0x4(%rbp)
+    1a77:	eb 3c                	jmp    1ab5 <_Z13GetMemorySizeP21EFI_MEMORY_DESCRIPTORmm+0x6e>
+    1a79:	8b 45 fc             	mov    -0x4(%rbp),%eax
+    1a7c:	48 98                	cltq
+    1a7e:	48 0f af 45 d8       	imul   -0x28(%rbp),%rax
+    1a83:	48 89 c2             	mov    %rax,%rdx
+    1a86:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1a8a:	48 01 d0             	add    %rdx,%rax
+    1a8d:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    1a91:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    1a95:	48 8b 40 18          	mov    0x18(%rax),%rax
+    1a99:	48 c1 e0 0c          	shl    $0xc,%rax
+    1a9d:	48 89 c2             	mov    %rax,%rdx
+    1aa0:	48 8b 05 61 c5 00 00 	mov    0xc561(%rip),%rax        # e008 <_ZZ13GetMemorySizeP21EFI_MEMORY_DESCRIPTORmmE15memorySizeBytes>
+    1aa7:	48 01 d0             	add    %rdx,%rax
+    1aaa:	48 89 05 57 c5 00 00 	mov    %rax,0xc557(%rip)        # e008 <_ZZ13GetMemorySizeP21EFI_MEMORY_DESCRIPTORmmE15memorySizeBytes>
+    1ab1:	83 45 fc 01          	addl   $0x1,-0x4(%rbp)
+    1ab5:	8b 45 fc             	mov    -0x4(%rbp),%eax
+    1ab8:	48 98                	cltq
+    1aba:	48 3b 45 e0          	cmp    -0x20(%rbp),%rax
+    1abe:	72 b9                	jb     1a79 <_Z13GetMemorySizeP21EFI_MEMORY_DESCRIPTORmm+0x32>
+    1ac0:	48 8b 05 41 c5 00 00 	mov    0xc541(%rip),%rax        # e008 <_ZZ13GetMemorySizeP21EFI_MEMORY_DESCRIPTORmmE15memorySizeBytes>
+    1ac7:	5d                   	pop    %rbp
+    1ac8:	c3                   	ret
+
+0000000000001ac9 <_Z6memsetPvhm>:
+    1ac9:	f3 0f 1e fa          	endbr64
+    1acd:	55                   	push   %rbp
+    1ace:	48 89 e5             	mov    %rsp,%rbp
+    1ad1:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    1ad5:	89 f0                	mov    %esi,%eax
+    1ad7:	48 89 55 d8          	mov    %rdx,-0x28(%rbp)
+    1adb:	88 45 e4             	mov    %al,-0x1c(%rbp)
+    1ade:	48 c7 45 f8 00 00 00 	movq   $0x0,-0x8(%rbp)
+    1ae5:	00 
+    1ae6:	eb 19                	jmp    1b01 <_Z6memsetPvhm+0x38>
+    1ae8:	48 8b 55 e8          	mov    -0x18(%rbp),%rdx
+    1aec:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1af0:	48 01 d0             	add    %rdx,%rax
+    1af3:	48 89 c2             	mov    %rax,%rdx
+    1af6:	0f b6 45 e4          	movzbl -0x1c(%rbp),%eax
+    1afa:	88 02                	mov    %al,(%rdx)
+    1afc:	48 83 45 f8 01       	addq   $0x1,-0x8(%rbp)
+    1b01:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1b05:	48 3b 45 d8          	cmp    -0x28(%rbp),%rax
+    1b09:	72 dd                	jb     1ae8 <_Z6memsetPvhm+0x1f>
+    1b0b:	90                   	nop
+    1b0c:	90                   	nop
+    1b0d:	5d                   	pop    %rbp
+    1b0e:	c3                   	ret
+    1b0f:	90                   	nop
+
+0000000000001b10 <_ZN18PageFrameAllocatorC1Ev>:
+    1b10:	f3 0f 1e fa          	endbr64
+    1b14:	55                   	push   %rbp
+    1b15:	48 89 e5             	mov    %rsp,%rbp
+    1b18:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    1b1c:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1b20:	c6 40 30 00          	movb   $0x0,0x30(%rax)
+    1b24:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1b28:	48 c7 40 48 00 00 00 	movq   $0x0,0x48(%rax)
+    1b2f:	00 
+    1b30:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1b34:	48 c7 40 38 00 00 00 	movq   $0x0,0x38(%rax)
+    1b3b:	00 
+    1b3c:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1b40:	48 c7 40 40 00 00 00 	movq   $0x0,0x40(%rax)
+    1b47:	00 
+    1b48:	90                   	nop
+    1b49:	5d                   	pop    %rbp
+    1b4a:	c3                   	ret
+    1b4b:	90                   	nop
+
+0000000000001b4c <_ZN18PageFrameAllocator16ReadEFIMemoryMapEP21EFI_MEMORY_DESCRIPTORmm>:
+    1b4c:	f3 0f 1e fa          	endbr64
+    1b50:	55                   	push   %rbp
+    1b51:	48 89 e5             	mov    %rsp,%rbp
+    1b54:	48 83 ec 60          	sub    $0x60,%rsp
+    1b58:	48 89 7d b8          	mov    %rdi,-0x48(%rbp)
+    1b5c:	48 89 75 b0          	mov    %rsi,-0x50(%rbp)
+    1b60:	48 89 55 a8          	mov    %rdx,-0x58(%rbp)
+    1b64:	48 89 4d a0          	mov    %rcx,-0x60(%rbp)
+    1b68:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1b6c:	0f b6 40 30          	movzbl 0x30(%rax),%eax
+    1b70:	84 c0                	test   %al,%al
+    1b72:	0f 85 1a 02 00 00    	jne    1d92 <_ZN18PageFrameAllocator16ReadEFIMemoryMapEP21EFI_MEMORY_DESCRIPTORmm+0x246>
+    1b78:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1b7c:	c6 40 30 01          	movb   $0x1,0x30(%rax)
+    1b80:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1b84:	48 8b 55 b0          	mov    -0x50(%rbp),%rdx
+    1b88:	48 89 10             	mov    %rdx,(%rax)
+    1b8b:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1b8f:	48 8b 55 a8          	mov    -0x58(%rbp),%rdx
+    1b93:	48 89 50 08          	mov    %rdx,0x8(%rax)
+    1b97:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1b9b:	48 8b 55 a0          	mov    -0x60(%rbp),%rdx
+    1b9f:	48 89 50 10          	mov    %rdx,0x10(%rax)
+    1ba3:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1ba7:	48 8b 50 10          	mov    0x10(%rax),%rdx
+    1bab:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1baf:	48 8b 48 08          	mov    0x8(%rax),%rcx
+    1bb3:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1bb7:	48 8b 00             	mov    (%rax),%rax
+    1bba:	48 89 ce             	mov    %rcx,%rsi
+    1bbd:	48 89 c7             	mov    %rax,%rdi
+    1bc0:	e8 82 fe ff ff       	call   1a47 <_Z13GetMemorySizeP21EFI_MEMORY_DESCRIPTORmm>
+    1bc5:	48 c1 e8 0c          	shr    $0xc,%rax
+    1bc9:	48 89 c2             	mov    %rax,%rdx
+    1bcc:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1bd0:	48 89 50 28          	mov    %rdx,0x28(%rax)
+    1bd4:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1bd8:	48 8b 40 08          	mov    0x8(%rax),%rax
+    1bdc:	48 8b 55 b8          	mov    -0x48(%rbp),%rdx
+    1be0:	48 8b 72 10          	mov    0x10(%rdx),%rsi
+    1be4:	ba 00 00 00 00       	mov    $0x0,%edx
+    1be9:	48 f7 f6             	div    %rsi
+    1bec:	48 89 45 e0          	mov    %rax,-0x20(%rbp)
+    1bf0:	48 c7 45 f8 00 00 00 	movq   $0x0,-0x8(%rbp)
+    1bf7:	00 
+    1bf8:	48 c7 45 f0 00 00 00 	movq   $0x0,-0x10(%rbp)
+    1bff:	00 
+    1c00:	c7 45 ec 00 00 00 00 	movl   $0x0,-0x14(%rbp)
+    1c07:	eb 60                	jmp    1c69 <_ZN18PageFrameAllocator16ReadEFIMemoryMapEP21EFI_MEMORY_DESCRIPTORmm+0x11d>
+    1c09:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1c0d:	48 8b 00             	mov    (%rax),%rax
+    1c10:	48 89 c1             	mov    %rax,%rcx
+    1c13:	8b 45 ec             	mov    -0x14(%rbp),%eax
+    1c16:	48 63 d0             	movslq %eax,%rdx
+    1c19:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1c1d:	48 8b 40 10          	mov    0x10(%rax),%rax
+    1c21:	48 0f af c2          	imul   %rdx,%rax
+    1c25:	48 01 c8             	add    %rcx,%rax
+    1c28:	48 89 45 c0          	mov    %rax,-0x40(%rbp)
+    1c2c:	48 8b 45 c0          	mov    -0x40(%rbp),%rax
+    1c30:	8b 00                	mov    (%rax),%eax
+    1c32:	83 f8 07             	cmp    $0x7,%eax
+    1c35:	75 2e                	jne    1c65 <_ZN18PageFrameAllocator16ReadEFIMemoryMapEP21EFI_MEMORY_DESCRIPTORmm+0x119>
+    1c37:	48 8b 45 c0          	mov    -0x40(%rbp),%rax
+    1c3b:	48 8b 40 18          	mov    0x18(%rax),%rax
+    1c3f:	48 c1 e0 0c          	shl    $0xc,%rax
+    1c43:	48 39 45 f0          	cmp    %rax,-0x10(%rbp)
+    1c47:	73 1c                	jae    1c65 <_ZN18PageFrameAllocator16ReadEFIMemoryMapEP21EFI_MEMORY_DESCRIPTORmm+0x119>
+    1c49:	48 8b 45 c0          	mov    -0x40(%rbp),%rax
+    1c4d:	48 8b 40 08          	mov    0x8(%rax),%rax
+    1c51:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    1c55:	48 8b 45 c0          	mov    -0x40(%rbp),%rax
+    1c59:	48 8b 40 18          	mov    0x18(%rax),%rax
+    1c5d:	48 c1 e0 0c          	shl    $0xc,%rax
+    1c61:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    1c65:	83 45 ec 01          	addl   $0x1,-0x14(%rbp)
+    1c69:	8b 45 ec             	mov    -0x14(%rbp),%eax
+    1c6c:	48 98                	cltq
+    1c6e:	48 3b 45 e0          	cmp    -0x20(%rbp),%rax
+    1c72:	72 95                	jb     1c09 <_ZN18PageFrameAllocator16ReadEFIMemoryMapEP21EFI_MEMORY_DESCRIPTORmm+0xbd>
+    1c74:	48 83 7d f8 00       	cmpq   $0x0,-0x8(%rbp)
+    1c79:	75 2c                	jne    1ca7 <_ZN18PageFrameAllocator16ReadEFIMemoryMapEP21EFI_MEMORY_DESCRIPTORmm+0x15b>
+    1c7b:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1c7f:	48 8b 40 50          	mov    0x50(%rax),%rax
+    1c83:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    1c88:	48 8d 0d b1 74 00 00 	lea    0x74b1(%rip),%rcx        # 9140 <_ZL4font+0x1000>
+    1c8f:	48 89 ce             	mov    %rcx,%rsi
+    1c92:	48 89 c7             	mov    %rax,%rdi
+    1c95:	e8 86 f5 ff ff       	call   1220 <_ZN12BasicConsole7PrintlnEPKcj>
+    1c9a:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1c9e:	c6 40 30 00          	movb   $0x0,0x30(%rax)
+    1ca2:	e9 ec 00 00 00       	jmp    1d93 <_ZN18PageFrameAllocator16ReadEFIMemoryMapEP21EFI_MEMORY_DESCRIPTORmm+0x247>
+    1ca7:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1cab:	48 8b 50 10          	mov    0x10(%rax),%rdx
+    1caf:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1cb3:	48 8b 00             	mov    (%rax),%rax
+    1cb6:	48 8b 4d e0          	mov    -0x20(%rbp),%rcx
+    1cba:	48 89 ce             	mov    %rcx,%rsi
+    1cbd:	48 89 c7             	mov    %rax,%rdi
+    1cc0:	e8 82 fd ff ff       	call   1a47 <_Z13GetMemorySizeP21EFI_MEMORY_DESCRIPTORmm>
+    1cc5:	48 89 45 d8          	mov    %rax,-0x28(%rbp)
+    1cc9:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1ccd:	48 8b 55 d8          	mov    -0x28(%rbp),%rdx
+    1cd1:	48 89 50 38          	mov    %rdx,0x38(%rax)
+    1cd5:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1cd9:	48 c1 e8 0f          	shr    $0xf,%rax
+    1cdd:	48 83 c0 01          	add    $0x1,%rax
+    1ce1:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+    1ce5:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
+    1ce9:	48 8b 4d d0          	mov    -0x30(%rbp),%rcx
+    1ced:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1cf1:	48 89 ce             	mov    %rcx,%rsi
+    1cf4:	48 89 c7             	mov    %rax,%rdi
+    1cf7:	e8 9a 00 00 00       	call   1d96 <_ZN18PageFrameAllocator10InitBitmapEmPv>
+    1cfc:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1d00:	48 8b 40 20          	mov    0x20(%rax),%rax
+    1d04:	48 05 ff 0f 00 00    	add    $0xfff,%rax
+    1d0a:	48 c1 e8 0c          	shr    $0xc,%rax
+    1d0e:	48 89 c2             	mov    %rax,%rdx
+    1d11:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1d15:	48 8b 48 18          	mov    0x18(%rax),%rcx
+    1d19:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1d1d:	48 89 ce             	mov    %rcx,%rsi
+    1d20:	48 89 c7             	mov    %rax,%rdi
+    1d23:	e8 bc 01 00 00       	call   1ee4 <_ZN18PageFrameAllocator9LockPagesEPvm>
+    1d28:	c7 45 e8 00 00 00 00 	movl   $0x0,-0x18(%rbp)
+    1d2f:	eb 54                	jmp    1d85 <_ZN18PageFrameAllocator16ReadEFIMemoryMapEP21EFI_MEMORY_DESCRIPTORmm+0x239>
+    1d31:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1d35:	48 8b 00             	mov    (%rax),%rax
+    1d38:	48 89 c1             	mov    %rax,%rcx
+    1d3b:	8b 45 e8             	mov    -0x18(%rbp),%eax
+    1d3e:	48 63 d0             	movslq %eax,%rdx
+    1d41:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1d45:	48 8b 40 10          	mov    0x10(%rax),%rax
+    1d49:	48 0f af c2          	imul   %rdx,%rax
+    1d4d:	48 01 c8             	add    %rcx,%rax
+    1d50:	48 89 45 c8          	mov    %rax,-0x38(%rbp)
+    1d54:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
+    1d58:	8b 00                	mov    (%rax),%eax
+    1d5a:	83 f8 07             	cmp    $0x7,%eax
+    1d5d:	74 22                	je     1d81 <_ZN18PageFrameAllocator16ReadEFIMemoryMapEP21EFI_MEMORY_DESCRIPTORmm+0x235>
+    1d5f:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
+    1d63:	48 8b 50 18          	mov    0x18(%rax),%rdx
+    1d67:	48 8b 45 c8          	mov    -0x38(%rbp),%rax
+    1d6b:	48 8b 40 08          	mov    0x8(%rax),%rax
+    1d6f:	48 89 c1             	mov    %rax,%rcx
+    1d72:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    1d76:	48 89 ce             	mov    %rcx,%rsi
+    1d79:	48 89 c7             	mov    %rax,%rdi
+    1d7c:	e8 e9 03 00 00       	call   216a <_ZN18PageFrameAllocator12ReservePagesEPvm>
+    1d81:	83 45 e8 01          	addl   $0x1,-0x18(%rbp)
+    1d85:	8b 45 e8             	mov    -0x18(%rbp),%eax
+    1d88:	48 98                	cltq
+    1d8a:	48 3b 45 e0          	cmp    -0x20(%rbp),%rax
+    1d8e:	72 a1                	jb     1d31 <_ZN18PageFrameAllocator16ReadEFIMemoryMapEP21EFI_MEMORY_DESCRIPTORmm+0x1e5>
+    1d90:	eb 01                	jmp    1d93 <_ZN18PageFrameAllocator16ReadEFIMemoryMapEP21EFI_MEMORY_DESCRIPTORmm+0x247>
+    1d92:	90                   	nop
+    1d93:	c9                   	leave
+    1d94:	c3                   	ret
+    1d95:	90                   	nop
+
+0000000000001d96 <_ZN18PageFrameAllocator10InitBitmapEmPv>:
+    1d96:	f3 0f 1e fa          	endbr64
+    1d9a:	55                   	push   %rbp
+    1d9b:	48 89 e5             	mov    %rsp,%rbp
+    1d9e:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    1da2:	48 89 75 e0          	mov    %rsi,-0x20(%rbp)
+    1da6:	48 89 55 d8          	mov    %rdx,-0x28(%rbp)
+    1daa:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1dae:	48 8b 55 e0          	mov    -0x20(%rbp),%rdx
+    1db2:	48 89 50 20          	mov    %rdx,0x20(%rax)
+    1db6:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1dba:	48 8b 55 d8          	mov    -0x28(%rbp),%rdx
+    1dbe:	48 89 50 18          	mov    %rdx,0x18(%rax)
+    1dc2:	48 c7 45 f8 00 00 00 	movq   $0x0,-0x8(%rbp)
+    1dc9:	00 
+    1dca:	eb 17                	jmp    1de3 <_ZN18PageFrameAllocator10InitBitmapEmPv+0x4d>
+    1dcc:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1dd0:	48 8b 50 18          	mov    0x18(%rax),%rdx
+    1dd4:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1dd8:	48 01 d0             	add    %rdx,%rax
+    1ddb:	c6 00 00             	movb   $0x0,(%rax)
+    1dde:	48 83 45 f8 01       	addq   $0x1,-0x8(%rbp)
+    1de3:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1de7:	48 8b 40 20          	mov    0x20(%rax),%rax
+    1deb:	48 83 c0 07          	add    $0x7,%rax
+    1def:	48 c1 e8 03          	shr    $0x3,%rax
+    1df3:	48 39 45 f8          	cmp    %rax,-0x8(%rbp)
+    1df7:	72 d3                	jb     1dcc <_ZN18PageFrameAllocator10InitBitmapEmPv+0x36>
+    1df9:	90                   	nop
+    1dfa:	90                   	nop
+    1dfb:	5d                   	pop    %rbp
+    1dfc:	c3                   	ret
+    1dfd:	90                   	nop
+
+0000000000001dfe <_ZN18PageFrameAllocator8LockPageEPv>:
+    1dfe:	f3 0f 1e fa          	endbr64
+    1e02:	55                   	push   %rbp
+    1e03:	48 89 e5             	mov    %rsp,%rbp
+    1e06:	53                   	push   %rbx
+    1e07:	48 83 ec 28          	sub    $0x28,%rsp
+    1e0b:	48 89 7d d8          	mov    %rdi,-0x28(%rbp)
+    1e0f:	48 89 75 d0          	mov    %rsi,-0x30(%rbp)
+    1e13:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+    1e17:	48 c1 e8 0c          	shr    $0xc,%rax
+    1e1b:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
+    1e1f:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1e23:	48 8d 50 18          	lea    0x18(%rax),%rdx
+    1e27:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1e2b:	48 89 c6             	mov    %rax,%rsi
+    1e2e:	48 89 d7             	mov    %rdx,%rdi
+    1e31:	e8 e0 fa ff ff       	call   1916 <_ZN6BitmapixEm>
+    1e36:	0f b6 c0             	movzbl %al,%eax
+    1e39:	83 f8 01             	cmp    $0x1,%eax
+    1e3c:	0f 94 c0             	sete   %al
+    1e3f:	84 c0                	test   %al,%al
+    1e41:	0f 85 95 00 00 00    	jne    1edc <_ZN18PageFrameAllocator8LockPageEPv+0xde>
+    1e47:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1e4b:	48 8d 48 18          	lea    0x18(%rax),%rcx
+    1e4f:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1e53:	ba 01 00 00 00       	mov    $0x1,%edx
+    1e58:	48 89 c6             	mov    %rax,%rsi
+    1e5b:	48 89 cf             	mov    %rcx,%rdi
+    1e5e:	e8 2b fb ff ff       	call   198e <_ZN6Bitmap3SetEmb>
+    1e63:	84 c0                	test   %al,%al
+    1e65:	74 30                	je     1e97 <_ZN18PageFrameAllocator8LockPageEPv+0x99>
+    1e67:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1e6b:	48 8b 40 38          	mov    0x38(%rax),%rax
+    1e6f:	48 8d 90 00 f0 ff ff 	lea    -0x1000(%rax),%rdx
+    1e76:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1e7a:	48 89 50 38          	mov    %rdx,0x38(%rax)
+    1e7e:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1e82:	48 8b 40 48          	mov    0x48(%rax),%rax
+    1e86:	48 8d 90 00 10 00 00 	lea    0x1000(%rax),%rdx
+    1e8d:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1e91:	48 89 50 48          	mov    %rdx,0x48(%rax)
+    1e95:	eb 46                	jmp    1edd <_ZN18PageFrameAllocator8LockPageEPv+0xdf>
+    1e97:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1e9b:	48 8b 40 50          	mov    0x50(%rax),%rax
+    1e9f:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    1ea4:	48 8d 0d d5 72 00 00 	lea    0x72d5(%rip),%rcx        # 9180 <_ZL4font+0x1040>
+    1eab:	48 89 ce             	mov    %rcx,%rsi
+    1eae:	48 89 c7             	mov    %rax,%rdi
+    1eb1:	e8 9a f2 ff ff       	call   1150 <_ZN12BasicConsole5PrintEPKcj>
+    1eb6:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1eba:	48 8b 58 50          	mov    0x50(%rax),%rbx
+    1ebe:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+    1ec2:	48 89 c7             	mov    %rax,%rdi
+    1ec5:	e8 ad 0d 00 00       	call   2c77 <_Z10to_hstringm>
+    1eca:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    1ecf:	48 89 c6             	mov    %rax,%rsi
+    1ed2:	48 89 df             	mov    %rbx,%rdi
+    1ed5:	e8 46 f3 ff ff       	call   1220 <_ZN12BasicConsole7PrintlnEPKcj>
+    1eda:	eb 01                	jmp    1edd <_ZN18PageFrameAllocator8LockPageEPv+0xdf>
+    1edc:	90                   	nop
+    1edd:	48 8b 5d f8          	mov    -0x8(%rbp),%rbx
+    1ee1:	c9                   	leave
+    1ee2:	c3                   	ret
+    1ee3:	90                   	nop
+
+0000000000001ee4 <_ZN18PageFrameAllocator9LockPagesEPvm>:
+    1ee4:	f3 0f 1e fa          	endbr64
+    1ee8:	55                   	push   %rbp
+    1ee9:	48 89 e5             	mov    %rsp,%rbp
+    1eec:	48 83 ec 30          	sub    $0x30,%rsp
+    1ef0:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    1ef4:	48 89 75 e0          	mov    %rsi,-0x20(%rbp)
+    1ef8:	48 89 55 d8          	mov    %rdx,-0x28(%rbp)
+    1efc:	48 c7 45 f8 00 00 00 	movq   $0x0,-0x8(%rbp)
+    1f03:	00 
+    1f04:	eb 2e                	jmp    1f34 <_ZN18PageFrameAllocator9LockPagesEPvm+0x50>
+    1f06:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1f0a:	48 c1 e0 0c          	shl    $0xc,%rax
+    1f0e:	48 89 c2             	mov    %rax,%rdx
+    1f11:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    1f15:	48 01 d0             	add    %rdx,%rax
+    1f18:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    1f1c:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
+    1f20:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1f24:	48 89 d6             	mov    %rdx,%rsi
+    1f27:	48 89 c7             	mov    %rax,%rdi
+    1f2a:	e8 cf fe ff ff       	call   1dfe <_ZN18PageFrameAllocator8LockPageEPv>
+    1f2f:	48 83 45 f8 01       	addq   $0x1,-0x8(%rbp)
+    1f34:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    1f38:	48 3b 45 d8          	cmp    -0x28(%rbp),%rax
+    1f3c:	72 c8                	jb     1f06 <_ZN18PageFrameAllocator9LockPagesEPvm+0x22>
+    1f3e:	90                   	nop
+    1f3f:	90                   	nop
+    1f40:	c9                   	leave
+    1f41:	c3                   	ret
+
+0000000000001f42 <_ZN18PageFrameAllocator8FreePageEPv>:
+    1f42:	f3 0f 1e fa          	endbr64
+    1f46:	55                   	push   %rbp
+    1f47:	48 89 e5             	mov    %rsp,%rbp
+    1f4a:	53                   	push   %rbx
+    1f4b:	48 83 ec 28          	sub    $0x28,%rsp
+    1f4f:	48 89 7d d8          	mov    %rdi,-0x28(%rbp)
+    1f53:	48 89 75 d0          	mov    %rsi,-0x30(%rbp)
+    1f57:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+    1f5b:	48 c1 e8 0c          	shr    $0xc,%rax
+    1f5f:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
+    1f63:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1f67:	48 8d 50 18          	lea    0x18(%rax),%rdx
+    1f6b:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1f6f:	48 89 c6             	mov    %rax,%rsi
+    1f72:	48 89 d7             	mov    %rdx,%rdi
+    1f75:	e8 9c f9 ff ff       	call   1916 <_ZN6BitmapixEm>
+    1f7a:	0f b6 c0             	movzbl %al,%eax
+    1f7d:	85 c0                	test   %eax,%eax
+    1f7f:	0f 94 c0             	sete   %al
+    1f82:	84 c0                	test   %al,%al
+    1f84:	0f 85 95 00 00 00    	jne    201f <_ZN18PageFrameAllocator8FreePageEPv+0xdd>
+    1f8a:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1f8e:	48 8d 48 18          	lea    0x18(%rax),%rcx
+    1f92:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    1f96:	ba 00 00 00 00       	mov    $0x0,%edx
+    1f9b:	48 89 c6             	mov    %rax,%rsi
+    1f9e:	48 89 cf             	mov    %rcx,%rdi
+    1fa1:	e8 e8 f9 ff ff       	call   198e <_ZN6Bitmap3SetEmb>
+    1fa6:	84 c0                	test   %al,%al
+    1fa8:	74 30                	je     1fda <_ZN18PageFrameAllocator8FreePageEPv+0x98>
+    1faa:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1fae:	48 8b 40 38          	mov    0x38(%rax),%rax
+    1fb2:	48 8d 90 00 10 00 00 	lea    0x1000(%rax),%rdx
+    1fb9:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1fbd:	48 89 50 38          	mov    %rdx,0x38(%rax)
+    1fc1:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1fc5:	48 8b 40 48          	mov    0x48(%rax),%rax
+    1fc9:	48 8d 90 00 f0 ff ff 	lea    -0x1000(%rax),%rdx
+    1fd0:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1fd4:	48 89 50 48          	mov    %rdx,0x48(%rax)
+    1fd8:	eb 46                	jmp    2020 <_ZN18PageFrameAllocator8FreePageEPv+0xde>
+    1fda:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1fde:	48 8b 40 50          	mov    0x50(%rax),%rax
+    1fe2:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    1fe7:	48 8d 0d ba 71 00 00 	lea    0x71ba(%rip),%rcx        # 91a8 <_ZL4font+0x1068>
+    1fee:	48 89 ce             	mov    %rcx,%rsi
+    1ff1:	48 89 c7             	mov    %rax,%rdi
+    1ff4:	e8 57 f1 ff ff       	call   1150 <_ZN12BasicConsole5PrintEPKcj>
+    1ff9:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    1ffd:	48 8b 58 50          	mov    0x50(%rax),%rbx
+    2001:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+    2005:	48 89 c7             	mov    %rax,%rdi
+    2008:	e8 6a 0c 00 00       	call   2c77 <_Z10to_hstringm>
+    200d:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    2012:	48 89 c6             	mov    %rax,%rsi
+    2015:	48 89 df             	mov    %rbx,%rdi
+    2018:	e8 03 f2 ff ff       	call   1220 <_ZN12BasicConsole7PrintlnEPKcj>
+    201d:	eb 01                	jmp    2020 <_ZN18PageFrameAllocator8FreePageEPv+0xde>
+    201f:	90                   	nop
+    2020:	48 8b 5d f8          	mov    -0x8(%rbp),%rbx
+    2024:	c9                   	leave
+    2025:	c3                   	ret
+
+0000000000002026 <_ZN18PageFrameAllocator9FreePagesEPvm>:
+    2026:	f3 0f 1e fa          	endbr64
+    202a:	55                   	push   %rbp
+    202b:	48 89 e5             	mov    %rsp,%rbp
+    202e:	48 83 ec 30          	sub    $0x30,%rsp
+    2032:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    2036:	48 89 75 e0          	mov    %rsi,-0x20(%rbp)
+    203a:	48 89 55 d8          	mov    %rdx,-0x28(%rbp)
+    203e:	48 c7 45 f8 00 00 00 	movq   $0x0,-0x8(%rbp)
+    2045:	00 
+    2046:	eb 2e                	jmp    2076 <_ZN18PageFrameAllocator9FreePagesEPvm+0x50>
+    2048:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    204c:	48 c1 e0 0c          	shl    $0xc,%rax
+    2050:	48 89 c2             	mov    %rax,%rdx
+    2053:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    2057:	48 01 d0             	add    %rdx,%rax
+    205a:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    205e:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
+    2062:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    2066:	48 89 d6             	mov    %rdx,%rsi
+    2069:	48 89 c7             	mov    %rax,%rdi
+    206c:	e8 d1 fe ff ff       	call   1f42 <_ZN18PageFrameAllocator8FreePageEPv>
+    2071:	48 83 45 f8 01       	addq   $0x1,-0x8(%rbp)
+    2076:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    207a:	48 3b 45 d8          	cmp    -0x28(%rbp),%rax
+    207e:	72 c8                	jb     2048 <_ZN18PageFrameAllocator9FreePagesEPvm+0x22>
+    2080:	90                   	nop
+    2081:	90                   	nop
+    2082:	c9                   	leave
+    2083:	c3                   	ret
+
+0000000000002084 <_ZN18PageFrameAllocator11ReservePageEPv>:
+    2084:	f3 0f 1e fa          	endbr64
+    2088:	55                   	push   %rbp
+    2089:	48 89 e5             	mov    %rsp,%rbp
+    208c:	53                   	push   %rbx
+    208d:	48 83 ec 28          	sub    $0x28,%rsp
+    2091:	48 89 7d d8          	mov    %rdi,-0x28(%rbp)
+    2095:	48 89 75 d0          	mov    %rsi,-0x30(%rbp)
+    2099:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+    209d:	48 c1 e8 0c          	shr    $0xc,%rax
+    20a1:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
+    20a5:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    20a9:	48 8d 50 18          	lea    0x18(%rax),%rdx
+    20ad:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    20b1:	48 89 c6             	mov    %rax,%rsi
+    20b4:	48 89 d7             	mov    %rdx,%rdi
+    20b7:	e8 5a f8 ff ff       	call   1916 <_ZN6BitmapixEm>
+    20bc:	0f b6 c0             	movzbl %al,%eax
+    20bf:	83 f8 01             	cmp    $0x1,%eax
+    20c2:	0f 94 c0             	sete   %al
+    20c5:	84 c0                	test   %al,%al
+    20c7:	0f 85 95 00 00 00    	jne    2162 <_ZN18PageFrameAllocator11ReservePageEPv+0xde>
+    20cd:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    20d1:	48 8d 48 18          	lea    0x18(%rax),%rcx
+    20d5:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    20d9:	ba 01 00 00 00       	mov    $0x1,%edx
+    20de:	48 89 c6             	mov    %rax,%rsi
+    20e1:	48 89 cf             	mov    %rcx,%rdi
+    20e4:	e8 a5 f8 ff ff       	call   198e <_ZN6Bitmap3SetEmb>
+    20e9:	84 c0                	test   %al,%al
+    20eb:	74 30                	je     211d <_ZN18PageFrameAllocator11ReservePageEPv+0x99>
+    20ed:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    20f1:	48 8b 40 38          	mov    0x38(%rax),%rax
+    20f5:	48 8d 90 00 f0 ff ff 	lea    -0x1000(%rax),%rdx
+    20fc:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    2100:	48 89 50 38          	mov    %rdx,0x38(%rax)
+    2104:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    2108:	48 8b 40 40          	mov    0x40(%rax),%rax
+    210c:	48 8d 90 00 10 00 00 	lea    0x1000(%rax),%rdx
+    2113:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    2117:	48 89 50 40          	mov    %rdx,0x40(%rax)
+    211b:	eb 46                	jmp    2163 <_ZN18PageFrameAllocator11ReservePageEPv+0xdf>
+    211d:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    2121:	48 8b 40 50          	mov    0x50(%rax),%rax
+    2125:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    212a:	48 8d 0d 9f 70 00 00 	lea    0x709f(%rip),%rcx        # 91d0 <_ZL4font+0x1090>
+    2131:	48 89 ce             	mov    %rcx,%rsi
+    2134:	48 89 c7             	mov    %rax,%rdi
+    2137:	e8 14 f0 ff ff       	call   1150 <_ZN12BasicConsole5PrintEPKcj>
+    213c:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    2140:	48 8b 58 50          	mov    0x50(%rax),%rbx
+    2144:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+    2148:	48 89 c7             	mov    %rax,%rdi
+    214b:	e8 27 0b 00 00       	call   2c77 <_Z10to_hstringm>
+    2150:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    2155:	48 89 c6             	mov    %rax,%rsi
+    2158:	48 89 df             	mov    %rbx,%rdi
+    215b:	e8 c0 f0 ff ff       	call   1220 <_ZN12BasicConsole7PrintlnEPKcj>
+    2160:	eb 01                	jmp    2163 <_ZN18PageFrameAllocator11ReservePageEPv+0xdf>
+    2162:	90                   	nop
+    2163:	48 8b 5d f8          	mov    -0x8(%rbp),%rbx
+    2167:	c9                   	leave
+    2168:	c3                   	ret
+    2169:	90                   	nop
+
+000000000000216a <_ZN18PageFrameAllocator12ReservePagesEPvm>:
+    216a:	f3 0f 1e fa          	endbr64
+    216e:	55                   	push   %rbp
+    216f:	48 89 e5             	mov    %rsp,%rbp
+    2172:	48 83 ec 30          	sub    $0x30,%rsp
+    2176:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    217a:	48 89 75 e0          	mov    %rsi,-0x20(%rbp)
+    217e:	48 89 55 d8          	mov    %rdx,-0x28(%rbp)
+    2182:	48 c7 45 f8 00 00 00 	movq   $0x0,-0x8(%rbp)
+    2189:	00 
+    218a:	eb 2e                	jmp    21ba <_ZN18PageFrameAllocator12ReservePagesEPvm+0x50>
+    218c:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2190:	48 c1 e0 0c          	shl    $0xc,%rax
+    2194:	48 89 c2             	mov    %rax,%rdx
+    2197:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    219b:	48 01 d0             	add    %rdx,%rax
+    219e:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    21a2:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
+    21a6:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    21aa:	48 89 d6             	mov    %rdx,%rsi
+    21ad:	48 89 c7             	mov    %rax,%rdi
+    21b0:	e8 cf fe ff ff       	call   2084 <_ZN18PageFrameAllocator11ReservePageEPv>
+    21b5:	48 83 45 f8 01       	addq   $0x1,-0x8(%rbp)
+    21ba:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    21be:	48 3b 45 d8          	cmp    -0x28(%rbp),%rax
+    21c2:	72 c8                	jb     218c <_ZN18PageFrameAllocator12ReservePagesEPvm+0x22>
+    21c4:	90                   	nop
+    21c5:	90                   	nop
+    21c6:	c9                   	leave
+    21c7:	c3                   	ret
+
+00000000000021c8 <_ZN18PageFrameAllocator13UnReservePageEPv>:
+    21c8:	f3 0f 1e fa          	endbr64
+    21cc:	55                   	push   %rbp
+    21cd:	48 89 e5             	mov    %rsp,%rbp
+    21d0:	53                   	push   %rbx
+    21d1:	48 83 ec 28          	sub    $0x28,%rsp
+    21d5:	48 89 7d d8          	mov    %rdi,-0x28(%rbp)
+    21d9:	48 89 75 d0          	mov    %rsi,-0x30(%rbp)
+    21dd:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+    21e1:	48 c1 e8 0c          	shr    $0xc,%rax
+    21e5:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
+    21e9:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    21ed:	48 8d 50 18          	lea    0x18(%rax),%rdx
+    21f1:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    21f5:	48 89 c6             	mov    %rax,%rsi
+    21f8:	48 89 d7             	mov    %rdx,%rdi
+    21fb:	e8 16 f7 ff ff       	call   1916 <_ZN6BitmapixEm>
+    2200:	0f b6 c0             	movzbl %al,%eax
+    2203:	85 c0                	test   %eax,%eax
+    2205:	0f 94 c0             	sete   %al
+    2208:	84 c0                	test   %al,%al
+    220a:	0f 85 95 00 00 00    	jne    22a5 <_ZN18PageFrameAllocator13UnReservePageEPv+0xdd>
+    2210:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    2214:	48 8d 48 18          	lea    0x18(%rax),%rcx
+    2218:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    221c:	ba 00 00 00 00       	mov    $0x0,%edx
+    2221:	48 89 c6             	mov    %rax,%rsi
+    2224:	48 89 cf             	mov    %rcx,%rdi
+    2227:	e8 62 f7 ff ff       	call   198e <_ZN6Bitmap3SetEmb>
+    222c:	84 c0                	test   %al,%al
+    222e:	74 30                	je     2260 <_ZN18PageFrameAllocator13UnReservePageEPv+0x98>
+    2230:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    2234:	48 8b 40 38          	mov    0x38(%rax),%rax
+    2238:	48 8d 90 00 10 00 00 	lea    0x1000(%rax),%rdx
+    223f:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    2243:	48 89 50 38          	mov    %rdx,0x38(%rax)
+    2247:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    224b:	48 8b 40 40          	mov    0x40(%rax),%rax
+    224f:	48 8d 90 00 f0 ff ff 	lea    -0x1000(%rax),%rdx
+    2256:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    225a:	48 89 50 40          	mov    %rdx,0x40(%rax)
+    225e:	eb 46                	jmp    22a6 <_ZN18PageFrameAllocator13UnReservePageEPv+0xde>
+    2260:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    2264:	48 8b 40 50          	mov    0x50(%rax),%rax
+    2268:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    226d:	48 8d 0d 84 6f 00 00 	lea    0x6f84(%rip),%rcx        # 91f8 <_ZL4font+0x10b8>
+    2274:	48 89 ce             	mov    %rcx,%rsi
+    2277:	48 89 c7             	mov    %rax,%rdi
+    227a:	e8 d1 ee ff ff       	call   1150 <_ZN12BasicConsole5PrintEPKcj>
+    227f:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    2283:	48 8b 58 50          	mov    0x50(%rax),%rbx
+    2287:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+    228b:	48 89 c7             	mov    %rax,%rdi
+    228e:	e8 e4 09 00 00       	call   2c77 <_Z10to_hstringm>
+    2293:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    2298:	48 89 c6             	mov    %rax,%rsi
+    229b:	48 89 df             	mov    %rbx,%rdi
+    229e:	e8 7d ef ff ff       	call   1220 <_ZN12BasicConsole7PrintlnEPKcj>
+    22a3:	eb 01                	jmp    22a6 <_ZN18PageFrameAllocator13UnReservePageEPv+0xde>
+    22a5:	90                   	nop
+    22a6:	48 8b 5d f8          	mov    -0x8(%rbp),%rbx
+    22aa:	c9                   	leave
+    22ab:	c3                   	ret
+
+00000000000022ac <_ZN18PageFrameAllocator14UnReservePagesEPvm>:
+    22ac:	f3 0f 1e fa          	endbr64
+    22b0:	55                   	push   %rbp
+    22b1:	48 89 e5             	mov    %rsp,%rbp
+    22b4:	48 83 ec 30          	sub    $0x30,%rsp
+    22b8:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    22bc:	48 89 75 e0          	mov    %rsi,-0x20(%rbp)
+    22c0:	48 89 55 d8          	mov    %rdx,-0x28(%rbp)
+    22c4:	48 c7 45 f8 00 00 00 	movq   $0x0,-0x8(%rbp)
+    22cb:	00 
+    22cc:	eb 2e                	jmp    22fc <_ZN18PageFrameAllocator14UnReservePagesEPvm+0x50>
+    22ce:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    22d2:	48 c1 e0 0c          	shl    $0xc,%rax
+    22d6:	48 89 c2             	mov    %rax,%rdx
+    22d9:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    22dd:	48 01 d0             	add    %rdx,%rax
+    22e0:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    22e4:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
+    22e8:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    22ec:	48 89 d6             	mov    %rdx,%rsi
+    22ef:	48 89 c7             	mov    %rax,%rdi
+    22f2:	e8 d1 fe ff ff       	call   21c8 <_ZN18PageFrameAllocator13UnReservePageEPv>
+    22f7:	48 83 45 f8 01       	addq   $0x1,-0x8(%rbp)
+    22fc:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2300:	48 3b 45 d8          	cmp    -0x28(%rbp),%rax
+    2304:	72 c8                	jb     22ce <_ZN18PageFrameAllocator14UnReservePagesEPvm+0x22>
+    2306:	90                   	nop
+    2307:	90                   	nop
+    2308:	c9                   	leave
+    2309:	c3                   	ret
+
+000000000000230a <_ZN18PageFrameAllocator10GetFreeRAMEv>:
+    230a:	f3 0f 1e fa          	endbr64
+    230e:	55                   	push   %rbp
+    230f:	48 89 e5             	mov    %rsp,%rbp
+    2312:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    2316:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    231a:	48 8b 40 38          	mov    0x38(%rax),%rax
+    231e:	5d                   	pop    %rbp
+    231f:	c3                   	ret
+
+0000000000002320 <_ZN18PageFrameAllocator10GetUsedRAMEv>:
+    2320:	f3 0f 1e fa          	endbr64
+    2324:	55                   	push   %rbp
+    2325:	48 89 e5             	mov    %rsp,%rbp
+    2328:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    232c:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2330:	48 8b 40 48          	mov    0x48(%rax),%rax
+    2334:	5d                   	pop    %rbp
+    2335:	c3                   	ret
+
+0000000000002336 <_ZN18PageFrameAllocator14GetReservedRAMEv>:
+    2336:	f3 0f 1e fa          	endbr64
+    233a:	55                   	push   %rbp
+    233b:	48 89 e5             	mov    %rsp,%rbp
+    233e:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    2342:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2346:	48 8b 40 40          	mov    0x40(%rax),%rax
+    234a:	5d                   	pop    %rbp
+    234b:	c3                   	ret
+
+000000000000234c <_ZN18PageFrameAllocator11RequestPageEv>:
+    234c:	f3 0f 1e fa          	endbr64
+    2350:	55                   	push   %rbp
+    2351:	48 89 e5             	mov    %rsp,%rbp
+    2354:	48 83 ec 20          	sub    $0x20,%rsp
+    2358:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    235c:	48 c7 45 f8 00 00 00 	movq   $0x0,-0x8(%rbp)
+    2363:	00 
+    2364:	eb 4e                	jmp    23b4 <_ZN18PageFrameAllocator11RequestPageEv+0x68>
+    2366:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    236a:	48 8d 50 18          	lea    0x18(%rax),%rdx
+    236e:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2372:	48 89 c6             	mov    %rax,%rsi
+    2375:	48 89 d7             	mov    %rdx,%rdi
+    2378:	e8 99 f5 ff ff       	call   1916 <_ZN6BitmapixEm>
+    237d:	0f b6 c0             	movzbl %al,%eax
+    2380:	83 f8 01             	cmp    $0x1,%eax
+    2383:	0f 94 c0             	sete   %al
+    2386:	84 c0                	test   %al,%al
+    2388:	75 24                	jne    23ae <_ZN18PageFrameAllocator11RequestPageEv+0x62>
+    238a:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    238e:	48 c1 e0 0c          	shl    $0xc,%rax
+    2392:	48 89 c2             	mov    %rax,%rdx
+    2395:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    2399:	48 89 d6             	mov    %rdx,%rsi
+    239c:	48 89 c7             	mov    %rax,%rdi
+    239f:	e8 5a fa ff ff       	call   1dfe <_ZN18PageFrameAllocator8LockPageEPv>
+    23a4:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    23a8:	48 c1 e0 0c          	shl    $0xc,%rax
+    23ac:	eb 1d                	jmp    23cb <_ZN18PageFrameAllocator11RequestPageEv+0x7f>
+    23ae:	90                   	nop
+    23af:	48 83 45 f8 01       	addq   $0x1,-0x8(%rbp)
+    23b4:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    23b8:	48 8b 40 20          	mov    0x20(%rax),%rax
+    23bc:	48 c1 e0 03          	shl    $0x3,%rax
+    23c0:	48 39 45 f8          	cmp    %rax,-0x8(%rbp)
+    23c4:	72 a0                	jb     2366 <_ZN18PageFrameAllocator11RequestPageEv+0x1a>
+    23c6:	b8 00 00 00 00       	mov    $0x0,%eax
+    23cb:	c9                   	leave
+    23cc:	c3                   	ret
+    23cd:	90                   	nop
+
+00000000000023ce <_ZN16PageTableManager10InitializeEP9PageTableP18PageFrameAllocatorP12BasicConsole>:
+    23ce:	f3 0f 1e fa          	endbr64
+    23d2:	55                   	push   %rbp
+    23d3:	48 89 e5             	mov    %rsp,%rbp
+    23d6:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    23da:	48 89 75 f0          	mov    %rsi,-0x10(%rbp)
+    23de:	48 89 55 e8          	mov    %rdx,-0x18(%rbp)
+    23e2:	48 89 4d e0          	mov    %rcx,-0x20(%rbp)
+    23e6:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    23ea:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
+    23ee:	48 89 50 08          	mov    %rdx,0x8(%rax)
+    23f2:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    23f6:	48 8b 55 e8          	mov    -0x18(%rbp),%rdx
+    23fa:	48 89 10             	mov    %rdx,(%rax)
+    23fd:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2401:	48 8b 55 e0          	mov    -0x20(%rbp),%rdx
+    2405:	48 89 50 10          	mov    %rdx,0x10(%rax)
+    2409:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    240d:	c6 40 18 01          	movb   $0x1,0x18(%rax)
+    2411:	90                   	nop
+    2412:	5d                   	pop    %rbp
+    2413:	c3                   	ret
+
+0000000000002414 <_ZN16PageTableManager9MapMemoryEPvS0_>:
+    2414:	f3 0f 1e fa          	endbr64
+    2418:	55                   	push   %rbp
+    2419:	48 89 e5             	mov    %rsp,%rbp
+    241c:	48 83 ec 70          	sub    $0x70,%rsp
+    2420:	48 89 7d a8          	mov    %rdi,-0x58(%rbp)
+    2424:	48 89 75 a0          	mov    %rsi,-0x60(%rbp)
+    2428:	48 89 55 98          	mov    %rdx,-0x68(%rbp)
+    242c:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    2430:	0f b6 40 18          	movzbl 0x18(%rax),%eax
+    2434:	83 f0 01             	xor    $0x1,%eax
+    2437:	84 c0                	test   %al,%al
+    2439:	74 43                	je     247e <_ZN16PageTableManager9MapMemoryEPvS0_+0x6a>
+    243b:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    243f:	48 8b 40 10          	mov    0x10(%rax),%rax
+    2443:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    2448:	48 8d 0d d1 7d 00 00 	lea    0x7dd1(%rip),%rcx        # a220 <_ZL4font+0x1000>
+    244f:	48 89 ce             	mov    %rcx,%rsi
+    2452:	48 89 c7             	mov    %rax,%rdi
+    2455:	e8 c6 ed ff ff       	call   1220 <_ZN12BasicConsole7PrintlnEPKcj>
+    245a:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    245e:	48 8b 40 10          	mov    0x10(%rax),%rax
+    2462:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    2467:	48 8d 0d e7 7d 00 00 	lea    0x7de7(%rip),%rcx        # a255 <_ZL4font+0x1035>
+    246e:	48 89 ce             	mov    %rcx,%rsi
+    2471:	48 89 c7             	mov    %rax,%rdi
+    2474:	e8 a7 ed ff ff       	call   1220 <_ZN12BasicConsole7PrintlnEPKcj>
+    2479:	e9 c4 02 00 00       	jmp    2742 <_ZN16PageTableManager9MapMemoryEPvS0_+0x32e>
+    247e:	48 8b 55 a0          	mov    -0x60(%rbp),%rdx
+    2482:	48 8d 45 c0          	lea    -0x40(%rbp),%rax
+    2486:	48 89 d6             	mov    %rdx,%rsi
+    2489:	48 89 c7             	mov    %rax,%rdi
+    248c:	e8 b3 02 00 00       	call   2744 <_ZN14PageMapIndexerC1Em>
+    2491:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    2495:	48 8b 40 08          	mov    0x8(%rax),%rax
+    2499:	48 8b 55 c0          	mov    -0x40(%rbp),%rdx
+    249d:	48 8b 04 d0          	mov    (%rax,%rdx,8),%rax
+    24a1:	48 89 45 b8          	mov    %rax,-0x48(%rbp)
+    24a5:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    24a9:	be 00 00 00 00       	mov    $0x0,%esi
+    24ae:	48 89 c7             	mov    %rax,%rdi
+    24b1:	e8 62 03 00 00       	call   2818 <_ZN18PageDirectoryEntry7GetFlagE7PT_Flag>
+    24b6:	83 f0 01             	xor    $0x1,%eax
+    24b9:	84 c0                	test   %al,%al
+    24bb:	0f 84 85 00 00 00    	je     2546 <_ZN16PageTableManager9MapMemoryEPvS0_+0x132>
+    24c1:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    24c5:	48 8b 00             	mov    (%rax),%rax
+    24c8:	48 89 c7             	mov    %rax,%rdi
+    24cb:	e8 7c fe ff ff       	call   234c <_ZN18PageFrameAllocator11RequestPageEv>
+    24d0:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    24d4:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    24d8:	ba 00 10 00 00       	mov    $0x1000,%edx
+    24dd:	be 00 00 00 00       	mov    $0x0,%esi
+    24e2:	48 89 c7             	mov    %rax,%rdi
+    24e5:	e8 df f5 ff ff       	call   1ac9 <_Z6memsetPvhm>
+    24ea:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    24ee:	48 c1 e8 0c          	shr    $0xc,%rax
+    24f2:	48 89 c2             	mov    %rax,%rdx
+    24f5:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    24f9:	48 89 d6             	mov    %rdx,%rsi
+    24fc:	48 89 c7             	mov    %rax,%rdi
+    24ff:	e8 7e 03 00 00       	call   2882 <_ZN18PageDirectoryEntry10SetAddressEm>
+    2504:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    2508:	ba 01 00 00 00       	mov    $0x1,%edx
+    250d:	be 00 00 00 00       	mov    $0x0,%esi
+    2512:	48 89 c7             	mov    %rax,%rdi
+    2515:	e8 a0 02 00 00       	call   27ba <_ZN18PageDirectoryEntry7SetFlagE7PT_Flagb>
+    251a:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    251e:	ba 01 00 00 00       	mov    $0x1,%edx
+    2523:	be 01 00 00 00       	mov    $0x1,%esi
+    2528:	48 89 c7             	mov    %rax,%rdi
+    252b:	e8 8a 02 00 00       	call   27ba <_ZN18PageDirectoryEntry7SetFlagE7PT_Flagb>
+    2530:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    2534:	48 8b 40 08          	mov    0x8(%rax),%rax
+    2538:	48 8b 55 c0          	mov    -0x40(%rbp),%rdx
+    253c:	48 8b 4d b8          	mov    -0x48(%rbp),%rcx
+    2540:	48 89 0c d0          	mov    %rcx,(%rax,%rdx,8)
+    2544:	eb 14                	jmp    255a <_ZN16PageTableManager9MapMemoryEPvS0_+0x146>
+    2546:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    254a:	48 89 c7             	mov    %rax,%rdi
+    254d:	e8 06 03 00 00       	call   2858 <_ZN18PageDirectoryEntry10GetAddressEv>
+    2552:	48 c1 e0 0c          	shl    $0xc,%rax
+    2556:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    255a:	48 8b 55 c8          	mov    -0x38(%rbp),%rdx
+    255e:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2562:	48 8b 04 d0          	mov    (%rax,%rdx,8),%rax
+    2566:	48 89 45 b8          	mov    %rax,-0x48(%rbp)
+    256a:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    256e:	be 00 00 00 00       	mov    $0x0,%esi
+    2573:	48 89 c7             	mov    %rax,%rdi
+    2576:	e8 9d 02 00 00       	call   2818 <_ZN18PageDirectoryEntry7GetFlagE7PT_Flag>
+    257b:	83 f0 01             	xor    $0x1,%eax
+    257e:	84 c0                	test   %al,%al
+    2580:	0f 84 81 00 00 00    	je     2607 <_ZN16PageTableManager9MapMemoryEPvS0_+0x1f3>
+    2586:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    258a:	48 8b 00             	mov    (%rax),%rax
+    258d:	48 89 c7             	mov    %rax,%rdi
+    2590:	e8 b7 fd ff ff       	call   234c <_ZN18PageFrameAllocator11RequestPageEv>
+    2595:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    2599:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    259d:	ba 00 10 00 00       	mov    $0x1000,%edx
+    25a2:	be 00 00 00 00       	mov    $0x0,%esi
+    25a7:	48 89 c7             	mov    %rax,%rdi
+    25aa:	e8 1a f5 ff ff       	call   1ac9 <_Z6memsetPvhm>
+    25af:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    25b3:	48 c1 e8 0c          	shr    $0xc,%rax
+    25b7:	48 89 c2             	mov    %rax,%rdx
+    25ba:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    25be:	48 89 d6             	mov    %rdx,%rsi
+    25c1:	48 89 c7             	mov    %rax,%rdi
+    25c4:	e8 b9 02 00 00       	call   2882 <_ZN18PageDirectoryEntry10SetAddressEm>
+    25c9:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    25cd:	ba 01 00 00 00       	mov    $0x1,%edx
+    25d2:	be 00 00 00 00       	mov    $0x0,%esi
+    25d7:	48 89 c7             	mov    %rax,%rdi
+    25da:	e8 db 01 00 00       	call   27ba <_ZN18PageDirectoryEntry7SetFlagE7PT_Flagb>
+    25df:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    25e3:	ba 01 00 00 00       	mov    $0x1,%edx
+    25e8:	be 01 00 00 00       	mov    $0x1,%esi
+    25ed:	48 89 c7             	mov    %rax,%rdi
+    25f0:	e8 c5 01 00 00       	call   27ba <_ZN18PageDirectoryEntry7SetFlagE7PT_Flagb>
+    25f5:	48 8b 55 c8          	mov    -0x38(%rbp),%rdx
+    25f9:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    25fd:	48 8b 4d b8          	mov    -0x48(%rbp),%rcx
+    2601:	48 89 0c d0          	mov    %rcx,(%rax,%rdx,8)
+    2605:	eb 14                	jmp    261b <_ZN16PageTableManager9MapMemoryEPvS0_+0x207>
+    2607:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    260b:	48 89 c7             	mov    %rax,%rdi
+    260e:	e8 45 02 00 00       	call   2858 <_ZN18PageDirectoryEntry10GetAddressEv>
+    2613:	48 c1 e0 0c          	shl    $0xc,%rax
+    2617:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    261b:	48 8b 55 d0          	mov    -0x30(%rbp),%rdx
+    261f:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    2623:	48 8b 04 d0          	mov    (%rax,%rdx,8),%rax
+    2627:	48 89 45 b8          	mov    %rax,-0x48(%rbp)
+    262b:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    262f:	be 00 00 00 00       	mov    $0x0,%esi
+    2634:	48 89 c7             	mov    %rax,%rdi
+    2637:	e8 dc 01 00 00       	call   2818 <_ZN18PageDirectoryEntry7GetFlagE7PT_Flag>
+    263c:	83 f0 01             	xor    $0x1,%eax
+    263f:	84 c0                	test   %al,%al
+    2641:	0f 84 81 00 00 00    	je     26c8 <_ZN16PageTableManager9MapMemoryEPvS0_+0x2b4>
+    2647:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    264b:	48 8b 00             	mov    (%rax),%rax
+    264e:	48 89 c7             	mov    %rax,%rdi
+    2651:	e8 f6 fc ff ff       	call   234c <_ZN18PageFrameAllocator11RequestPageEv>
+    2656:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
+    265a:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    265e:	ba 00 10 00 00       	mov    $0x1000,%edx
+    2663:	be 00 00 00 00       	mov    $0x0,%esi
+    2668:	48 89 c7             	mov    %rax,%rdi
+    266b:	e8 59 f4 ff ff       	call   1ac9 <_Z6memsetPvhm>
+    2670:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    2674:	48 c1 e8 0c          	shr    $0xc,%rax
+    2678:	48 89 c2             	mov    %rax,%rdx
+    267b:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    267f:	48 89 d6             	mov    %rdx,%rsi
+    2682:	48 89 c7             	mov    %rax,%rdi
+    2685:	e8 f8 01 00 00       	call   2882 <_ZN18PageDirectoryEntry10SetAddressEm>
+    268a:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    268e:	ba 01 00 00 00       	mov    $0x1,%edx
+    2693:	be 00 00 00 00       	mov    $0x0,%esi
+    2698:	48 89 c7             	mov    %rax,%rdi
+    269b:	e8 1a 01 00 00       	call   27ba <_ZN18PageDirectoryEntry7SetFlagE7PT_Flagb>
+    26a0:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    26a4:	ba 01 00 00 00       	mov    $0x1,%edx
+    26a9:	be 01 00 00 00       	mov    $0x1,%esi
+    26ae:	48 89 c7             	mov    %rax,%rdi
+    26b1:	e8 04 01 00 00       	call   27ba <_ZN18PageDirectoryEntry7SetFlagE7PT_Flagb>
+    26b6:	48 8b 55 d0          	mov    -0x30(%rbp),%rdx
+    26ba:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    26be:	48 8b 4d b8          	mov    -0x48(%rbp),%rcx
+    26c2:	48 89 0c d0          	mov    %rcx,(%rax,%rdx,8)
+    26c6:	eb 14                	jmp    26dc <_ZN16PageTableManager9MapMemoryEPvS0_+0x2c8>
+    26c8:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    26cc:	48 89 c7             	mov    %rax,%rdi
+    26cf:	e8 84 01 00 00       	call   2858 <_ZN18PageDirectoryEntry10GetAddressEv>
+    26d4:	48 c1 e0 0c          	shl    $0xc,%rax
+    26d8:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
+    26dc:	48 8b 55 d8          	mov    -0x28(%rbp),%rdx
+    26e0:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    26e4:	48 8b 04 d0          	mov    (%rax,%rdx,8),%rax
+    26e8:	48 89 45 b8          	mov    %rax,-0x48(%rbp)
+    26ec:	48 8b 45 98          	mov    -0x68(%rbp),%rax
+    26f0:	48 c1 e8 0c          	shr    $0xc,%rax
+    26f4:	48 89 c2             	mov    %rax,%rdx
+    26f7:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    26fb:	48 89 d6             	mov    %rdx,%rsi
+    26fe:	48 89 c7             	mov    %rax,%rdi
+    2701:	e8 7c 01 00 00       	call   2882 <_ZN18PageDirectoryEntry10SetAddressEm>
+    2706:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    270a:	ba 01 00 00 00       	mov    $0x1,%edx
+    270f:	be 00 00 00 00       	mov    $0x0,%esi
+    2714:	48 89 c7             	mov    %rax,%rdi
+    2717:	e8 9e 00 00 00       	call   27ba <_ZN18PageDirectoryEntry7SetFlagE7PT_Flagb>
+    271c:	48 8d 45 b8          	lea    -0x48(%rbp),%rax
+    2720:	ba 01 00 00 00       	mov    $0x1,%edx
+    2725:	be 01 00 00 00       	mov    $0x1,%esi
+    272a:	48 89 c7             	mov    %rax,%rdi
+    272d:	e8 88 00 00 00       	call   27ba <_ZN18PageDirectoryEntry7SetFlagE7PT_Flagb>
+    2732:	48 8b 55 d8          	mov    -0x28(%rbp),%rdx
+    2736:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    273a:	48 8b 4d b8          	mov    -0x48(%rbp),%rcx
+    273e:	48 89 0c d0          	mov    %rcx,(%rax,%rdx,8)
+    2742:	c9                   	leave
+    2743:	c3                   	ret
+
+0000000000002744 <_ZN14PageMapIndexerC1Em>:
+    2744:	f3 0f 1e fa          	endbr64
+    2748:	55                   	push   %rbp
+    2749:	48 89 e5             	mov    %rsp,%rbp
+    274c:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    2750:	48 89 75 f0          	mov    %rsi,-0x10(%rbp)
+    2754:	48 c1 6d f0 0c       	shrq   $0xc,-0x10(%rbp)
+    2759:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    275d:	25 ff 01 00 00       	and    $0x1ff,%eax
+    2762:	48 89 c2             	mov    %rax,%rdx
+    2765:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2769:	48 89 50 18          	mov    %rdx,0x18(%rax)
+    276d:	48 c1 6d f0 09       	shrq   $0x9,-0x10(%rbp)
+    2772:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    2776:	25 ff 01 00 00       	and    $0x1ff,%eax
+    277b:	48 89 c2             	mov    %rax,%rdx
+    277e:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2782:	48 89 50 10          	mov    %rdx,0x10(%rax)
+    2786:	48 c1 6d f0 09       	shrq   $0x9,-0x10(%rbp)
+    278b:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    278f:	25 ff 01 00 00       	and    $0x1ff,%eax
+    2794:	48 89 c2             	mov    %rax,%rdx
+    2797:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    279b:	48 89 50 08          	mov    %rdx,0x8(%rax)
+    279f:	48 c1 6d f0 09       	shrq   $0x9,-0x10(%rbp)
+    27a4:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    27a8:	25 ff 01 00 00       	and    $0x1ff,%eax
+    27ad:	48 89 c2             	mov    %rax,%rdx
+    27b0:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    27b4:	48 89 10             	mov    %rdx,(%rax)
+    27b7:	90                   	nop
+    27b8:	5d                   	pop    %rbp
+    27b9:	c3                   	ret
+
+00000000000027ba <_ZN18PageDirectoryEntry7SetFlagE7PT_Flagb>:
+    27ba:	f3 0f 1e fa          	endbr64
+    27be:	55                   	push   %rbp
+    27bf:	48 89 e5             	mov    %rsp,%rbp
+    27c2:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    27c6:	89 75 e4             	mov    %esi,-0x1c(%rbp)
+    27c9:	89 d0                	mov    %edx,%eax
+    27cb:	88 45 e0             	mov    %al,-0x20(%rbp)
+    27ce:	8b 45 e4             	mov    -0x1c(%rbp),%eax
+    27d1:	ba 01 00 00 00       	mov    $0x1,%edx
+    27d6:	89 c1                	mov    %eax,%ecx
+    27d8:	48 d3 e2             	shl    %cl,%rdx
+    27db:	48 89 d0             	mov    %rdx,%rax
+    27de:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    27e2:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    27e6:	48 8b 10             	mov    (%rax),%rdx
+    27e9:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    27ed:	48 f7 d0             	not    %rax
+    27f0:	48 21 c2             	and    %rax,%rdx
+    27f3:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    27f7:	48 89 10             	mov    %rdx,(%rax)
+    27fa:	80 7d e0 00          	cmpb   $0x0,-0x20(%rbp)
+    27fe:	74 15                	je     2815 <_ZN18PageDirectoryEntry7SetFlagE7PT_Flagb+0x5b>
+    2800:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    2804:	48 8b 00             	mov    (%rax),%rax
+    2807:	48 0b 45 f8          	or     -0x8(%rbp),%rax
+    280b:	48 89 c2             	mov    %rax,%rdx
+    280e:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    2812:	48 89 10             	mov    %rdx,(%rax)
+    2815:	90                   	nop
+    2816:	5d                   	pop    %rbp
+    2817:	c3                   	ret
+
+0000000000002818 <_ZN18PageDirectoryEntry7GetFlagE7PT_Flag>:
+    2818:	f3 0f 1e fa          	endbr64
+    281c:	55                   	push   %rbp
+    281d:	48 89 e5             	mov    %rsp,%rbp
+    2820:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    2824:	89 75 e4             	mov    %esi,-0x1c(%rbp)
+    2827:	8b 45 e4             	mov    -0x1c(%rbp),%eax
+    282a:	ba 01 00 00 00       	mov    $0x1,%edx
+    282f:	89 c1                	mov    %eax,%ecx
+    2831:	48 d3 e2             	shl    %cl,%rdx
+    2834:	48 89 d0             	mov    %rdx,%rax
+    2837:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    283b:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    283f:	48 8b 10             	mov    (%rax),%rdx
+    2842:	48 83 7d f8 00       	cmpq   $0x0,-0x8(%rbp)
+    2847:	0f 95 c0             	setne  %al
+    284a:	0f b6 c0             	movzbl %al,%eax
+    284d:	48 21 d0             	and    %rdx,%rax
+    2850:	48 85 c0             	test   %rax,%rax
+    2853:	0f 95 c0             	setne  %al
+    2856:	5d                   	pop    %rbp
+    2857:	c3                   	ret
+
+0000000000002858 <_ZN18PageDirectoryEntry10GetAddressEv>:
+    2858:	f3 0f 1e fa          	endbr64
+    285c:	55                   	push   %rbp
+    285d:	48 89 e5             	mov    %rsp,%rbp
+    2860:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    2864:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2868:	48 8b 00             	mov    (%rax),%rax
+    286b:	48 c1 e8 0c          	shr    $0xc,%rax
+    286f:	48 89 c2             	mov    %rax,%rdx
+    2872:	48 b8 ff ff ff ff ff 	movabs $0xffffffffff,%rax
+    2879:	00 00 00 
+    287c:	48 21 d0             	and    %rdx,%rax
+    287f:	5d                   	pop    %rbp
+    2880:	c3                   	ret
+    2881:	90                   	nop
+
+0000000000002882 <_ZN18PageDirectoryEntry10SetAddressEm>:
+    2882:	f3 0f 1e fa          	endbr64
+    2886:	55                   	push   %rbp
+    2887:	48 89 e5             	mov    %rsp,%rbp
+    288a:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    288e:	48 89 75 f0          	mov    %rsi,-0x10(%rbp)
+    2892:	48 b8 ff ff ff ff ff 	movabs $0xffffffffff,%rax
+    2899:	00 00 00 
+    289c:	48 21 45 f0          	and    %rax,-0x10(%rbp)
+    28a0:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    28a4:	48 8b 00             	mov    (%rax),%rax
+    28a7:	48 ba ff 0f 00 00 00 	movabs $0xfff0000000000fff,%rdx
+    28ae:	00 f0 ff 
+    28b1:	48 21 c2             	and    %rax,%rdx
+    28b4:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    28b8:	48 89 10             	mov    %rdx,(%rax)
+    28bb:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    28bf:	48 8b 00             	mov    (%rax),%rax
+    28c2:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
+    28c6:	48 c1 e2 0c          	shl    $0xc,%rdx
+    28ca:	48 09 c2             	or     %rax,%rdx
+    28cd:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    28d1:	48 89 10             	mov    %rdx,(%rax)
+    28d4:	90                   	nop
+    28d5:	5d                   	pop    %rbp
+    28d6:	c3                   	ret
+
+00000000000028d7 <InitializePaging>:
+    28d7:	f3 0f 1e fa          	endbr64
+    28db:	55                   	push   %rbp
+    28dc:	48 89 e5             	mov    %rsp,%rbp
+    28df:	48 83 ec 60          	sub    $0x60,%rsp
+    28e3:	48 89 7d a8          	mov    %rdi,-0x58(%rbp)
+    28e7:	48 89 75 a0          	mov    %rsi,-0x60(%rbp)
+    28eb:	48 8d 05 0e e7 ff ff 	lea    -0x18f2(%rip),%rax        # 1000 <_kernel_start>
+    28f2:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
+    28f6:	48 8d 05 e3 b7 00 00 	lea    0xb7e3(%rip),%rax        # e0e0 <_kernel_end>
+    28fd:	48 89 45 e0          	mov    %rax,-0x20(%rbp)
+    2901:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    2905:	48 2b 45 e8          	sub    -0x18(%rbp),%rax
+    2909:	48 89 45 d8          	mov    %rax,-0x28(%rbp)
+    290d:	48 8b 45 d8          	mov    -0x28(%rbp),%rax
+    2911:	48 c1 e8 0c          	shr    $0xc,%rax
+    2915:	48 83 c0 01          	add    $0x1,%rax
+    2919:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+    291d:	48 8b 45 a0          	mov    -0x60(%rbp),%rax
+    2921:	48 8b 40 10          	mov    0x10(%rax),%rax
+    2925:	48 8b 55 a0          	mov    -0x60(%rbp),%rdx
+    2929:	48 8b 72 18          	mov    0x18(%rdx),%rsi
+    292d:	ba 00 00 00 00       	mov    $0x0,%edx
+    2932:	48 f7 f6             	div    %rsi
+    2935:	48 89 45 c8          	mov    %rax,-0x38(%rbp)
+    2939:	48 8b 45 a0          	mov    -0x60(%rbp),%rax
+    293d:	48 8b 50 18          	mov    0x18(%rax),%rdx
+    2941:	48 8b 45 a0          	mov    -0x60(%rbp),%rax
+    2945:	48 8b 40 08          	mov    0x8(%rax),%rax
+    2949:	48 8b 4d c8          	mov    -0x38(%rbp),%rcx
+    294d:	48 89 ce             	mov    %rcx,%rsi
+    2950:	48 89 c7             	mov    %rax,%rdi
+    2953:	e8 ef f0 ff ff       	call   1a47 <_Z13GetMemorySizeP21EFI_MEMORY_DESCRIPTORmm>
+    2958:	48 89 45 c0          	mov    %rax,-0x40(%rbp)
+    295c:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    2960:	48 8d 78 10          	lea    0x10(%rax),%rdi
+    2964:	48 8b 45 a0          	mov    -0x60(%rbp),%rax
+    2968:	48 8b 48 18          	mov    0x18(%rax),%rcx
+    296c:	48 8b 45 a0          	mov    -0x60(%rbp),%rax
+    2970:	48 8b 50 10          	mov    0x10(%rax),%rdx
+    2974:	48 8b 45 a0          	mov    -0x60(%rbp),%rax
+    2978:	48 8b 40 08          	mov    0x8(%rax),%rax
+    297c:	48 89 c6             	mov    %rax,%rsi
+    297f:	e8 c8 f1 ff ff       	call   1b4c <_ZN18PageFrameAllocator16ReadEFIMemoryMapEP21EFI_MEMORY_DESCRIPTORmm>
+    2984:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    2988:	48 8d 48 10          	lea    0x10(%rax),%rcx
+    298c:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+    2990:	48 89 c2             	mov    %rax,%rdx
+    2993:	48 8d 05 66 e6 ff ff 	lea    -0x199a(%rip),%rax        # 1000 <_kernel_start>
+    299a:	48 89 c6             	mov    %rax,%rsi
+    299d:	48 89 cf             	mov    %rcx,%rdi
+    29a0:	e8 3f f5 ff ff       	call   1ee4 <_ZN18PageFrameAllocator9LockPagesEPvm>
+    29a5:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    29a9:	48 83 c0 10          	add    $0x10,%rax
+    29ad:	48 89 c7             	mov    %rax,%rdi
+    29b0:	e8 97 f9 ff ff       	call   234c <_ZN18PageFrameAllocator11RequestPageEv>
+    29b5:	48 8b 55 a8          	mov    -0x58(%rbp),%rdx
+    29b9:	48 89 82 88 00 00 00 	mov    %rax,0x88(%rdx)
+    29c0:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    29c4:	48 8b 80 88 00 00 00 	mov    0x88(%rax),%rax
+    29cb:	ba 00 10 00 00       	mov    $0x1000,%edx
+    29d0:	be 00 00 00 00       	mov    $0x0,%esi
+    29d5:	48 89 c7             	mov    %rax,%rdi
+    29d8:	e8 ec f0 ff ff       	call   1ac9 <_Z6memsetPvhm>
+    29dd:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    29e1:	48 8d 78 68          	lea    0x68(%rax),%rdi
+    29e5:	48 8b 55 a8          	mov    -0x58(%rbp),%rdx
+    29e9:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    29ed:	48 8d 70 10          	lea    0x10(%rax),%rsi
+    29f1:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    29f5:	48 8b 80 88 00 00 00 	mov    0x88(%rax),%rax
+    29fc:	48 89 d1             	mov    %rdx,%rcx
+    29ff:	48 89 f2             	mov    %rsi,%rdx
+    2a02:	48 89 c6             	mov    %rax,%rsi
+    2a05:	e8 c4 f9 ff ff       	call   23ce <_ZN16PageTableManager10InitializeEP9PageTableP18PageFrameAllocatorP12BasicConsole>
+    2a0a:	48 c7 45 f8 00 00 00 	movq   $0x0,-0x8(%rbp)
+    2a11:	00 
+    2a12:	eb 23                	jmp    2a37 <InitializePaging+0x160>
+    2a14:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    2a18:	48 8d 48 68          	lea    0x68(%rax),%rcx
+    2a1c:	48 8b 55 f8          	mov    -0x8(%rbp),%rdx
+    2a20:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2a24:	48 89 c6             	mov    %rax,%rsi
+    2a27:	48 89 cf             	mov    %rcx,%rdi
+    2a2a:	e8 e5 f9 ff ff       	call   2414 <_ZN16PageTableManager9MapMemoryEPvS0_>
+    2a2f:	48 81 45 f8 00 10 00 	addq   $0x1000,-0x8(%rbp)
+    2a36:	00 
+    2a37:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2a3b:	48 3b 45 c0          	cmp    -0x40(%rbp),%rax
+    2a3f:	72 d3                	jb     2a14 <InitializePaging+0x13d>
+    2a41:	48 8b 45 a0          	mov    -0x60(%rbp),%rax
+    2a45:	48 8b 00             	mov    (%rax),%rax
+    2a48:	48 8b 00             	mov    (%rax),%rax
+    2a4b:	48 89 45 b8          	mov    %rax,-0x48(%rbp)
+    2a4f:	48 8b 45 a0          	mov    -0x60(%rbp),%rax
+    2a53:	48 8b 00             	mov    (%rax),%rax
+    2a56:	48 8b 40 08          	mov    0x8(%rax),%rax
+    2a5a:	48 05 00 10 00 00    	add    $0x1000,%rax
+    2a60:	48 89 45 b0          	mov    %rax,-0x50(%rbp)
+    2a64:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    2a68:	48 8d 48 10          	lea    0x10(%rax),%rcx
+    2a6c:	48 8b 45 b0          	mov    -0x50(%rbp),%rax
+    2a70:	48 c1 e8 0c          	shr    $0xc,%rax
+    2a74:	48 8d 50 01          	lea    0x1(%rax),%rdx
+    2a78:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    2a7c:	48 89 c6             	mov    %rax,%rsi
+    2a7f:	48 89 cf             	mov    %rcx,%rdi
+    2a82:	e8 5d f4 ff ff       	call   1ee4 <_ZN18PageFrameAllocator9LockPagesEPvm>
+    2a87:	48 8b 45 b8          	mov    -0x48(%rbp),%rax
+    2a8b:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    2a8f:	eb 23                	jmp    2ab4 <InitializePaging+0x1dd>
+    2a91:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    2a95:	48 8d 48 68          	lea    0x68(%rax),%rcx
+    2a99:	48 8b 55 f0          	mov    -0x10(%rbp),%rdx
+    2a9d:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    2aa1:	48 89 c6             	mov    %rax,%rsi
+    2aa4:	48 89 cf             	mov    %rcx,%rdi
+    2aa7:	e8 68 f9 ff ff       	call   2414 <_ZN16PageTableManager9MapMemoryEPvS0_>
+    2aac:	48 81 45 f0 00 10 00 	addq   $0x1000,-0x10(%rbp)
+    2ab3:	00 
+    2ab4:	48 8b 55 b8          	mov    -0x48(%rbp),%rdx
+    2ab8:	48 8b 45 b0          	mov    -0x50(%rbp),%rax
+    2abc:	48 01 d0             	add    %rdx,%rax
+    2abf:	48 39 45 f0          	cmp    %rax,-0x10(%rbp)
+    2ac3:	72 cc                	jb     2a91 <InitializePaging+0x1ba>
+    2ac5:	48 8b 45 a8          	mov    -0x58(%rbp),%rax
+    2ac9:	48 8b 80 88 00 00 00 	mov    0x88(%rax),%rax
+    2ad0:	0f 22 d8             	mov    %rax,%cr3
+    2ad3:	90                   	nop
+    2ad4:	c9                   	leave
+    2ad5:	c3                   	ret
+
+0000000000002ad6 <InitializeIDT>:
+    2ad6:	f3 0f 1e fa          	endbr64
+    2ada:	55                   	push   %rbp
+    2adb:	48 89 e5             	mov    %rsp,%rbp
+    2ade:	48 89 7d f8          	mov    %rdi,-0x8(%rbp)
+    2ae2:	48 89 75 f0          	mov    %rsi,-0x10(%rbp)
+    2ae6:	90                   	nop
+    2ae7:	5d                   	pop    %rbp
+    2ae8:	c3                   	ret
+
+0000000000002ae9 <_Z9to_stringm>:
+    2ae9:	f3 0f 1e fa          	endbr64
+    2aed:	55                   	push   %rbp
+    2aee:	48 89 e5             	mov    %rsp,%rbp
+    2af1:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    2af5:	c7 45 fc 14 00 00 00 	movl   $0x14,-0x4(%rbp)
+    2afc:	8b 45 fc             	mov    -0x4(%rbp),%eax
+    2aff:	48 98                	cltq
+    2b01:	48 8d 15 18 b5 00 00 	lea    0xb518(%rip),%rdx        # e020 <_ZZ9to_stringmE6buffer>
+    2b08:	c6 04 10 00          	movb   $0x0,(%rax,%rdx,1)
+    2b0c:	48 83 7d e8 00       	cmpq   $0x0,-0x18(%rbp)
+    2b11:	0f 85 86 00 00 00    	jne    2b9d <_Z9to_stringm+0xb4>
+    2b17:	83 6d fc 01          	subl   $0x1,-0x4(%rbp)
+    2b1b:	8b 45 fc             	mov    -0x4(%rbp),%eax
+    2b1e:	48 98                	cltq
+    2b20:	48 8d 15 f9 b4 00 00 	lea    0xb4f9(%rip),%rdx        # e020 <_ZZ9to_stringmE6buffer>
+    2b27:	c6 04 10 30          	movb   $0x30,(%rax,%rdx,1)
+    2b2b:	8b 45 fc             	mov    -0x4(%rbp),%eax
+    2b2e:	48 98                	cltq
+    2b30:	48 8d 15 e9 b4 00 00 	lea    0xb4e9(%rip),%rdx        # e020 <_ZZ9to_stringmE6buffer>
+    2b37:	48 01 d0             	add    %rdx,%rax
+    2b3a:	eb 77                	jmp    2bb3 <_Z9to_stringm+0xca>
+    2b3c:	48 8b 4d e8          	mov    -0x18(%rbp),%rcx
+    2b40:	48 ba cd cc cc cc cc 	movabs $0xcccccccccccccccd,%rdx
+    2b47:	cc cc cc 
+    2b4a:	48 89 c8             	mov    %rcx,%rax
+    2b4d:	48 f7 e2             	mul    %rdx
+    2b50:	48 c1 ea 03          	shr    $0x3,%rdx
+    2b54:	48 89 d0             	mov    %rdx,%rax
+    2b57:	48 c1 e0 02          	shl    $0x2,%rax
+    2b5b:	48 01 d0             	add    %rdx,%rax
+    2b5e:	48 01 c0             	add    %rax,%rax
+    2b61:	48 29 c1             	sub    %rax,%rcx
+    2b64:	48 89 ca             	mov    %rcx,%rdx
+    2b67:	89 d0                	mov    %edx,%eax
+    2b69:	83 c0 30             	add    $0x30,%eax
+    2b6c:	89 c1                	mov    %eax,%ecx
+    2b6e:	83 6d fc 01          	subl   $0x1,-0x4(%rbp)
+    2b72:	8b 45 fc             	mov    -0x4(%rbp),%eax
+    2b75:	48 98                	cltq
+    2b77:	48 8d 15 a2 b4 00 00 	lea    0xb4a2(%rip),%rdx        # e020 <_ZZ9to_stringmE6buffer>
+    2b7e:	88 0c 10             	mov    %cl,(%rax,%rdx,1)
+    2b81:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    2b85:	48 ba cd cc cc cc cc 	movabs $0xcccccccccccccccd,%rdx
+    2b8c:	cc cc cc 
+    2b8f:	48 f7 e2             	mul    %rdx
+    2b92:	48 89 d0             	mov    %rdx,%rax
+    2b95:	48 c1 e8 03          	shr    $0x3,%rax
+    2b99:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
+    2b9d:	48 83 7d e8 00       	cmpq   $0x0,-0x18(%rbp)
+    2ba2:	75 98                	jne    2b3c <_Z9to_stringm+0x53>
+    2ba4:	8b 45 fc             	mov    -0x4(%rbp),%eax
+    2ba7:	48 98                	cltq
+    2ba9:	48 8d 15 70 b4 00 00 	lea    0xb470(%rip),%rdx        # e020 <_ZZ9to_stringmE6buffer>
+    2bb0:	48 01 d0             	add    %rdx,%rax
+    2bb3:	5d                   	pop    %rbp
+    2bb4:	c3                   	ret
+
+0000000000002bb5 <_Z9to_stringl>:
+    2bb5:	f3 0f 1e fa          	endbr64
+    2bb9:	55                   	push   %rbp
+    2bba:	48 89 e5             	mov    %rsp,%rbp
+    2bbd:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    2bc1:	48 8d 05 8c b4 00 00 	lea    0xb48c(%rip),%rax        # e054 <_ZZ9to_stringlE6buffer+0x14>
+    2bc8:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    2bcc:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2bd0:	c6 00 00             	movb   $0x0,(%rax)
+    2bd3:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    2bd7:	48 c1 e8 3f          	shr    $0x3f,%rax
+    2bdb:	88 45 f7             	mov    %al,-0x9(%rbp)
+    2bde:	80 7d f7 00          	cmpb   $0x0,-0x9(%rbp)
+    2be2:	74 04                	je     2be8 <_Z9to_stringl+0x33>
+    2be4:	48 f7 5d e8          	negq   -0x18(%rbp)
+    2be8:	48 8b 4d e8          	mov    -0x18(%rbp),%rcx
+    2bec:	48 ba 67 66 66 66 66 	movabs $0x6666666666666667,%rdx
+    2bf3:	66 66 66 
+    2bf6:	48 89 c8             	mov    %rcx,%rax
+    2bf9:	48 f7 ea             	imul   %rdx
+    2bfc:	48 c1 fa 02          	sar    $0x2,%rdx
+    2c00:	48 89 c8             	mov    %rcx,%rax
+    2c03:	48 c1 f8 3f          	sar    $0x3f,%rax
+    2c07:	48 29 c2             	sub    %rax,%rdx
+    2c0a:	48 89 d0             	mov    %rdx,%rax
+    2c0d:	48 c1 e0 02          	shl    $0x2,%rax
+    2c11:	48 01 d0             	add    %rdx,%rax
+    2c14:	48 01 c0             	add    %rax,%rax
+    2c17:	48 29 c1             	sub    %rax,%rcx
+    2c1a:	48 89 ca             	mov    %rcx,%rdx
+    2c1d:	89 d0                	mov    %edx,%eax
+    2c1f:	83 c0 30             	add    $0x30,%eax
+    2c22:	89 c2                	mov    %eax,%edx
+    2c24:	48 83 6d f8 01       	subq   $0x1,-0x8(%rbp)
+    2c29:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2c2d:	88 10                	mov    %dl,(%rax)
+    2c2f:	48 8b 4d e8          	mov    -0x18(%rbp),%rcx
+    2c33:	48 ba 67 66 66 66 66 	movabs $0x6666666666666667,%rdx
+    2c3a:	66 66 66 
+    2c3d:	48 89 c8             	mov    %rcx,%rax
+    2c40:	48 f7 ea             	imul   %rdx
+    2c43:	48 89 d0             	mov    %rdx,%rax
+    2c46:	48 c1 f8 02          	sar    $0x2,%rax
+    2c4a:	48 c1 f9 3f          	sar    $0x3f,%rcx
+    2c4e:	48 89 ca             	mov    %rcx,%rdx
+    2c51:	48 29 d0             	sub    %rdx,%rax
+    2c54:	48 89 45 e8          	mov    %rax,-0x18(%rbp)
+    2c58:	48 83 7d e8 00       	cmpq   $0x0,-0x18(%rbp)
+    2c5d:	7f 89                	jg     2be8 <_Z9to_stringl+0x33>
+    2c5f:	80 7d f7 00          	cmpb   $0x0,-0x9(%rbp)
+    2c63:	74 0c                	je     2c71 <_Z9to_stringl+0xbc>
+    2c65:	48 83 6d f8 01       	subq   $0x1,-0x8(%rbp)
+    2c6a:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2c6e:	c6 00 2d             	movb   $0x2d,(%rax)
+    2c71:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2c75:	5d                   	pop    %rbp
+    2c76:	c3                   	ret
+
+0000000000002c77 <_Z10to_hstringm>:
+    2c77:	f3 0f 1e fa          	endbr64
+    2c7b:	55                   	push   %rbp
+    2c7c:	48 89 e5             	mov    %rsp,%rbp
+    2c7f:	48 89 7d e8          	mov    %rdi,-0x18(%rbp)
+    2c83:	48 8d 05 e8 b3 00 00 	lea    0xb3e8(%rip),%rax        # e072 <_ZZ10to_hstringmE6buffer+0x12>
+    2c8a:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    2c8e:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2c92:	c6 00 00             	movb   $0x0,(%rax)
+    2c95:	48 8b 45 e8          	mov    -0x18(%rbp),%rax
+    2c99:	83 e0 0f             	and    $0xf,%eax
+    2c9c:	88 45 f7             	mov    %al,-0x9(%rbp)
+    2c9f:	80 7d f7 09          	cmpb   $0x9,-0x9(%rbp)
+    2ca3:	77 0b                	ja     2cb0 <_Z10to_hstringm+0x39>
+    2ca5:	0f b6 45 f7          	movzbl -0x9(%rbp),%eax
+    2ca9:	83 c0 30             	add    $0x30,%eax
+    2cac:	89 c2                	mov    %eax,%edx
+    2cae:	eb 09                	jmp    2cb9 <_Z10to_hstringm+0x42>
+    2cb0:	0f b6 45 f7          	movzbl -0x9(%rbp),%eax
+    2cb4:	83 c0 37             	add    $0x37,%eax
+    2cb7:	89 c2                	mov    %eax,%edx
+    2cb9:	48 83 6d f8 01       	subq   $0x1,-0x8(%rbp)
+    2cbe:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2cc2:	88 10                	mov    %dl,(%rax)
+    2cc4:	48 c1 6d e8 04       	shrq   $0x4,-0x18(%rbp)
+    2cc9:	48 83 7d e8 00       	cmpq   $0x0,-0x18(%rbp)
+    2cce:	75 c5                	jne    2c95 <_Z10to_hstringm+0x1e>
+    2cd0:	48 83 6d f8 01       	subq   $0x1,-0x8(%rbp)
+    2cd5:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2cd9:	c6 00 78             	movb   $0x78,(%rax)
+    2cdc:	48 83 6d f8 01       	subq   $0x1,-0x8(%rbp)
+    2ce1:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2ce5:	c6 00 30             	movb   $0x30,(%rax)
+    2ce8:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2cec:	5d                   	pop    %rbp
+    2ced:	c3                   	ret
+
+0000000000002cee <_Z10to_hstringj>:
+    2cee:	f3 0f 1e fa          	endbr64
+    2cf2:	55                   	push   %rbp
+    2cf3:	48 89 e5             	mov    %rsp,%rbp
+    2cf6:	89 7d ec             	mov    %edi,-0x14(%rbp)
+    2cf9:	48 8d 05 82 b3 00 00 	lea    0xb382(%rip),%rax        # e082 <_ZZ10to_hstringjE6buffer+0xa>
+    2d00:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    2d04:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2d08:	c6 00 00             	movb   $0x0,(%rax)
+    2d0b:	8b 45 ec             	mov    -0x14(%rbp),%eax
+    2d0e:	83 e0 0f             	and    $0xf,%eax
+    2d11:	88 45 f7             	mov    %al,-0x9(%rbp)
+    2d14:	80 7d f7 09          	cmpb   $0x9,-0x9(%rbp)
+    2d18:	77 0b                	ja     2d25 <_Z10to_hstringj+0x37>
+    2d1a:	0f b6 45 f7          	movzbl -0x9(%rbp),%eax
+    2d1e:	83 c0 30             	add    $0x30,%eax
+    2d21:	89 c2                	mov    %eax,%edx
+    2d23:	eb 09                	jmp    2d2e <_Z10to_hstringj+0x40>
+    2d25:	0f b6 45 f7          	movzbl -0x9(%rbp),%eax
+    2d29:	83 c0 37             	add    $0x37,%eax
+    2d2c:	89 c2                	mov    %eax,%edx
+    2d2e:	48 83 6d f8 01       	subq   $0x1,-0x8(%rbp)
+    2d33:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2d37:	88 10                	mov    %dl,(%rax)
+    2d39:	c1 6d ec 04          	shrl   $0x4,-0x14(%rbp)
+    2d3d:	83 7d ec 00          	cmpl   $0x0,-0x14(%rbp)
+    2d41:	75 c8                	jne    2d0b <_Z10to_hstringj+0x1d>
+    2d43:	48 83 6d f8 01       	subq   $0x1,-0x8(%rbp)
+    2d48:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2d4c:	c6 00 78             	movb   $0x78,(%rax)
+    2d4f:	48 83 6d f8 01       	subq   $0x1,-0x8(%rbp)
+    2d54:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2d58:	c6 00 30             	movb   $0x30,(%rax)
+    2d5b:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2d5f:	5d                   	pop    %rbp
+    2d60:	c3                   	ret
+
+0000000000002d61 <_Z10to_hstringt>:
+    2d61:	f3 0f 1e fa          	endbr64
+    2d65:	55                   	push   %rbp
+    2d66:	48 89 e5             	mov    %rsp,%rbp
+    2d69:	89 f8                	mov    %edi,%eax
+    2d6b:	66 89 45 ec          	mov    %ax,-0x14(%rbp)
+    2d6f:	48 8d 05 13 b3 00 00 	lea    0xb313(%rip),%rax        # e089 <_ZZ10to_hstringtE6buffer+0x6>
+    2d76:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    2d7a:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2d7e:	c6 00 00             	movb   $0x0,(%rax)
+    2d81:	0f b7 45 ec          	movzwl -0x14(%rbp),%eax
+    2d85:	83 e0 0f             	and    $0xf,%eax
+    2d88:	88 45 f7             	mov    %al,-0x9(%rbp)
+    2d8b:	80 7d f7 09          	cmpb   $0x9,-0x9(%rbp)
+    2d8f:	77 0b                	ja     2d9c <_Z10to_hstringt+0x3b>
+    2d91:	0f b6 45 f7          	movzbl -0x9(%rbp),%eax
+    2d95:	83 c0 30             	add    $0x30,%eax
+    2d98:	89 c2                	mov    %eax,%edx
+    2d9a:	eb 09                	jmp    2da5 <_Z10to_hstringt+0x44>
+    2d9c:	0f b6 45 f7          	movzbl -0x9(%rbp),%eax
+    2da0:	83 c0 37             	add    $0x37,%eax
+    2da3:	89 c2                	mov    %eax,%edx
+    2da5:	48 83 6d f8 01       	subq   $0x1,-0x8(%rbp)
+    2daa:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2dae:	88 10                	mov    %dl,(%rax)
+    2db0:	66 c1 6d ec 04       	shrw   $0x4,-0x14(%rbp)
+    2db5:	66 83 7d ec 00       	cmpw   $0x0,-0x14(%rbp)
+    2dba:	75 c5                	jne    2d81 <_Z10to_hstringt+0x20>
+    2dbc:	48 83 6d f8 01       	subq   $0x1,-0x8(%rbp)
+    2dc1:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2dc5:	c6 00 78             	movb   $0x78,(%rax)
+    2dc8:	48 83 6d f8 01       	subq   $0x1,-0x8(%rbp)
+    2dcd:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2dd1:	c6 00 30             	movb   $0x30,(%rax)
+    2dd4:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2dd8:	5d                   	pop    %rbp
+    2dd9:	c3                   	ret
+
+0000000000002dda <_Z10to_hstringh>:
+    2dda:	f3 0f 1e fa          	endbr64
+    2dde:	55                   	push   %rbp
+    2ddf:	48 89 e5             	mov    %rsp,%rbp
+    2de2:	89 f8                	mov    %edi,%eax
+    2de4:	88 45 ec             	mov    %al,-0x14(%rbp)
+    2de7:	48 8d 05 a0 b2 00 00 	lea    0xb2a0(%rip),%rax        # e08e <_ZZ10to_hstringhE6buffer+0x4>
+    2dee:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    2df2:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2df6:	c6 00 00             	movb   $0x0,(%rax)
+    2df9:	0f b6 45 ec          	movzbl -0x14(%rbp),%eax
+    2dfd:	83 e0 0f             	and    $0xf,%eax
+    2e00:	88 45 f7             	mov    %al,-0x9(%rbp)
+    2e03:	80 7d f7 09          	cmpb   $0x9,-0x9(%rbp)
+    2e07:	77 0b                	ja     2e14 <_Z10to_hstringh+0x3a>
+    2e09:	0f b6 45 f7          	movzbl -0x9(%rbp),%eax
+    2e0d:	83 c0 30             	add    $0x30,%eax
+    2e10:	89 c2                	mov    %eax,%edx
+    2e12:	eb 09                	jmp    2e1d <_Z10to_hstringh+0x43>
+    2e14:	0f b6 45 f7          	movzbl -0x9(%rbp),%eax
+    2e18:	83 c0 37             	add    $0x37,%eax
+    2e1b:	89 c2                	mov    %eax,%edx
+    2e1d:	48 83 6d f8 01       	subq   $0x1,-0x8(%rbp)
+    2e22:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2e26:	88 10                	mov    %dl,(%rax)
+    2e28:	c0 6d ec 04          	shrb   $0x4,-0x14(%rbp)
+    2e2c:	80 7d ec 00          	cmpb   $0x0,-0x14(%rbp)
+    2e30:	75 c7                	jne    2df9 <_Z10to_hstringh+0x1f>
+    2e32:	48 83 6d f8 01       	subq   $0x1,-0x8(%rbp)
+    2e37:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2e3b:	c6 00 78             	movb   $0x78,(%rax)
+    2e3e:	48 83 6d f8 01       	subq   $0x1,-0x8(%rbp)
+    2e43:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2e47:	c6 00 30             	movb   $0x30,(%rax)
+    2e4a:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2e4e:	5d                   	pop    %rbp
+    2e4f:	c3                   	ret
+
+0000000000002e50 <_Z9to_stringdh>:
+    2e50:	f3 0f 1e fa          	endbr64
+    2e54:	55                   	push   %rbp
+    2e55:	48 89 e5             	mov    %rsp,%rbp
+    2e58:	f2 0f 11 45 b8       	movsd  %xmm0,-0x48(%rbp)
+    2e5d:	89 f8                	mov    %edi,%eax
+    2e5f:	88 45 b4             	mov    %al,-0x4c(%rbp)
+    2e62:	48 8d 05 37 b2 00 00 	lea    0xb237(%rip),%rax        # e0a0 <_ZZ9to_stringdhE6buffer>
+    2e69:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    2e6d:	66 0f ef c0          	pxor   %xmm0,%xmm0
+    2e71:	66 0f 2f 45 b8       	comisd -0x48(%rbp),%xmm0
+    2e76:	76 25                	jbe    2e9d <_Z9to_stringdh+0x4d>
+    2e78:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2e7c:	48 8d 50 01          	lea    0x1(%rax),%rdx
+    2e80:	48 89 55 f8          	mov    %rdx,-0x8(%rbp)
+    2e84:	c6 00 2d             	movb   $0x2d,(%rax)
+    2e87:	f2 0f 10 45 b8       	movsd  -0x48(%rbp),%xmm0
+    2e8c:	f3 0f 7e 0d ec 83 00 	movq   0x83ec(%rip),%xmm1        # b280 <_ZL4font+0x1000>
+    2e93:	00 
+    2e94:	66 0f 57 c1          	xorpd  %xmm1,%xmm0
+    2e98:	f2 0f 11 45 b8       	movsd  %xmm0,-0x48(%rbp)
+    2e9d:	f2 0f 10 45 b8       	movsd  -0x48(%rbp),%xmm0
+    2ea2:	66 0f 2f 05 e6 83 00 	comisd 0x83e6(%rip),%xmm0        # b290 <_ZL4font+0x1010>
+    2ea9:	00 
+    2eaa:	73 10                	jae    2ebc <_Z9to_stringdh+0x6c>
+    2eac:	f2 0f 10 45 b8       	movsd  -0x48(%rbp),%xmm0
+    2eb1:	f2 48 0f 2c c0       	cvttsd2si %xmm0,%rax
+    2eb6:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    2eba:	eb 28                	jmp    2ee4 <_Z9to_stringdh+0x94>
+    2ebc:	f2 0f 10 45 b8       	movsd  -0x48(%rbp),%xmm0
+    2ec1:	f2 0f 10 0d c7 83 00 	movsd  0x83c7(%rip),%xmm1        # b290 <_ZL4font+0x1010>
+    2ec8:	00 
+    2ec9:	f2 0f 5c c1          	subsd  %xmm1,%xmm0
+    2ecd:	f2 48 0f 2c c0       	cvttsd2si %xmm0,%rax
+    2ed2:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    2ed6:	48 b8 00 00 00 00 00 	movabs $0x8000000000000000,%rax
+    2edd:	00 00 80 
+    2ee0:	48 31 45 f0          	xor    %rax,-0x10(%rbp)
+    2ee4:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    2ee8:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    2eec:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    2ef0:	48 85 c0             	test   %rax,%rax
+    2ef3:	78 0b                	js     2f00 <_Z9to_stringdh+0xb0>
+    2ef5:	66 0f ef c0          	pxor   %xmm0,%xmm0
+    2ef9:	f2 48 0f 2a c0       	cvtsi2sd %rax,%xmm0
+    2efe:	eb 19                	jmp    2f19 <_Z9to_stringdh+0xc9>
+    2f00:	48 89 c2             	mov    %rax,%rdx
+    2f03:	48 d1 ea             	shr    $1,%rdx
+    2f06:	83 e0 01             	and    $0x1,%eax
+    2f09:	48 09 c2             	or     %rax,%rdx
+    2f0c:	66 0f ef c0          	pxor   %xmm0,%xmm0
+    2f10:	f2 48 0f 2a c2       	cvtsi2sd %rdx,%xmm0
+    2f15:	f2 0f 58 c0          	addsd  %xmm0,%xmm0
+    2f19:	f2 0f 10 4d b8       	movsd  -0x48(%rbp),%xmm1
+    2f1e:	f2 0f 5c c8          	subsd  %xmm0,%xmm1
+    2f22:	f2 0f 11 4d e8       	movsd  %xmm1,-0x18(%rbp)
+    2f27:	48 8d 05 91 b1 00 00 	lea    0xb191(%rip),%rax        # e0bf <_ZZ9to_stringdhE6buffer+0x1f>
+    2f2e:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+    2f32:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+    2f36:	c6 00 00             	movb   $0x0,(%rax)
+    2f39:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+    2f3d:	48 89 45 e0          	mov    %rax,-0x20(%rbp)
+    2f41:	48 8b 4d f0          	mov    -0x10(%rbp),%rcx
+    2f45:	48 ba cd cc cc cc cc 	movabs $0xcccccccccccccccd,%rdx
+    2f4c:	cc cc cc 
+    2f4f:	48 89 c8             	mov    %rcx,%rax
+    2f52:	48 f7 e2             	mul    %rdx
+    2f55:	48 c1 ea 03          	shr    $0x3,%rdx
+    2f59:	48 89 d0             	mov    %rdx,%rax
+    2f5c:	48 c1 e0 02          	shl    $0x2,%rax
+    2f60:	48 01 d0             	add    %rdx,%rax
+    2f63:	48 01 c0             	add    %rax,%rax
+    2f66:	48 29 c1             	sub    %rax,%rcx
+    2f69:	48 89 ca             	mov    %rcx,%rdx
+    2f6c:	89 d0                	mov    %edx,%eax
+    2f6e:	83 c0 30             	add    $0x30,%eax
+    2f71:	89 c2                	mov    %eax,%edx
+    2f73:	48 83 6d e0 01       	subq   $0x1,-0x20(%rbp)
+    2f78:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    2f7c:	88 10                	mov    %dl,(%rax)
+    2f7e:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    2f82:	48 ba cd cc cc cc cc 	movabs $0xcccccccccccccccd,%rdx
+    2f89:	cc cc cc 
+    2f8c:	48 f7 e2             	mul    %rdx
+    2f8f:	48 89 d0             	mov    %rdx,%rax
+    2f92:	48 c1 e8 03          	shr    $0x3,%rax
+    2f96:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    2f9a:	48 83 7d f0 00       	cmpq   $0x0,-0x10(%rbp)
+    2f9f:	75 a0                	jne    2f41 <_Z9to_stringdh+0xf1>
+    2fa1:	eb 1d                	jmp    2fc0 <_Z9to_stringdh+0x170>
+    2fa3:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    2fa7:	48 8d 50 01          	lea    0x1(%rax),%rdx
+    2fab:	48 89 55 e0          	mov    %rdx,-0x20(%rbp)
+    2faf:	0f b6 10             	movzbl (%rax),%edx
+    2fb2:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2fb6:	48 8d 48 01          	lea    0x1(%rax),%rcx
+    2fba:	48 89 4d f8          	mov    %rcx,-0x8(%rbp)
+    2fbe:	88 10                	mov    %dl,(%rax)
+    2fc0:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    2fc4:	0f b6 00             	movzbl (%rax),%eax
+    2fc7:	84 c0                	test   %al,%al
+    2fc9:	75 d8                	jne    2fa3 <_Z9to_stringdh+0x153>
+    2fcb:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    2fcf:	48 8d 50 01          	lea    0x1(%rax),%rdx
+    2fd3:	48 89 55 f8          	mov    %rdx,-0x8(%rbp)
+    2fd7:	c6 00 2e             	movb   $0x2e,(%rax)
+    2fda:	c6 45 df 00          	movb   $0x0,-0x21(%rbp)
+    2fde:	eb 53                	jmp    3033 <_Z9to_stringdh+0x1e3>
+    2fe0:	f2 0f 10 4d e8       	movsd  -0x18(%rbp),%xmm1
+    2fe5:	f2 0f 10 05 ab 82 00 	movsd  0x82ab(%rip),%xmm0        # b298 <_ZL4font+0x1018>
+    2fec:	00 
+    2fed:	f2 0f 59 c1          	mulsd  %xmm1,%xmm0
+    2ff1:	f2 0f 11 45 e8       	movsd  %xmm0,-0x18(%rbp)
+    2ff6:	f2 0f 2c 45 e8       	cvttsd2si -0x18(%rbp),%eax
+    2ffb:	88 45 cf             	mov    %al,-0x31(%rbp)
+    2ffe:	0f b6 45 cf          	movzbl -0x31(%rbp),%eax
+    3002:	83 c0 30             	add    $0x30,%eax
+    3005:	89 c1                	mov    %eax,%ecx
+    3007:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    300b:	48 8d 50 01          	lea    0x1(%rax),%rdx
+    300f:	48 89 55 f8          	mov    %rdx,-0x8(%rbp)
+    3013:	88 08                	mov    %cl,(%rax)
+    3015:	0f b6 45 cf          	movzbl -0x31(%rbp),%eax
+    3019:	66 0f ef c9          	pxor   %xmm1,%xmm1
+    301d:	f2 0f 2a c8          	cvtsi2sd %eax,%xmm1
+    3021:	f2 0f 10 45 e8       	movsd  -0x18(%rbp),%xmm0
+    3026:	f2 0f 5c c1          	subsd  %xmm1,%xmm0
+    302a:	f2 0f 11 45 e8       	movsd  %xmm0,-0x18(%rbp)
+    302f:	80 45 df 01          	addb   $0x1,-0x21(%rbp)
+    3033:	0f b6 45 df          	movzbl -0x21(%rbp),%eax
+    3037:	3a 45 b4             	cmp    -0x4c(%rbp),%al
+    303a:	72 a4                	jb     2fe0 <_Z9to_stringdh+0x190>
+    303c:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    3040:	c6 00 00             	movb   $0x0,(%rax)
+    3043:	48 8d 05 56 b0 00 00 	lea    0xb056(%rip),%rax        # e0a0 <_ZZ9to_stringdhE6buffer>
+    304a:	5d                   	pop    %rbp
+    304b:	c3                   	ret
+
+000000000000304c <_Z9to_stringd>:
+    304c:	f3 0f 1e fa          	endbr64
+    3050:	55                   	push   %rbp
+    3051:	48 89 e5             	mov    %rsp,%rbp
+    3054:	f2 0f 11 45 b8       	movsd  %xmm0,-0x48(%rbp)
+    3059:	48 8d 05 60 b0 00 00 	lea    0xb060(%rip),%rax        # e0c0 <_ZZ9to_stringdE6buffer>
+    3060:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    3064:	66 0f ef c0          	pxor   %xmm0,%xmm0
+    3068:	66 0f 2f 45 b8       	comisd -0x48(%rbp),%xmm0
+    306d:	76 25                	jbe    3094 <_Z9to_stringd+0x48>
+    306f:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    3073:	48 8d 50 01          	lea    0x1(%rax),%rdx
+    3077:	48 89 55 f8          	mov    %rdx,-0x8(%rbp)
+    307b:	c6 00 2d             	movb   $0x2d,(%rax)
+    307e:	f2 0f 10 45 b8       	movsd  -0x48(%rbp),%xmm0
+    3083:	f3 0f 7e 0d f5 81 00 	movq   0x81f5(%rip),%xmm1        # b280 <_ZL4font+0x1000>
+    308a:	00 
+    308b:	66 0f 57 c1          	xorpd  %xmm1,%xmm0
+    308f:	f2 0f 11 45 b8       	movsd  %xmm0,-0x48(%rbp)
+    3094:	f2 0f 10 45 b8       	movsd  -0x48(%rbp),%xmm0
+    3099:	66 0f 2f 05 ef 81 00 	comisd 0x81ef(%rip),%xmm0        # b290 <_ZL4font+0x1010>
+    30a0:	00 
+    30a1:	73 10                	jae    30b3 <_Z9to_stringd+0x67>
+    30a3:	f2 0f 10 45 b8       	movsd  -0x48(%rbp),%xmm0
+    30a8:	f2 48 0f 2c c0       	cvttsd2si %xmm0,%rax
+    30ad:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    30b1:	eb 28                	jmp    30db <_Z9to_stringd+0x8f>
+    30b3:	f2 0f 10 45 b8       	movsd  -0x48(%rbp),%xmm0
+    30b8:	f2 0f 10 0d d0 81 00 	movsd  0x81d0(%rip),%xmm1        # b290 <_ZL4font+0x1010>
+    30bf:	00 
+    30c0:	f2 0f 5c c1          	subsd  %xmm1,%xmm0
+    30c4:	f2 48 0f 2c c0       	cvttsd2si %xmm0,%rax
+    30c9:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    30cd:	48 b8 00 00 00 00 00 	movabs $0x8000000000000000,%rax
+    30d4:	00 00 80 
+    30d7:	48 31 45 f0          	xor    %rax,-0x10(%rbp)
+    30db:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    30df:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    30e3:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    30e7:	48 85 c0             	test   %rax,%rax
+    30ea:	78 0b                	js     30f7 <_Z9to_stringd+0xab>
+    30ec:	66 0f ef c0          	pxor   %xmm0,%xmm0
+    30f0:	f2 48 0f 2a c0       	cvtsi2sd %rax,%xmm0
+    30f5:	eb 19                	jmp    3110 <_Z9to_stringd+0xc4>
+    30f7:	48 89 c2             	mov    %rax,%rdx
+    30fa:	48 d1 ea             	shr    $1,%rdx
+    30fd:	83 e0 01             	and    $0x1,%eax
+    3100:	48 09 c2             	or     %rax,%rdx
+    3103:	66 0f ef c0          	pxor   %xmm0,%xmm0
+    3107:	f2 48 0f 2a c2       	cvtsi2sd %rdx,%xmm0
+    310c:	f2 0f 58 c0          	addsd  %xmm0,%xmm0
+    3110:	f2 0f 10 4d b8       	movsd  -0x48(%rbp),%xmm1
+    3115:	f2 0f 5c c8          	subsd  %xmm0,%xmm1
+    3119:	f2 0f 11 4d e8       	movsd  %xmm1,-0x18(%rbp)
+    311e:	48 8d 05 ba af 00 00 	lea    0xafba(%rip),%rax        # e0df <_ZZ9to_stringdE6buffer+0x1f>
+    3125:	48 89 45 d0          	mov    %rax,-0x30(%rbp)
+    3129:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+    312d:	c6 00 00             	movb   $0x0,(%rax)
+    3130:	48 8b 45 d0          	mov    -0x30(%rbp),%rax
+    3134:	48 89 45 e0          	mov    %rax,-0x20(%rbp)
+    3138:	48 8b 4d f0          	mov    -0x10(%rbp),%rcx
+    313c:	48 ba cd cc cc cc cc 	movabs $0xcccccccccccccccd,%rdx
+    3143:	cc cc cc 
+    3146:	48 89 c8             	mov    %rcx,%rax
+    3149:	48 f7 e2             	mul    %rdx
+    314c:	48 c1 ea 03          	shr    $0x3,%rdx
+    3150:	48 89 d0             	mov    %rdx,%rax
+    3153:	48 c1 e0 02          	shl    $0x2,%rax
+    3157:	48 01 d0             	add    %rdx,%rax
+    315a:	48 01 c0             	add    %rax,%rax
+    315d:	48 29 c1             	sub    %rax,%rcx
+    3160:	48 89 ca             	mov    %rcx,%rdx
+    3163:	89 d0                	mov    %edx,%eax
+    3165:	83 c0 30             	add    $0x30,%eax
+    3168:	89 c2                	mov    %eax,%edx
+    316a:	48 83 6d e0 01       	subq   $0x1,-0x20(%rbp)
+    316f:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    3173:	88 10                	mov    %dl,(%rax)
+    3175:	48 8b 45 f0          	mov    -0x10(%rbp),%rax
+    3179:	48 ba cd cc cc cc cc 	movabs $0xcccccccccccccccd,%rdx
+    3180:	cc cc cc 
+    3183:	48 f7 e2             	mul    %rdx
+    3186:	48 89 d0             	mov    %rdx,%rax
+    3189:	48 c1 e8 03          	shr    $0x3,%rax
+    318d:	48 89 45 f0          	mov    %rax,-0x10(%rbp)
+    3191:	48 83 7d f0 00       	cmpq   $0x0,-0x10(%rbp)
+    3196:	75 a0                	jne    3138 <_Z9to_stringd+0xec>
+    3198:	eb 1d                	jmp    31b7 <_Z9to_stringd+0x16b>
+    319a:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    319e:	48 8d 50 01          	lea    0x1(%rax),%rdx
+    31a2:	48 89 55 e0          	mov    %rdx,-0x20(%rbp)
+    31a6:	0f b6 10             	movzbl (%rax),%edx
+    31a9:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    31ad:	48 8d 48 01          	lea    0x1(%rax),%rcx
+    31b1:	48 89 4d f8          	mov    %rcx,-0x8(%rbp)
+    31b5:	88 10                	mov    %dl,(%rax)
+    31b7:	48 8b 45 e0          	mov    -0x20(%rbp),%rax
+    31bb:	0f b6 00             	movzbl (%rax),%eax
+    31be:	84 c0                	test   %al,%al
+    31c0:	75 d8                	jne    319a <_Z9to_stringd+0x14e>
+    31c2:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    31c6:	48 8d 50 01          	lea    0x1(%rax),%rdx
+    31ca:	48 89 55 f8          	mov    %rdx,-0x8(%rbp)
+    31ce:	c6 00 2e             	movb   $0x2e,(%rax)
+    31d1:	c7 45 dc 00 00 00 00 	movl   $0x0,-0x24(%rbp)
+    31d8:	eb 53                	jmp    322d <_Z9to_stringd+0x1e1>
+    31da:	f2 0f 10 4d e8       	movsd  -0x18(%rbp),%xmm1
+    31df:	f2 0f 10 05 b1 80 00 	movsd  0x80b1(%rip),%xmm0        # b298 <_ZL4font+0x1018>
+    31e6:	00 
+    31e7:	f2 0f 59 c1          	mulsd  %xmm1,%xmm0
+    31eb:	f2 0f 11 45 e8       	movsd  %xmm0,-0x18(%rbp)
+    31f0:	f2 0f 2c 45 e8       	cvttsd2si -0x18(%rbp),%eax
+    31f5:	88 45 cf             	mov    %al,-0x31(%rbp)
+    31f8:	0f b6 45 cf          	movzbl -0x31(%rbp),%eax
+    31fc:	83 c0 30             	add    $0x30,%eax
+    31ff:	89 c1                	mov    %eax,%ecx
+    3201:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    3205:	48 8d 50 01          	lea    0x1(%rax),%rdx
+    3209:	48 89 55 f8          	mov    %rdx,-0x8(%rbp)
+    320d:	88 08                	mov    %cl,(%rax)
+    320f:	0f b6 45 cf          	movzbl -0x31(%rbp),%eax
+    3213:	66 0f ef c9          	pxor   %xmm1,%xmm1
+    3217:	f2 0f 2a c8          	cvtsi2sd %eax,%xmm1
+    321b:	f2 0f 10 45 e8       	movsd  -0x18(%rbp),%xmm0
+    3220:	f2 0f 5c c1          	subsd  %xmm1,%xmm0
+    3224:	f2 0f 11 45 e8       	movsd  %xmm0,-0x18(%rbp)
+    3229:	83 45 dc 01          	addl   $0x1,-0x24(%rbp)
+    322d:	83 7d dc 01          	cmpl   $0x1,-0x24(%rbp)
+    3231:	7e a7                	jle    31da <_Z9to_stringd+0x18e>
+    3233:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    3237:	c6 00 00             	movb   $0x0,(%rax)
+    323a:	48 8d 05 7f ae 00 00 	lea    0xae7f(%rip),%rax        # e0c0 <_ZZ9to_stringdE6buffer>
+    3241:	5d                   	pop    %rbp
+    3242:	c3                   	ret
+
+0000000000003243 <_start>:
+    3243:	f3 0f 1e fa          	endbr64
+    3247:	55                   	push   %rbp
+    3248:	48 89 e5             	mov    %rsp,%rbp
+    324b:	48 81 ec e0 00 00 00 	sub    $0xe0,%rsp
+    3252:	48 89 bd 28 ff ff ff 	mov    %rdi,-0xd8(%rbp)
+    3259:	48 8b 95 28 ff ff ff 	mov    -0xd8(%rbp),%rdx
+    3260:	48 8d 85 30 ff ff ff 	lea    -0xd0(%rbp),%rax
+    3267:	48 89 d6             	mov    %rdx,%rsi
+    326a:	48 89 c7             	mov    %rax,%rdi
+    326d:	e8 c0 e5 ff ff       	call   1832 <_ZN14KernelServicesC1EP8BootInfo>
+    3272:	48 8b 95 28 ff ff ff 	mov    -0xd8(%rbp),%rdx
+    3279:	48 8d 85 30 ff ff ff 	lea    -0xd0(%rbp),%rax
+    3280:	48 89 d6             	mov    %rdx,%rsi
+    3283:	48 89 c7             	mov    %rax,%rdi
+    3286:	e8 4c f6 ff ff       	call   28d7 <InitializePaging>
+    328b:	48 8b 85 28 ff ff ff 	mov    -0xd8(%rbp),%rax
+    3292:	48 8b 00             	mov    (%rax),%rax
+    3295:	48 8b 50 08          	mov    0x8(%rax),%rdx
+    3299:	48 8b 85 28 ff ff ff 	mov    -0xd8(%rbp),%rax
+    32a0:	48 8b 00             	mov    (%rax),%rax
+    32a3:	48 8b 00             	mov    (%rax),%rax
+    32a6:	be 00 00 00 00       	mov    $0x0,%esi
+    32ab:	48 89 c7             	mov    %rax,%rdi
+    32ae:	e8 16 e8 ff ff       	call   1ac9 <_Z6memsetPvhm>
+    32b3:	48 8d 85 30 ff ff ff 	lea    -0xd0(%rbp),%rax
+    32ba:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    32bf:	48 8d 0d da 8f 00 00 	lea    0x8fda(%rip),%rcx        # c2a0 <_ZL4font+0x1000>
+    32c6:	48 89 ce             	mov    %rcx,%rsi
+    32c9:	48 89 c7             	mov    %rax,%rdi
+    32cc:	e8 4f df ff ff       	call   1220 <_ZN12BasicConsole7PrintlnEPKcj>
+    32d1:	48 8d 85 30 ff ff ff 	lea    -0xd0(%rbp),%rax
+    32d8:	48 83 c0 68          	add    $0x68,%rax
+    32dc:	ba 00 00 08 00       	mov    $0x80000,%edx
+    32e1:	48 b9 00 00 00 00 06 	movabs $0x600000000,%rcx
+    32e8:	00 00 00 
+    32eb:	48 89 ce             	mov    %rcx,%rsi
+    32ee:	48 89 c7             	mov    %rax,%rdi
+    32f1:	e8 1e f1 ff ff       	call   2414 <_ZN16PageTableManager9MapMemoryEPvS0_>
+    32f6:	48 8d 85 30 ff ff ff 	lea    -0xd0(%rbp),%rax
+    32fd:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    3302:	48 8d 0d ab 8f 00 00 	lea    0x8fab(%rip),%rcx        # c2b4 <_ZL4font+0x1014>
+    3309:	48 89 ce             	mov    %rcx,%rsi
+    330c:	48 89 c7             	mov    %rax,%rdi
+    330f:	e8 0c df ff ff       	call   1220 <_ZN12BasicConsole7PrintlnEPKcj>
+    3314:	48 b8 00 00 00 00 06 	movabs $0x600000000,%rax
+    331b:	00 00 00 
+    331e:	48 89 45 f8          	mov    %rax,-0x8(%rbp)
+    3322:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    3326:	48 c7 00 1a 00 00 00 	movq   $0x1a,(%rax)
+    332d:	48 8b 45 f8          	mov    -0x8(%rbp),%rax
+    3331:	48 8b 00             	mov    (%rax),%rax
+    3334:	48 89 c7             	mov    %rax,%rdi
+    3337:	e8 ad f7 ff ff       	call   2ae9 <_Z9to_stringm>
+    333c:	48 89 c1             	mov    %rax,%rcx
+    333f:	48 8d 85 30 ff ff ff 	lea    -0xd0(%rbp),%rax
+    3346:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    334b:	48 89 ce             	mov    %rcx,%rsi
+    334e:	48 89 c7             	mov    %rax,%rdi
+    3351:	e8 ca de ff ff       	call   1220 <_ZN12BasicConsole7PrintlnEPKcj>
+    3356:	48 8d 85 30 ff ff ff 	lea    -0xd0(%rbp),%rax
+    335d:	48 05 90 00 00 00    	add    $0x90,%rax
+    3363:	48 89 c7             	mov    %rax,%rdi
+    3366:	e8 81 e2 ff ff       	call   15ec <_ZN3GDT14Create64BitGDTEv>
+    336b:	66 8c c8             	mov    %cs,%ax
+    336e:	66 89 45 f6          	mov    %ax,-0xa(%rbp)
+    3372:	66 8c d8             	mov    %ds,%ax
+    3375:	66 89 45 f4          	mov    %ax,-0xc(%rbp)
+    3379:	48 8d 85 30 ff ff ff 	lea    -0xd0(%rbp),%rax
+    3380:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    3385:	48 8d 0d 46 8f 00 00 	lea    0x8f46(%rip),%rcx        # c2d2 <_ZL4font+0x1032>
+    338c:	48 89 ce             	mov    %rcx,%rsi
+    338f:	48 89 c7             	mov    %rax,%rdi
+    3392:	e8 b9 dd ff ff       	call   1150 <_ZN12BasicConsole5PrintEPKcj>
+    3397:	0f b7 45 f6          	movzwl -0xa(%rbp),%eax
+    339b:	89 c7                	mov    %eax,%edi
+    339d:	e8 bf f9 ff ff       	call   2d61 <_Z10to_hstringt>
+    33a2:	48 89 c1             	mov    %rax,%rcx
+    33a5:	48 8d 85 30 ff ff ff 	lea    -0xd0(%rbp),%rax
+    33ac:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    33b1:	48 89 ce             	mov    %rcx,%rsi
+    33b4:	48 89 c7             	mov    %rax,%rdi
+    33b7:	e8 94 dd ff ff       	call   1150 <_ZN12BasicConsole5PrintEPKcj>
+    33bc:	48 8d 85 30 ff ff ff 	lea    -0xd0(%rbp),%rax
+    33c3:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    33c8:	48 8d 0d 12 8f 00 00 	lea    0x8f12(%rip),%rcx        # c2e1 <_ZL4font+0x1041>
+    33cf:	48 89 ce             	mov    %rcx,%rsi
+    33d2:	48 89 c7             	mov    %rax,%rdi
+    33d5:	e8 76 dd ff ff       	call   1150 <_ZN12BasicConsole5PrintEPKcj>
+    33da:	0f b7 45 f4          	movzwl -0xc(%rbp),%eax
+    33de:	89 c7                	mov    %eax,%edi
+    33e0:	e8 7c f9 ff ff       	call   2d61 <_Z10to_hstringt>
+    33e5:	48 89 c1             	mov    %rax,%rcx
+    33e8:	48 8d 85 30 ff ff ff 	lea    -0xd0(%rbp),%rax
+    33ef:	ba ff ff ff ff       	mov    $0xffffffff,%edx
+    33f4:	48 89 ce             	mov    %rcx,%rsi
+    33f7:	48 89 c7             	mov    %rax,%rdi
+    33fa:	e8 21 de ff ff       	call   1220 <_ZN12BasicConsole7PrintlnEPKcj>
+    33ff:	48 8b 95 28 ff ff ff 	mov    -0xd8(%rbp),%rdx
+    3406:	48 8d 85 30 ff ff ff 	lea    -0xd0(%rbp),%rax
+    340d:	48 89 d6             	mov    %rdx,%rsi
+    3410:	48 89 c7             	mov    %rax,%rdi
+    3413:	e8 be f6 ff ff       	call   2ad6 <InitializeIDT>
+    3418:	90                   	nop
+    3419:	eb fd                	jmp    3418 <_start+0x1d5>
