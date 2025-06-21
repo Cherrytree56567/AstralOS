@@ -21,5 +21,9 @@ SECTIONS {
         *(COMMON)
     }
 
+    .isr_stubs ALIGN(4K) : {
+        KEEP(*(.isr_stubs))
+    }
+
     _kernel_end = .;
 }

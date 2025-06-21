@@ -69,7 +69,7 @@ include CMakeFiles/init.dir/progress.make
 CMakeFiles/init:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Initializing Kernel"
 	sudo apt update
-	sudo apt -y install build-essential mtools git gcc make
+	sudo apt -y install build-essential mtools git gcc make nasm ninja-build
 	mkdir -p /mnt/d/AstralOS/AstralOS.Kernel/bin && mkdir -p /mnt/d/AstralOS/AstralOS.Kernel/obj && mkdir -p /mnt/d/AstralOS/AstralOS.Kernel/bin/AstralOS && mkdir -p /mnt/d/AstralOS/AstralOS.Kernel/bin/AstralOS/System64
 
 init: CMakeFiles/init

@@ -4,6 +4,7 @@ file(REMOVE_RECURSE
   "obj/Bitmap.o"
   "obj/EFIMemoryMap.o"
   "obj/GDT.o"
+  "obj/IDT.o"
   "obj/KernelServices.o"
   "obj/KernelUtils.o"
   "obj/PageFrameAllocator.o"
@@ -11,6 +12,7 @@ file(REMOVE_RECURSE
   "obj/PageTableManager.o"
   "obj/Paging.o"
   "obj/cstr.o"
+  "obj/interrupts.o"
   "obj/main.o"
 )
 

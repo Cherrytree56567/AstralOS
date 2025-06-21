@@ -259,9 +259,19 @@ struct GDTEntries {
     //LongModeSegmentDescriptor tssDesc;  // 5 + 6 TODO: LATER
 } __attribute__((packed));
 
+enum GDTOffsets {
+    GDT_NULL = 0x00,
+    GDT_KERNEL_CODE = 0x08, // Entry 1
+    GDT_KERNEL_DATA = 0x10, // Entry 2
+    GDT_USER_CODE   = 0x18, // Entry 3
+    GDT_USER_DATA   = 0x20, // Entry 4
+};
+
 class GDT {
 public:
-    GDT(PageTableManager* ptm, BasicConsole* bc) : pageTableManager(ptm), basicConsole(bc) {}
+    GDT() {}
+
+    void Initialize(BasicConsole* bc);
 
     void Create64BitGDT();
 
@@ -269,7 +279,6 @@ public:
     void reload_segments();
 
 private:
-    PageTableManager* pageTableManager;
     BasicConsole* basicConsole;
     GDTEntries currentGDT;
 };

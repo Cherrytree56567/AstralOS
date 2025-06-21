@@ -9,7 +9,11 @@ set(CC "g++")
 set(LD "ld")
 set(CFLAGS "-ffreestanding" "-fshort-wchar")
 
+set(AS "nasm")
+set(ASFLAGS "-felf64")
+
 file(GLOB_RECURSE  SRC_FILES "${SRC_DIR}/*.c" "${SRC_DIR}/*.cpp")
+file(GLOB_RECURSE ASM_FILES "${SRC_DIR}/*.asm" "${SRC_DIR}/*.s" "${SRC_DIR}/*.S")
 
 execute_process(COMMAND bash -c "if [[ \$(pwd) == *\"OS/AstralOS.Kernel\" ]]; then exit 0; else echo 'Please go inside AstralOS.Kernel'; exit 1; fi"
                 RESULT_VARIABLE check_directory_result)
@@ -18,6 +22,20 @@ if(NOT check_directory_result EQUAL 0)
 endif()
 
 set(OBJ_FILES)
+
+foreach(ASM_FILE ${ASM_FILES})
+    get_filename_component(FILE_NAME ${ASM_FILE} NAME_WE)
+    set(OBJ_FILE "${OBJ_DIR}/${FILE_NAME}.o")
+
+    list(APPEND OBJ_FILES ${OBJ_FILE})
+
+    add_custom_command(
+        OUTPUT ${OBJ_FILE}
+        COMMAND ${AS} ${ASFLAGS} ${ASM_FILE} -o ${OBJ_FILE}
+        DEPENDS ${ASM_FILE}
+        COMMENT "Assembling ${ASM_FILE} to ${OBJ_FILE}"
+    )
+endforeach()
 
 foreach(SRC_FILE ${SRC_FILES})
     get_filename_component(FILE_NAME ${SRC_FILE} NAME_WE)
@@ -35,7 +53,7 @@ endforeach()
 
 add_custom_target(init
     COMMAND sudo apt update
-    COMMAND sudo apt -y install build-essential mtools git gcc make
+    COMMAND sudo apt -y install build-essential mtools git gcc make nasm ninja-build
     COMMAND mkdir -p ${BIN_DIR} && mkdir -p ${OBJ_DIR} && mkdir -p ${BIN_DIR}/AstralOS && mkdir -p ${BIN_DIR}/AstralOS/System64
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Initializing Kernel"

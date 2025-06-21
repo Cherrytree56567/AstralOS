@@ -36,3 +36,9 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
 
     __asm__("mov %0, %%cr3" : : "r" (kernelServices->PML4));
 }
+
+IDTR64 idtr;
+extern "C" void InitializeIDT(KernelServices* kernelServices, BootInfo* pBootInfo) {
+    kernelServices->idt.CreateIDT();
+    kernelServices->basicConsole.Println("Interrupts Initialized.");
+}
