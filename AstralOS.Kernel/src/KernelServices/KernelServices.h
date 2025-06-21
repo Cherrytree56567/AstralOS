@@ -3,6 +3,7 @@
 #include "Paging/PageFrameAllocator/PageFrameAllocator.h"
 #include "Paging/PageTableManager/PageTableManager.h"
 #include "GDT/GDT.h"
+#include "IDT/IDT.h"
 
 struct BootInfo {
 	FrameBuffer* pFramebuffer;
@@ -19,6 +20,8 @@ public:
 	PageFrameAllocator pageFrameAllocator;
 	PageTableManager pageTableManager;
 	PageTable* PML4;
-	GDT* gdt;
+	GDT gdt;
+	IDT idt;
 };
 
+extern KernelServices* ks;

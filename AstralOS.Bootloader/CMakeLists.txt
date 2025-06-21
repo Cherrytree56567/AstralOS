@@ -19,7 +19,7 @@ add_custom_target(init
     COMMAND sudo apt -y install build-essential mtools git gcc make
     COMMAND git submodule init
     COMMAND git submodule update
-    COMMAND cd ${BUILD_DIR} && rm -rf src && make && mkdir src && cd src && mkdir out && cd ../../
+    COMMAND cd ${BUILD_DIR} && make && mkdir src && cd src && mkdir out && cd ../../
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Initializing Bootloader"
 )

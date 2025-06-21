@@ -72,7 +72,7 @@ CMakeFiles/init:
 	sudo apt -y install build-essential mtools git gcc make
 	git submodule init
 	git submodule update
-	cd gnu-efi && rm -rf src && make && mkdir src && cd src && mkdir out && cd ../../
+	cd gnu-efi && make && mkdir src && cd src && mkdir out && cd ../../
 
 init: CMakeFiles/init
 init: CMakeFiles/init.dir/build.make

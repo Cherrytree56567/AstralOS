@@ -1,11 +1,12 @@
 # Hashes of file build rules.
 7d106a6e4971c7cf6f52b19633402577 CMakeFiles/_clean
-499fbaa6614a428d8a49cefb93224427 CMakeFiles/build
-547e03d83ae476c96a3909d15130b632 CMakeFiles/init
+05100f8a81855cc6a2c24547480ad8ea CMakeFiles/build
+4d444417996319ccb69cf6c2a3b3d1be CMakeFiles/init
 e07e221661d4c69e11c0f1f18aaf60a0 obj/BasicConsole.o
 0d000b99c3f229b7ebb96e0c3dde814a obj/Bitmap.o
 c85676680db0bb3cf3f35f14ab14a3de obj/EFIMemoryMap.o
 9b40f59018f9d038fad03c756f3e746e obj/GDT.o
+10865d7a36c44e4cce67d9d538cbad26 obj/IDT.o
 b81343681409e8b56b360b645f96098e obj/KernelServices.o
 34b7075602c5d9227be97e28526d6f65 obj/KernelUtils.o
 158649b088b50fea36bab69cb7bbcb1f obj/PageFrameAllocator.o
@@ -13,4 +14,5 @@ f4ca1897c095e84bdc814b985663a3e3 obj/PageMapIndexer.o
 9ca737b5a8d46236f3e0d7cf3a72c4e4 obj/PageTableManager.o
 533069e67176b9a39793cc0cdad61a5f obj/Paging.o
 71330f0e3cea1415a893740e08cfc651 obj/cstr.o
+330d661a90ebdbbe64c301ab3b3aa8aa obj/interrupts.o
 f688fc6ab6e217a35763a598504b9327 obj/main.o

@@ -133,6 +133,10 @@ void SystemAccessByte::setP(bool val) {
     }
 }
 
+void GDT::Initialize(BasicConsole* bc) {
+    basicConsole = bc;
+}
+
 void GDT::Create64BitGDT() {
     /*
      * These values are set according to the OSDev Wiki.
