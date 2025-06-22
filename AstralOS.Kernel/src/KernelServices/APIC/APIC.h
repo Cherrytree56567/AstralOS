@@ -79,8 +79,8 @@ enum class APICRegs {
     Reserved10 = 0x2D0, // Reserved
     Reserved11 = 0x2E0, // Reserved
     CMCI = 0x2F0,       // LVT Corrected Machine Check Interrupt (CMCI) Register (Read/Write)
-    _ICR = 0x300,       // Interrupt Command Register START (Read/Write)
-    ICR_ = 0x310,       // Interrupt Command Register END (Read/Write)
+    ICR0 = 0x300,       // Interrupt Command Register (Read/Write)
+    ICR1 = 0x310,       // Interrupt Command Register (Read/Write)
     lvtTimer = 0x320,   // LVT Timer Register (Read/Write)
     lvtThermal = 0x330, // LVT Thermal Sensor Register (Read/Write)
     lvtPerf = 0x340,    // LVT Performance Monitoring Counters Register (Read/Write)
