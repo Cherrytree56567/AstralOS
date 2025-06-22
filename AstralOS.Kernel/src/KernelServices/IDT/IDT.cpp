@@ -1,9 +1,21 @@
 #include "IDT.h"
 #include "../KernelServices.h"
 
-extern "C" void exception_handler() {
-    ks->basicConsole.Print("EXCEPTION");
+extern "C" void exception_handler(uint64_t vector, uint64_t errCode) {
+    ks->basicConsole.Print("EXCEPTION at Vector: ");
+    ks->basicConsole.Print(to_hstring(vector));
+    ks->basicConsole.Print(", Error Code: ");
+    ks->basicConsole.Println(to_hstring(vector));
     while (true) __asm__ volatile ("cli; hlt");
+}
+
+extern "C" void hardware_handler(uint64_t vector) {
+    ks->basicConsole.Print("Hardware Interrupt at Vector: ");
+    ks->basicConsole.Println(to_hstring(vector));
+}
+extern "C" void apic_handler(uint64_t vector) {
+    ks->basicConsole.Print("APIC Interrupt at Vector: ");
+    ks->basicConsole.Println(to_hstring(vector));
 }
 
 void IDT::Initialize(BasicConsole* bc) {

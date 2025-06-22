@@ -41,10 +41,15 @@ extern "C" int _start(BootInfo* pBootInfo) {
         kernelServices.basicConsole.Println("APIC is Enabled.");
     }
 
+    kernelServices.apic.WriteAPIC(APICRegs::ICR1, 0);
+    kernelServices.apic.WriteAPIC(APICRegs::ICR0, 0x00004500);
+
+    if (kernelServices.apic.IsInterruptPending()) {
+        kernelServices.basicConsole.Println("APIC Interrupt is Pending.");
+    }
+
     while (true) {
-        if (kernelServices.apic.IsInterruptPending()) {
-            kernelServices.basicConsole.Println("APIC Interrupt is Pending.");
-        }
+        
     }
     return 0;
 }
