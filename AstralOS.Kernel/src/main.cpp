@@ -35,8 +35,16 @@ extern "C" int _start(BootInfo* pBootInfo) {
 
     InitializeIDT(&kernelServices, pBootInfo);
 
+    if (kernelServices.apic.CheckAPIC()) {
+        kernelServices.basicConsole.Println("APIC is Supported.");
+        kernelServices.apic.EnableAPIC();
+        kernelServices.basicConsole.Println("APIC is Enabled.");
+    }
+
     while (true) {
-        
+        if (kernelServices.apic.IsInterruptPending()) {
+            kernelServices.basicConsole.Println("APIC Interrupt is Pending.");
+        }
     }
     return 0;
 }
