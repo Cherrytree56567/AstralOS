@@ -60,7 +60,9 @@ struct IDTR64 {
 	uint64_t base;
 } __attribute__((packed));
 
-extern "C" void exception_handler();
+extern "C" void exception_handler(uint64_t vector, uint64_t errCode);
+extern "C" void hardware_handler(uint64_t vector);
+extern "C" void apic_handler(uint64_t vector);
 
 class IDT {
 public:
