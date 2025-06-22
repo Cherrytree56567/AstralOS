@@ -1,5 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/build"
+  "obj/APIC.o"
   "obj/BasicConsole.o"
   "obj/Bitmap.o"
   "obj/EFIMemoryMap.o"
@@ -11,6 +12,7 @@ file(REMOVE_RECURSE
   "obj/PageMapIndexer.o"
   "obj/PageTableManager.o"
   "obj/Paging.o"
+  "obj/cpuid.o"
   "obj/cstr.o"
   "obj/interrupts.o"
   "obj/main.o"

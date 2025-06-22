@@ -4,6 +4,7 @@
 #include "Paging/PageTableManager/PageTableManager.h"
 #include "GDT/GDT.h"
 #include "IDT/IDT.h"
+#include "APIC/APIC.h"
 
 struct BootInfo {
 	FrameBuffer* pFramebuffer;
@@ -22,6 +23,7 @@ public:
 	PageTable* PML4;
 	GDT gdt;
 	IDT idt;
+	APIC apic;
 };
 
 extern KernelServices* ks;
