@@ -1,4 +1,5 @@
 #include "APIC.h"
+#include "../KernelServices.h"
 
 /*
  * Code from OSDev
@@ -11,6 +12,10 @@ bool APIC::CheckAPIC() {
    uint32_t eax, edx;
    cpuid(1, &eax, &edx);
    return edx & CPUID_FEAT_EDX_APIC;
+}
+
+static inline void outb(unsigned short port, unsigned char val) {
+    asm volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
 }
 
 /* 
@@ -52,10 +57,43 @@ uintptr_t APIC::GetAPICBase() {
  * Set the Spurious Interrupt Vector Register bit 8 to start receiving interrupts
  */
 void APIC::EnableAPIC() {
-    SetAPICBase(GetAPICBase());
-    uint32_t val = ReadAPIC(static_cast<APICRegs>(APICRegs::SIV));
-    val |= 0x100;
-    WriteAPIC(static_cast<APICRegs>(APICRegs::SIV), val);
+    /*
+     * Disable the PIC
+     * TODO: Make this it's own class.
+    */
+    // 1. Start initialization in cascade mode
+    outb(0x20, 0x11); // Master PIC command: ICW1 - start init, expect ICW4
+    outb(0xA0, 0x11); // Slave PIC command: same
+
+    // 2. Remap offsets (vector numbers)
+    // Master IRQs start at 0x20 (32)
+    // Slave IRQs start at 0x28 (40)
+    outb(0x21, 0x20); // Master PIC data: ICW2 - vector offset
+    outb(0xA1, 0x28); // Slave PIC data: ICW2 - vector offset
+
+    // 3. Setup master/slave wiring
+    outb(0x21, 0x04); // Master PIC data: ICW3 - bitmask of slave PIC on IRQ2 (00000100)
+    outb(0xA1, 0x02); // Slave PIC data: ICW3 - slave ID (IRQ2)
+
+    // 4. Setup environment info
+    outb(0x21, 0x01); // Master PIC data: ICW4 - 8086 mode
+    outb(0xA1, 0x01); // Slave PIC data: ICW4 - 8086 mode
+
+    // 5. Mask all IRQs on both PICs
+    outb(0x21, 0xFF); // Master PIC data: mask all IRQs
+    outb(0xA1, 0xFF); // Slave PIC data: mask all IRQs
+
+    // Allow all interrupts
+    WriteAPIC(APICRegs::TPR, 0);
+
+    // Set DFR to flat model
+    WriteAPIC(APICRegs::DF, 0xFFFFFFFF);
+
+    // Logical Destination ID = 1
+    WriteAPIC(APICRegs::LD, 0x01000000);
+
+    // Set SIV to enable LAPIC and set vector to 0xFF
+    WriteAPIC(APICRegs::SIV, 0x100 | 0xFF);
 }
 
 bool APIC::IsInterruptPending() {
@@ -73,10 +111,15 @@ void APIC::ReadMSR(uint32_t msr, uint32_t* eax, uint32_t* edx) {
 }
 
 void APIC::WriteMSR(uint32_t msr, uint32_t eax, uint32_t edx) {
-    __asm__ volatile ("wrmsr"
-                      :
-                      : "c"(msr), "a"(eax), "d"(edx));
+    __asm__ volatile (
+        "wrmsr\n"
+        "mfence\n"
+        :
+        : "c"(msr), "a"(eax), "d"(edx)
+        : "memory"
+    );
 }
+
 
 uint32_t APIC::ReadAPIC(APICRegs reg) {
     volatile uint32_t* addr = reinterpret_cast<volatile uint32_t*>(GetAPICBase() + static_cast<uintptr_t>(reg));

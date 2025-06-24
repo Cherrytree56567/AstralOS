@@ -12,10 +12,12 @@ extern "C" void exception_handler(uint64_t vector, uint64_t errCode) {
 extern "C" void hardware_handler(uint64_t vector) {
     ks->basicConsole.Print("Hardware Interrupt at Vector: ");
     ks->basicConsole.Println(to_hstring(vector));
+    while (true) __asm__ volatile ("cli; hlt");
 }
 extern "C" void apic_handler(uint64_t vector) {
     ks->basicConsole.Print("APIC Interrupt at Vector: ");
     ks->basicConsole.Println(to_hstring(vector));
+    while (true) __asm__ volatile ("cli; hlt");
 }
 
 void IDT::Initialize(BasicConsole* bc) {
