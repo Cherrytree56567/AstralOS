@@ -100,6 +100,7 @@ isr_hardware_stub 44
 isr_hardware_stub 45
 isr_hardware_stub 46
 isr_hardware_stub 47
+isr_apic_stub 47
 
 global isr_stub_table
 isr_stub_table:
