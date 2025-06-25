@@ -37,18 +37,6 @@ isr_stub_%+%1:
     iretq
 %endmacro
 
-%assign start_vec 0x30
-%assign end_vec 0xFF
-
-%assign vec start_vec
-%rep end_vec - start_vec + 1
-    isr_stub_%+vec:
-        mov rdi, vec
-        call apic_handler
-        iretq
-%assign vec vec + 1
-%endrep
-
 extern exception_handler
 extern hardware_handler
 extern apic_handler
@@ -100,7 +88,18 @@ isr_hardware_stub 44
 isr_hardware_stub 45
 isr_hardware_stub 46
 isr_hardware_stub 47
-isr_apic_stub 47
+
+%assign start_vec 0x30
+%assign end_vec 0xFF
+
+%assign vec start_vec
+%rep end_vec - start_vec + 1
+    isr_stub_%+vec:
+        mov rdi, vec
+        call apic_handler
+        iretq
+%assign vec vec + 1
+%endrep
 
 global isr_stub_table
 isr_stub_table:

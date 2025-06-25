@@ -51,7 +51,7 @@ void IDT::CreateIDT() {
     idtr.base = (uintptr_t)&idt[0];
     idtr.limit = (uint16_t)sizeof(IDT_ENTRY64) * IDT_MAX_DESCRIPTORS - 1;
 
-    for (uint8_t vector = 0; vector < 32; vector++) {
+    for (uint8_t vector = 0; vector < 255; vector++) {
         SetDescriptor(vector, isr_stub_table[vector], 0x8E);
         vectors[vector] = true;
     }
