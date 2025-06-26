@@ -73,6 +73,7 @@ CMakeFiles/build: obj/cpuid.o
 CMakeFiles/build: obj/GDT.o
 CMakeFiles/build: obj/IDT.o
 CMakeFiles/build: obj/KernelServices.o
+CMakeFiles/build: obj/PIC.o
 CMakeFiles/build: obj/Bitmap.o
 CMakeFiles/build: obj/EFIMemoryMap.o
 CMakeFiles/build: obj/PageFrameAllocator.o
@@ -82,8 +83,8 @@ CMakeFiles/build: obj/Paging.o
 CMakeFiles/build: obj/KernelUtils.o
 CMakeFiles/build: obj/cstr.o
 CMakeFiles/build: obj/main.o
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building Kernel: ld  -o /mnt/d/AstralOS/AstralOS.Kernel/obj/kernel.elf /mnt/d/AstralOS/AstralOS.Kernel/obj/interrupts.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/APIC.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/BasicConsole.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/cpuid.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/GDT.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/IDT.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/KernelServices.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/Bitmap.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/EFIMemoryMap.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/PageFrameAllocator.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/PageMapIndexer.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/PageTableManager.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/Paging.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/KernelUtils.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/cstr.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/main.o"
-	ld -static -Bsymbolic -nostdlib -T /mnt/d/AstralOS/AstralOS.Kernel/linker.ld -o /mnt/d/AstralOS/AstralOS.Kernel/obj/kernel.elf /mnt/d/AstralOS/AstralOS.Kernel/obj/interrupts.o /mnt/d/AstralOS/AstralOS.Kernel/obj/APIC.o /mnt/d/AstralOS/AstralOS.Kernel/obj/BasicConsole.o /mnt/d/AstralOS/AstralOS.Kernel/obj/cpuid.o /mnt/d/AstralOS/AstralOS.Kernel/obj/GDT.o /mnt/d/AstralOS/AstralOS.Kernel/obj/IDT.o /mnt/d/AstralOS/AstralOS.Kernel/obj/KernelServices.o /mnt/d/AstralOS/AstralOS.Kernel/obj/Bitmap.o /mnt/d/AstralOS/AstralOS.Kernel/obj/EFIMemoryMap.o /mnt/d/AstralOS/AstralOS.Kernel/obj/PageFrameAllocator.o /mnt/d/AstralOS/AstralOS.Kernel/obj/PageMapIndexer.o /mnt/d/AstralOS/AstralOS.Kernel/obj/PageTableManager.o /mnt/d/AstralOS/AstralOS.Kernel/obj/Paging.o /mnt/d/AstralOS/AstralOS.Kernel/obj/KernelUtils.o /mnt/d/AstralOS/AstralOS.Kernel/obj/cstr.o /mnt/d/AstralOS/AstralOS.Kernel/obj/main.o
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building Kernel: ld  -o /mnt/d/AstralOS/AstralOS.Kernel/obj/kernel.elf /mnt/d/AstralOS/AstralOS.Kernel/obj/interrupts.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/APIC.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/BasicConsole.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/cpuid.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/GDT.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/IDT.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/KernelServices.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/PIC.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/Bitmap.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/EFIMemoryMap.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/PageFrameAllocator.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/PageMapIndexer.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/PageTableManager.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/Paging.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/KernelUtils.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/cstr.o;/mnt/d/AstralOS/AstralOS.Kernel/obj/main.o"
+	ld -static -Bsymbolic -nostdlib -T /mnt/d/AstralOS/AstralOS.Kernel/linker.ld -o /mnt/d/AstralOS/AstralOS.Kernel/obj/kernel.elf /mnt/d/AstralOS/AstralOS.Kernel/obj/interrupts.o /mnt/d/AstralOS/AstralOS.Kernel/obj/APIC.o /mnt/d/AstralOS/AstralOS.Kernel/obj/BasicConsole.o /mnt/d/AstralOS/AstralOS.Kernel/obj/cpuid.o /mnt/d/AstralOS/AstralOS.Kernel/obj/GDT.o /mnt/d/AstralOS/AstralOS.Kernel/obj/IDT.o /mnt/d/AstralOS/AstralOS.Kernel/obj/KernelServices.o /mnt/d/AstralOS/AstralOS.Kernel/obj/PIC.o /mnt/d/AstralOS/AstralOS.Kernel/obj/Bitmap.o /mnt/d/AstralOS/AstralOS.Kernel/obj/EFIMemoryMap.o /mnt/d/AstralOS/AstralOS.Kernel/obj/PageFrameAllocator.o /mnt/d/AstralOS/AstralOS.Kernel/obj/PageMapIndexer.o /mnt/d/AstralOS/AstralOS.Kernel/obj/PageTableManager.o /mnt/d/AstralOS/AstralOS.Kernel/obj/Paging.o /mnt/d/AstralOS/AstralOS.Kernel/obj/KernelUtils.o /mnt/d/AstralOS/AstralOS.Kernel/obj/cstr.o /mnt/d/AstralOS/AstralOS.Kernel/obj/main.o
 	cp /mnt/d/AstralOS/AstralOS.Kernel/obj/kernel.elf /mnt/d/AstralOS/AstralOS.Kernel/bin/AstralOS/System64/kernel.elf
 
 obj/APIC.o: src/KernelServices/APIC/APIC.cpp
@@ -118,36 +119,40 @@ obj/KernelUtils.o: src/KernelUtils.cpp
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Compiling /mnt/d/AstralOS/AstralOS.Kernel/src/KernelUtils.cpp to /mnt/d/AstralOS/AstralOS.Kernel/obj/KernelUtils.o"
 	g++ -ffreestanding -fshort-wchar -c /mnt/d/AstralOS/AstralOS.Kernel/src/KernelUtils.cpp -o /mnt/d/AstralOS/AstralOS.Kernel/obj/KernelUtils.o
 
+obj/PIC.o: src/KernelServices/PIC/PIC.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Compiling /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/PIC/PIC.cpp to /mnt/d/AstralOS/AstralOS.Kernel/obj/PIC.o"
+	g++ -ffreestanding -fshort-wchar -c /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/PIC/PIC.cpp -o /mnt/d/AstralOS/AstralOS.Kernel/obj/PIC.o
+
 obj/PageFrameAllocator.o: src/KernelServices/Paging/PageFrameAllocator/PageFrameAllocator.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Compiling /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/Paging/PageFrameAllocator/PageFrameAllocator.cpp to /mnt/d/AstralOS/AstralOS.Kernel/obj/PageFrameAllocator.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Compiling /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/Paging/PageFrameAllocator/PageFrameAllocator.cpp to /mnt/d/AstralOS/AstralOS.Kernel/obj/PageFrameAllocator.o"
 	g++ -ffreestanding -fshort-wchar -c /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/Paging/PageFrameAllocator/PageFrameAllocator.cpp -o /mnt/d/AstralOS/AstralOS.Kernel/obj/PageFrameAllocator.o
 
 obj/PageMapIndexer.o: src/KernelServices/Paging/PageTableManager/PageMapIndexer/PageMapIndexer.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Compiling /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/Paging/PageTableManager/PageMapIndexer/PageMapIndexer.cpp to /mnt/d/AstralOS/AstralOS.Kernel/obj/PageMapIndexer.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Compiling /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/Paging/PageTableManager/PageMapIndexer/PageMapIndexer.cpp to /mnt/d/AstralOS/AstralOS.Kernel/obj/PageMapIndexer.o"
 	g++ -ffreestanding -fshort-wchar -c /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/Paging/PageTableManager/PageMapIndexer/PageMapIndexer.cpp -o /mnt/d/AstralOS/AstralOS.Kernel/obj/PageMapIndexer.o
 
 obj/PageTableManager.o: src/KernelServices/Paging/PageTableManager/PageTableManager.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Compiling /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/Paging/PageTableManager/PageTableManager.cpp to /mnt/d/AstralOS/AstralOS.Kernel/obj/PageTableManager.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Compiling /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/Paging/PageTableManager/PageTableManager.cpp to /mnt/d/AstralOS/AstralOS.Kernel/obj/PageTableManager.o"
 	g++ -ffreestanding -fshort-wchar -c /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/Paging/PageTableManager/PageTableManager.cpp -o /mnt/d/AstralOS/AstralOS.Kernel/obj/PageTableManager.o
 
 obj/Paging.o: src/KernelServices/Paging/Paging.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Compiling /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/Paging/Paging.cpp to /mnt/d/AstralOS/AstralOS.Kernel/obj/Paging.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Compiling /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/Paging/Paging.cpp to /mnt/d/AstralOS/AstralOS.Kernel/obj/Paging.o"
 	g++ -ffreestanding -fshort-wchar -c /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/Paging/Paging.cpp -o /mnt/d/AstralOS/AstralOS.Kernel/obj/Paging.o
 
 obj/cpuid.o: src/KernelServices/CPUutils/cpuid.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Compiling /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/CPUutils/cpuid.cpp to /mnt/d/AstralOS/AstralOS.Kernel/obj/cpuid.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Compiling /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/CPUutils/cpuid.cpp to /mnt/d/AstralOS/AstralOS.Kernel/obj/cpuid.o"
 	g++ -ffreestanding -fshort-wchar -c /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/CPUutils/cpuid.cpp -o /mnt/d/AstralOS/AstralOS.Kernel/obj/cpuid.o
 
 obj/cstr.o: src/cstr/cstr.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Compiling /mnt/d/AstralOS/AstralOS.Kernel/src/cstr/cstr.cpp to /mnt/d/AstralOS/AstralOS.Kernel/obj/cstr.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Compiling /mnt/d/AstralOS/AstralOS.Kernel/src/cstr/cstr.cpp to /mnt/d/AstralOS/AstralOS.Kernel/obj/cstr.o"
 	g++ -ffreestanding -fshort-wchar -c /mnt/d/AstralOS/AstralOS.Kernel/src/cstr/cstr.cpp -o /mnt/d/AstralOS/AstralOS.Kernel/obj/cstr.o
 
 obj/interrupts.o: src/KernelServices/IDT/interrupts.asm
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Assembling /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/IDT/interrupts.asm to /mnt/d/AstralOS/AstralOS.Kernel/obj/interrupts.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Assembling /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/IDT/interrupts.asm to /mnt/d/AstralOS/AstralOS.Kernel/obj/interrupts.o"
 	nasm -felf64 /mnt/d/AstralOS/AstralOS.Kernel/src/KernelServices/IDT/interrupts.asm -o /mnt/d/AstralOS/AstralOS.Kernel/obj/interrupts.o
 
 obj/main.o: src/main.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Compiling /mnt/d/AstralOS/AstralOS.Kernel/src/main.cpp to /mnt/d/AstralOS/AstralOS.Kernel/obj/main.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/mnt/d/AstralOS/AstralOS.Kernel/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Compiling /mnt/d/AstralOS/AstralOS.Kernel/src/main.cpp to /mnt/d/AstralOS/AstralOS.Kernel/obj/main.o"
 	g++ -ffreestanding -fshort-wchar -c /mnt/d/AstralOS/AstralOS.Kernel/src/main.cpp -o /mnt/d/AstralOS/AstralOS.Kernel/obj/main.o
 
 build: CMakeFiles/build
@@ -159,6 +164,7 @@ build: obj/GDT.o
 build: obj/IDT.o
 build: obj/KernelServices.o
 build: obj/KernelUtils.o
+build: obj/PIC.o
 build: obj/PageFrameAllocator.o
 build: obj/PageMapIndexer.o
 build: obj/PageTableManager.o
