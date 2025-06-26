@@ -5,6 +5,7 @@
 #include "GDT/GDT.h"
 #include "IDT/IDT.h"
 #include "APIC/APIC.h"
+#include "PIC/PIC.h"
 
 struct BootInfo {
 	FrameBuffer* pFramebuffer;
@@ -24,6 +25,7 @@ public:
 	GDT gdt;
 	IDT idt;
 	APIC apic;
+	PIC pic;
 };
 
 extern KernelServices* ks;

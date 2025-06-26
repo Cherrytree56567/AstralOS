@@ -59,3 +59,5 @@ enum {
 };
 
 void cpuid(uint32_t code, uint32_t* eax, uint32_t* edx);
+void outb(unsigned short port, unsigned char val);
+uint8_t inb(uint16_t port);

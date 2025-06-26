@@ -14,10 +14,6 @@ bool APIC::CheckAPIC() {
    return edx & CPUID_FEAT_EDX_APIC;
 }
 
-static inline void outb(unsigned short port, unsigned char val) {
-    asm volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
-}
-
 /* 
  * Set the physical address for local APIC registers 
  */
@@ -57,31 +53,9 @@ uintptr_t APIC::GetAPICBase() {
  * Set the Spurious Interrupt Vector Register bit 8 to start receiving interrupts
  */
 void APIC::EnableAPIC() {
-    /*
-     * Disable the PIC
-     * TODO: Make this it's own class.
-    */
-    // 1. Start initialization in cascade mode
-    outb(0x20, 0x11); // Master PIC command: ICW1 - start init, expect ICW4
-    outb(0xA0, 0x11); // Slave PIC command: same
-
-    // 2. Remap offsets (vector numbers)
-    // Master IRQs start at 0x20 (32)
-    // Slave IRQs start at 0x28 (40)
-    outb(0x21, 0x20); // Master PIC data: ICW2 - vector offset
-    outb(0xA1, 0x28); // Slave PIC data: ICW2 - vector offset
-
-    // 3. Setup master/slave wiring
-    outb(0x21, 0x04); // Master PIC data: ICW3 - bitmask of slave PIC on IRQ2 (00000100)
-    outb(0xA1, 0x02); // Slave PIC data: ICW3 - slave ID (IRQ2)
-
-    // 4. Setup environment info
-    outb(0x21, 0x01); // Master PIC data: ICW4 - 8086 mode
-    outb(0xA1, 0x01); // Slave PIC data: ICW4 - 8086 mode
-
-    // 5. Mask all IRQs on both PICs
-    outb(0x21, 0xFF); // Master PIC data: mask all IRQs
-    outb(0xA1, 0xFF); // Slave PIC data: mask all IRQs
+    PIC pic;
+    pic.RemapPIC(0x20, 0x28);
+    pic.Disable();
 
     // Allow all interrupts
     WriteAPIC(APICRegs::TPR, 0);
