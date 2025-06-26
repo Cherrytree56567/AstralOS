@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "../CPUutils/cpuid.h"
+#include "../PIC/PIC.h"
 
 /*
  * This code is from OSDev
@@ -11,7 +12,7 @@
 #define IA32_APIC_BASE_MSR_ENABLE 0x800
 
 /*
- * From ChatGPT
+ * This code is from ChatGPT
  * ik, chatgpt is bad, but the OSDev article was hard to understand.
 */
 #define APIC_REG(base, offset) (*((volatile uint32_t *)((base) + (offset))))
