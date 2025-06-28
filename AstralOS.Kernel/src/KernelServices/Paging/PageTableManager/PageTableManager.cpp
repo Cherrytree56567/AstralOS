@@ -7,7 +7,7 @@ void PageTableManager::Initialize(PageTable* PML4Address, PageFrameAllocator *pf
     this->initialized = true;
 }
 
-void PageTableManager::MapMemory(void* virtualMemory, void* physicalMemory) {
+void PageTableManager::MapMemory(void* virtualMemory, void* physicalMemory, bool cache) {
     if (!initialized) {
         basicConsole->Println("PageTableManager not initialized, cannot map memory.");
         basicConsole->Println("Did you call Initialize()?");
@@ -67,5 +67,12 @@ void PageTableManager::MapMemory(void* virtualMemory, void* physicalMemory) {
     PDE.SetAddress((uint64_t)physicalMemory >> 12);
     PDE.SetFlag(PT_Flag::Present, true);
     PDE.SetFlag(PT_Flag::ReadWrite, true);
+    if (cache) {
+        PDE.SetFlag(PT_Flag::WriteThrough, false);
+        PDE.SetFlag(PT_Flag::CacheDisabled, false);
+    } else {
+        PDE.SetFlag(PT_Flag::WriteThrough, true);
+        PDE.SetFlag(PT_Flag::CacheDisabled, true);
+    }
     PT->entries[indexer.P_i] = PDE;
 }

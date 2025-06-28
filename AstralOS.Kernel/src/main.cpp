@@ -38,6 +38,7 @@ extern "C" int _start(BootInfo* pBootInfo) {
     if (kernelServices.apic.CheckAPIC()) {
         kernelServices.basicConsole.Println("APIC is Supported.");
         kernelServices.apic.EnableAPIC();
+        kernelServices.ioapic.Initialize(&kernelServices.basicConsole, 0xFEC00000, 0, 0);
         kernelServices.basicConsole.Println("APIC is Enabled.");
     }
 

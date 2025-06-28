@@ -6,6 +6,7 @@ file(REMOVE_RECURSE
   "obj/EFIMemoryMap.o"
   "obj/GDT.o"
   "obj/IDT.o"
+  "obj/IOAPIC.o"
   "obj/KernelServices.o"
   "obj/KernelUtils.o"
   "obj/PIC.o"
