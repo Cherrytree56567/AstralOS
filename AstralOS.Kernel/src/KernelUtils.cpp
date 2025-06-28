@@ -51,4 +51,12 @@ IDTR64 idtr;
 extern "C" void InitializeIDT(KernelServices* kernelServices, BootInfo* pBootInfo) {
     kernelServices->idt.CreateIDT();
     kernelServices->basicConsole.Println("Interrupts Initialized.");
+    if (kernelServices->apic.CheckAPIC()) {
+        kernelServices->basicConsole.Println("APIC is Supported.");
+        kernelServices->apic.EnableAPIC();
+        kernelServices->ioapic.Initialize(&kernelServices->basicConsole, 0xFEC00000, 0, 0);
+        kernelServices->basicConsole.Println("APIC is Enabled.");
+    }
+
+    __asm__ volatile ("sti");
 }

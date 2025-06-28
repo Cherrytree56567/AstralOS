@@ -22,6 +22,19 @@ void IOAPIC::Initialize(BasicConsole* bc, unsigned long virtAddr, unsigned long 
 
     redirEntryCnt = (read(IOAPICVER) >> 16) + 1;
     globalIntrBase = gsib;
+
+    for (uint8_t i = 0; i < redirEntryCnt; ++i) {
+        RedirectionEntry entry = {};
+        entry.vector = 0x20 + i; // 0x20 = typical starting interrupt vector
+        entry.delvMode = 0;      // fixed delivery
+        entry.destMode = 0;      // physical
+        entry.mask = 1;          // start masked
+        entry.destination = 0;   // LAPIC ID 0 (usually BSP)
+
+        writeRedirEntry(i, &entry);
+    }
+
+    basicConsole->Println("IOAPIC initialized, all IRQs masked.");
 }
 
 RedirectionEntry IOAPIC::getRedirEntry(unsigned char entNo) {

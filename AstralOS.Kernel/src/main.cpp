@@ -1,5 +1,14 @@
 #include "KernelUtils.h"
 
+extern "C" void irq1_handler() {
+    uint8_t scancode = inb(0x60);
+    ks->basicConsole.Println("Key press!");
+
+    ks->apic.WriteAPIC(APICRegs::EOI, 0);
+}
+
+extern "C" void irq_stub();
+
 extern "C" int _start(BootInfo* pBootInfo) {
     /*
      * Disable Interrupts
@@ -35,13 +44,6 @@ extern "C" int _start(BootInfo* pBootInfo) {
 
     InitializeIDT(&kernelServices, pBootInfo);
 
-    if (kernelServices.apic.CheckAPIC()) {
-        kernelServices.basicConsole.Println("APIC is Supported.");
-        kernelServices.apic.EnableAPIC();
-        kernelServices.ioapic.Initialize(&kernelServices.basicConsole, 0xFEC00000, 0, 0);
-        kernelServices.basicConsole.Println("APIC is Enabled.");
-    }
-
     uint32_t eax, edx;
     kernelServices.apic.ReadMSR(0x1B, &eax, &edx); // IA32_APIC_BASE_MSR
     kernelServices.basicConsole.Print("MSR EAX = ");
@@ -59,6 +61,8 @@ extern "C" int _start(BootInfo* pBootInfo) {
 
     kernelServices.basicConsole.Println(to_hstring(cpuApicId));
 
+    /*
+     * Disable Timer Test
     asm volatile("cli" ::: "memory");
 
     // Vector 0x40 (64), periodic mode (bit 17 = 1)
@@ -73,6 +77,23 @@ extern "C" int _start(BootInfo* pBootInfo) {
     if (kernelServices.apic.IsInterruptPending()) {
         kernelServices.basicConsole.Println("APIC Interrupt is Pending.");
     }
+    */
+
+    /*
+     * Test I/O APIC
+    */
+    RedirectionEntry entry = {};
+    entry.vector = 0x21;         // vector = your IDT index
+    entry.delvMode = 0;          // fixed
+    entry.destMode = 0;          // physical
+    entry.mask = 0;              // ENABLED
+    entry.triggerMode = 0;       // edge-triggered for IRQ1
+    entry.pinPolarity = 0;       // high active
+    entry.destination = 0;       // LAPIC ID of current CPU
+
+    kernelServices.ioapic.writeRedirEntry(1, &entry); // IRQ1 = GSI 1
+
+    kernelServices.idt.SetDescriptor(0x21, (void*)irq_stub, 0x8E); // Set IDT entry for IRQ1
 
     while (true) {
         
