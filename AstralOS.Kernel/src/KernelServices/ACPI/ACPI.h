@@ -65,8 +65,9 @@ public:
    ACPI() {}
 
    void Initialize(BasicConsole* bc, void* rsdpAddr);
-
    bool doChecksum(ACPISDTHeader *tableHeader);
+
+   void *GetFACP(void *RootSDT);
 private:
    RSDP* rsdp;
    XSDP* xsdp;
