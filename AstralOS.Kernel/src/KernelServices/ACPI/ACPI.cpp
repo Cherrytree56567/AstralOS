@@ -52,3 +52,90 @@ void* ACPI::GetFACP() {
     basicConsole->Println("FACP not found in XSDT!");
     return NULL;
 }
+
+void* ACPI::GetMADT() {
+    int entries = (xsdt->h.Length - sizeof(xsdt->h)) / 8;
+
+    for (int i = 0; i < entries; i++) {
+        ACPISDTHeader *h = (ACPISDTHeader *) xsdt->PointerToOtherSDT[i];
+        if (!strncmp(h->Signature, "APIC", 4)) {
+            return (void *) h;
+        }
+    }
+
+    basicConsole->Println("MADT not found in XSDT!");
+    return NULL;
+}
+
+void* ACPI::GetBGRT() {
+    int entries = (xsdt->h.Length - sizeof(xsdt->h)) / 8;
+
+    for (int i = 0; i < entries; i++) {
+        ACPISDTHeader *h = (ACPISDTHeader *) xsdt->PointerToOtherSDT[i];
+        if (!strncmp(h->Signature, "BGRT", 4)) {
+            return (void *) h;
+        }
+    }
+
+    basicConsole->Println("BGRT not found in XSDT!");
+    return NULL;
+}
+
+/*
+ * TODO: What is the Signature for DSDT?
+*/
+void* ACPI::GetDSDT() {
+    int entries = (xsdt->h.Length - sizeof(xsdt->h)) / 8;
+
+    for (int i = 0; i < entries; i++) {
+        ACPISDTHeader *h = (ACPISDTHeader *) xsdt->PointerToOtherSDT[i];
+        if (!strncmp(h->Signature, "DSDT", 4)) {
+            return (void *) h;
+        }
+    }
+
+    basicConsole->Println("DSDT not found in XSDT!");
+    return NULL;
+}
+
+void* ACPI::GetRSDT() {
+    int entries = (xsdt->h.Length - sizeof(xsdt->h)) / 8;
+
+    for (int i = 0; i < entries; i++) {
+        ACPISDTHeader *h = (ACPISDTHeader *) xsdt->PointerToOtherSDT[i];
+        if (!strncmp(h->Signature, "RSDT", 4)) {
+            return (void *) h;
+        }
+    }
+
+    basicConsole->Println("RSDT not found in XSDT!");
+    return NULL;
+}
+
+void* ACPI::GetSRAT() {
+    int entries = (xsdt->h.Length - sizeof(xsdt->h)) / 8;
+
+    for (int i = 0; i < entries; i++) {
+        ACPISDTHeader *h = (ACPISDTHeader *) xsdt->PointerToOtherSDT[i];
+        if (!strncmp(h->Signature, "SRAT", 4)) {
+            return (void *) h;
+        }
+    }
+
+    basicConsole->Println("SRAT not found in XSDT!");
+    return NULL;
+}
+
+void* ACPI::GetSSDT() {
+    int entries = (xsdt->h.Length - sizeof(xsdt->h)) / 8;
+
+    for (int i = 0; i < entries; i++) {
+        ACPISDTHeader *h = (ACPISDTHeader *) xsdt->PointerToOtherSDT[i];
+        if (!strncmp(h->Signature, "SSDT", 4)) {
+            return (void *) h;
+        }
+    }
+
+    basicConsole->Println("SSDT not found in XSDT!");
+    return NULL;
+}
