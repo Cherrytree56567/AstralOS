@@ -37,7 +37,12 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
     /*
      * Map APIC
     */
-    kernelServices->pageTableManager.MapMemory((void*)0xFEE00000, (void*)0xFEE00000);
+    kernelServices->pageTableManager.MapMemory((void*)0xFEE00000, (void*)0xFEE00000, false);
+
+    /*
+     * Map I/O APIC
+    */
+    kernelServices->pageTableManager.MapMemory((void*)0xFEC00000, (void*)0xFEC00000, false);
 
     __asm__("mov %0, %%cr3" : : "r" (kernelServices->PML4));
 }

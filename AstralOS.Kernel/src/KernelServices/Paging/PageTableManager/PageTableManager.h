@@ -11,7 +11,7 @@
 class PageTableManager {
 public:
     PageTableManager() {}
-    void MapMemory(void* virtualMemory, void* physicalMemory);
+    void MapMemory(void* virtualMemory, void* physicalMemory, bool cache = true);
     void Initialize(PageTable* PML4Address, PageFrameAllocator *pfa, BasicConsole* console);
 
 private:
