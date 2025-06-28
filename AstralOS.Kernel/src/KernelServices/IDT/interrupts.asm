@@ -101,6 +101,23 @@ isr_hardware_stub 47
 %assign vec vec + 1
 %endrep
 
+global irq_stub
+extern irq1_handler
+irq_stub:
+    ; save general-purpose regs (caller-saved, minimal)
+    push rax
+    push rcx
+    push rdx
+
+    call irq1_handler
+
+    ; restore regs
+    pop rdx
+    pop rcx
+    pop rax
+
+    iretq
+
 global isr_stub_table
 isr_stub_table:
 %assign i 0 
