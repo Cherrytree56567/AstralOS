@@ -2,6 +2,8 @@
 
 A Simple AMD 64 UEFI EXT4 Operating System made in C and C++.
 
+![Keyboard Test](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/Keyboard_Test.png?raw=true)
+
 ## Building
 To build on Windows, install WSL (Windows Subsystem For Linux) and upgrade your distro to WSL 2.
 Then initialize cmake by running:
