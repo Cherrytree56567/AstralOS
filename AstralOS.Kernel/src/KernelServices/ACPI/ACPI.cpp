@@ -2,6 +2,7 @@
 #include "../KernelServices.h"
 
 void ACPI::Initialize(BasicConsole* bc, void* rsdpAddr) {
+    basicConsole = bc;
     xsdp = (XSDP*)rsdpAddr;
     if (xsdp->Revision == 0) {
         isRSDP = true;
@@ -12,6 +13,7 @@ void ACPI::Initialize(BasicConsole* bc, void* rsdpAddr) {
         rsdp = (RSDP*)rsdpAddr;
     }
 
+
     if (isRSDP) {
         basicConsole = bc;
         basicConsole->Println("WARNING: THERE IS CURRENTLY NO SUPPORT FOR RSDP IN ASTRALOS.");
@@ -19,7 +21,11 @@ void ACPI::Initialize(BasicConsole* bc, void* rsdpAddr) {
         ks->pageTableManager.MapMemory((void*)xsdp->XsdtAddress, (void*)xsdp->XsdtAddress);
         xsdt = (XSDT*)xsdp->XsdtAddress;
         basicConsole->Print("ACPI XSDT Addr: ");
-        basicConsole->Println(to_hstring((uint64_t)xsdp->XsdtAddress)); // FAILS
+        basicConsole->Println(to_hstring(xsdp->XsdtAddress));
+        if (!doChecksum(&xsdt->h)) {
+            basicConsole->Println("XSDT Checksum failed!");
+            return;
+        }
     }
 }
 
@@ -31,4 +37,18 @@ bool ACPI::doChecksum(ACPISDTHeader *tableHeader) {
     }
 
     return sum == 0;
+}
+
+void* ACPI::GetFACP() {
+    int entries = (xsdt->h.Length - sizeof(xsdt->h)) / 8;
+
+    for (int i = 0; i < entries; i++) {
+        ACPISDTHeader *h = (ACPISDTHeader *) xsdt->PointerToOtherSDT[i];
+        if (!strncmp(h->Signature, "FACP", 4)) {
+            return (void *) h;
+        }
+    }
+
+    basicConsole->Println("FACP not found in XSDT!");
+    return NULL;
 }
