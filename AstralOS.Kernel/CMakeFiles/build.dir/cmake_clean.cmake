@@ -1,5 +1,6 @@
 file(REMOVE_RECURSE
   "CMakeFiles/build"
+  "obj/ACPI.o"
   "obj/APIC.o"
   "obj/BasicConsole.o"
   "obj/Bitmap.o"
