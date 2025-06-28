@@ -1,7 +1,8 @@
 # Hashes of file build rules.
 7d106a6e4971c7cf6f52b19633402577 CMakeFiles/_clean
-c16c606f5f734904e364adeb85078567 CMakeFiles/build
+712e0eb0034d08711137ef83af079665 CMakeFiles/build
 4d444417996319ccb69cf6c2a3b3d1be CMakeFiles/init
+7df7bbebe8abc86ebf156226999b548c obj/ACPI.o
 70287fb48586b8773daaeb2553b9ebb8 obj/APIC.o
 e07e221661d4c69e11c0f1f18aaf60a0 obj/BasicConsole.o
 0d000b99c3f229b7ebb96e0c3dde814a obj/Bitmap.o

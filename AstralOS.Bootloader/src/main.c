@@ -1,6 +1,18 @@
 #include "main.h"
 #include "elf.h"
 
+EFI_GUID Acpi20TableGuid = { 0x8868e871, 0xe4f1, 0x11d3, {0xbc,0x22,0x00,0x80,0xc7,0x3c,0x88,0x81} };
+
+void* FindRSDP(EFI_SYSTEM_TABLE* SystemTable) {
+    for (UINTN i = 0; i < SystemTable->NumberOfTableEntries; ++i) {
+        if (CompareGuid(&SystemTable->ConfigurationTable[i].VendorGuid, &Acpi20TableGuid) ||
+            CompareGuid(&SystemTable->ConfigurationTable[i].VendorGuid, &AcpiTableGuid)) {
+            return SystemTable->ConfigurationTable[i].VendorTable;
+        }
+    }
+    return (void*)0;
+}
+
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     /*
 	* FSMAGIC, used to check if partition is NTFS, EXT4 or exFAT
@@ -296,7 +308,6 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
             UINTN Height = GraphicsOutput->Mode->Info->VerticalResolution;
             EFI_GRAPHICS_OUTPUT_BLT_PIXEL BlackPixel = { 0, 0, 0, 0 }; // RGBA format
 
-
             /*
             * Found in https://github.com/Absurdponcho/PonchoOS/blob/Episode-5-Efi-Memory-Map/gnu-efi/bootloader/main.c
             */
@@ -329,6 +340,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
             bi.mMap = Map;
 			bi.mMapSize = MapSize;
 			bi.mMapDescSize = DescriptorSize;
+            bi.rsdp = FindRSDP(SystemTable);
 
             int (*kernel_main)(BootInfo*) = (int (*)(BootInfo*))ehdr.e_entry;
 
