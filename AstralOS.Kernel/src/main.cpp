@@ -95,6 +95,8 @@ extern "C" int _start(BootInfo* pBootInfo) {
 
     kernelServices.idt.SetDescriptor(0x21, (void*)irq_stub, 0x8E); // Set IDT entry for IRQ1
 
+    kernelServices.acpi.Initialize(&kernelServices.basicConsole, pBootInfo->rsdp);
+
     while (true) {
         
     }

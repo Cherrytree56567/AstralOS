@@ -7,12 +7,14 @@
 #include "APIC/APIC.h"
 #include "PIC/PIC.h"
 #include "IOAPIC/IOAPIC.h"
+#include "ACPI/ACPI.h"
 
 struct BootInfo {
 	FrameBuffer* pFramebuffer;
 	EFI_MEMORY_DESCRIPTOR* mMap;
 	uint64_t mMapSize;
 	uint64_t mMapDescSize;
+	void* rsdp;
 };
 
 class KernelServices {
@@ -28,6 +30,7 @@ public:
 	APIC apic;
 	PIC pic;
 	IOAPIC ioapic;
+	ACPI acpi;
 };
 
 extern KernelServices* ks;
