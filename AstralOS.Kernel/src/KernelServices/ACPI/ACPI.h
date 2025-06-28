@@ -67,7 +67,12 @@ public:
    void Initialize(BasicConsole* bc, void* rsdpAddr);
    bool doChecksum(ACPISDTHeader *tableHeader);
 
-   void *GetFACP(void *RootSDT);
+   void* GetFACP();
+   void* GetMADT();
+   void* GetDSDT();
+   void* GetRSDT();
+   void* GetSRAT();
+   void* GetSSDT();
 private:
    RSDP* rsdp;
    XSDP* xsdp;
