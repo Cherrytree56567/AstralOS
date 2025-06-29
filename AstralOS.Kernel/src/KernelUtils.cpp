@@ -18,7 +18,7 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
     kernelServices->pageFrameAllocator.LockPages(&_kernel_start, kernelPages);
 
     kernelServices->PML4 = (PageTable*)kernelServices->pageFrameAllocator.RequestPage();
-	memset(kernelServices->PML4, 0, 0x1000);
+	memsetC(kernelServices->PML4, 0, 0x1000);
     kernelServices->pageTableManager.Initialize(kernelServices->PML4, &kernelServices->pageFrameAllocator, &kernelServices->basicConsole);
 
     for (uint64_t t = 0; t < memorySize; t += 0x1000){
@@ -43,6 +43,11 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
      * Map I/O APIC
     */
     kernelServices->pageTableManager.MapMemory((void*)0xFEC00000, (void*)0xFEC00000, false);
+
+    /*
+     * Map RSDP
+    */
+    //kernelServices->pageTableManager.MapMemory((void*)pBootInfo->rsdp, (void*)pBootInfo->rsdp, false);
 
     __asm__("mov %0, %%cr3" : : "r" (kernelServices->PML4));
 }

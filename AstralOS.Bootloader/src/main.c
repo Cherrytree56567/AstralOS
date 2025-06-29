@@ -4,9 +4,8 @@
 EFI_GUID Acpi20TableGuid = { 0x8868e871, 0xe4f1, 0x11d3, {0xbc,0x22,0x00,0x80,0xc7,0x3c,0x88,0x81} };
 
 void* FindRSDP(EFI_SYSTEM_TABLE* SystemTable) {
-    for (UINTN i = 0; i < SystemTable->NumberOfTableEntries; ++i) {
-        if (CompareGuid(&SystemTable->ConfigurationTable[i].VendorGuid, &Acpi20TableGuid) ||
-            CompareGuid(&SystemTable->ConfigurationTable[i].VendorGuid, &AcpiTableGuid)) {
+    for (UINTN i = 0; i < SystemTable->NumberOfTableEntries; i++) {
+        if (CompareGuid(&SystemTable->ConfigurationTable[i].VendorGuid, &Acpi20TableGuid)) {
             return SystemTable->ConfigurationTable[i].VendorTable;
         }
     }
@@ -57,6 +56,12 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
 
 	InitializeLib(ImageHandle, SystemTable);
 	gImageHandle = ImageHandle;
+
+    void* rsdsp = FindRSDP(SystemTable);
+    if (rsdsp == NULL) {
+        Print(L"RSDP not found\n");
+        return EFI_NOT_FOUND;
+    }
 
     SecureBootStatus = GetSecureBootStatus();
 
@@ -340,7 +345,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
             bi.mMap = Map;
 			bi.mMapSize = MapSize;
 			bi.mMapDescSize = DescriptorSize;
-            bi.rsdp = FindRSDP(SystemTable);
+            bi.rsdp = rsdsp;
 
             int (*kernel_main)(BootInfo*) = (int (*)(BootInfo*))ehdr.e_entry;
 
