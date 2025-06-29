@@ -18,16 +18,10 @@ extern "C" int _start(BootInfo* pBootInfo) {
 
     InitializePaging(&kernelServices, pBootInfo);
 
-    memset(pBootInfo->pFramebuffer->BaseAddress, 0, pBootInfo->pFramebuffer->BufferSize);
+    memsetC(pBootInfo->pFramebuffer->BaseAddress, 0, pBootInfo->pFramebuffer->BufferSize);
     kernelServices.basicConsole.Println("Framebuffer Cleared");
 
-    kernelServices.pageTableManager.MapMemory((void*)0x600000000, (void*)0x80000);
-	kernelServices.basicConsole.Println("Mapped 0x600000000 to 0x80000");
-
-    uint64_t* test = (uint64_t*)0x600000000;
-    *test = 26;
-
-    kernelServices.basicConsole.Println(to_string(*test));
+    kernelServices.acpi.Initialize(&kernelServices.basicConsole, pBootInfo->rsdp);
 
     kernelServices.gdt.Create64BitGDT();
 
@@ -95,7 +89,8 @@ extern "C" int _start(BootInfo* pBootInfo) {
 
     kernelServices.idt.SetDescriptor(0x21, (void*)irq_stub, 0x8E); // Set IDT entry for IRQ1
 
-    kernelServices.acpi.Initialize(&kernelServices.basicConsole, pBootInfo->rsdp);
+    kernelServices.basicConsole.Print("I/O APIC Addr: ");
+    kernelServices.basicConsole.Println(to_hstring(kernelServices.acpi.GetIOAPIC()->IOAPIC_Addr));
 
     while (true) {
         
