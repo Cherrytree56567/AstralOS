@@ -20,46 +20,61 @@ extern "C" void* memcpy(void* dest, const void* src, size_t count) {
     return dest;
 }
 
+uint64_t ReadUnaligned64(uint8_t* addr) {
+    uint64_t val;
+    memcpy(&val, addr, sizeof(val));
+    return val;
+}
+
 void ACPI::Initialize(BasicConsole* bc, void* rsdpAddr) {
     basicConsole = bc;
 
-    // Always start by treating it as a base RSDP
     RSDP* rsdpBase = (RSDP*)rsdpAddr;
 
-    // Print the signature safely
-    char sig[9];
-    memcpy(sig, rsdpBase->Signature, 8);
-    sig[8] = '\0';
-    basicConsole->Print("ACPI Signature: ");
-    basicConsole->Println(sig);
-
-    basicConsole->Print("ACPI RSDP Addr: ");
-    basicConsole->Println(to_hstring((uint64_t)rsdpAddr));
-
-    basicConsole->Print("ACPI Revision: ");
-    basicConsole->Println(to_string((uint64_t)rsdpBase->Revision));
+    basicConsole->Print("RSDP Addr: ");
+    basicConsole->Println(to_hstring((uint64_t)rsdpBase));
+    basicConsole->Print("RSDP Signature: ");
+    basicConsole->Println(rsdpBase->Signature);
+    basicConsole->Print("RSDP OEM ID: ");
+    basicConsole->Println(rsdpBase->OEMID);
+    basicConsole->Print("RSDP Revision: ");
+    basicConsole->Println(to_hstring(rsdpBase->Revision));
 
     if (rsdpBase->Revision == 0) {
         isRSDP = true;
         rsdp = rsdpBase;
         xsdp = nullptr;
         basicConsole->Println("WARNING: THERE IS CURRENTLY NO SUPPORT FOR RSDP IN ASTRALOS.");
-    } else {
+    } else if (rsdpBase->Revision > 1) {
         isRSDP = false;
         xsdp = (XSDP*)rsdpAddr;
         rsdp = rsdpBase;
 
-        // Map and validate XSDT
-        ks->pageTableManager.MapMemory((void*)xsdp->XsdtAddress, (void*)xsdp->XsdtAddress);
-        xsdt = (XSDT*)xsdp->XsdtAddress;
-
         basicConsole->Print("ACPI XSDT Addr: ");
         basicConsole->Println(to_hstring(xsdp->XsdtAddress));
+
+        ks->pageTableManager.MapMemory((void*)xsdp->XsdtAddress, (void*)xsdp->XsdtAddress, false);
+        xsdt = (XSDT*)xsdp->XsdtAddress;
+
+        basicConsole->Print("XSDT Length: ");
+        basicConsole->Println(to_hstring(xsdt->h.Length));
+        basicConsole->Print("XSDT Signature: ");
+        basicConsole->Println(xsdt->h.Signature);
+        basicConsole->Print("XSDT OEM ID: ");
+        basicConsole->Println(xsdt->h.OEMID);
+
+        int entries = (xsdt->h.Length - sizeof(xsdt->h)) / 8;
+        basicConsole->Print("XSDT Entries: ");
+        basicConsole->Println(to_hstring((uint64_t)entries));
 
         if (!doChecksum(&xsdt->h)) {
             basicConsole->Println("XSDT Checksum failed!");
             return;
         }
+    } else {
+        basicConsole->Println("RSDP Revision is not supported!");
+        basicConsole->Println("Could be garbage values.");
+        return;
     }
 }
 
@@ -75,11 +90,17 @@ bool ACPI::doChecksum(ACPISDTHeader *tableHeader) {
 
 FADT* ACPI::GetFADT() {
     int entries = (xsdt->h.Length - sizeof(xsdt->h)) / 8;
+    uint8_t* entriesBase = (uint8_t*)xsdt + sizeof(ACPISDTHeader);
 
     for (int i = 0; i < entries; i++) {
-        ACPISDTHeader *h = (ACPISDTHeader *) xsdt->Entries[i];
-        if (!strncmp(h->Signature, "FACP", 4)) {
-            return (FADT*) h;
+        uint64_t entryAddr = ReadUnaligned64(entriesBase + i * sizeof(uint64_t));
+
+        ks->pageTableManager.MapMemory((void*)entryAddr, (void*)entryAddr, false);
+
+        ACPISDTHeader* h = (ACPISDTHeader*)entryAddr;
+
+        if (strncmp((const char*)h->Signature, "FACP", 4) == 0) {
+            return (FADT*)h;
         }
     }
 
@@ -89,29 +110,37 @@ FADT* ACPI::GetFADT() {
 
 MADT* ACPI::GetMADT() {
     int entries = (xsdt->h.Length - sizeof(xsdt->h)) / 8;
-    basicConsole->Print("MADT Entries: ");
-    basicConsole->Println(to_hstring((uint64_t)xsdt->h.Length));
+    uint8_t* entriesBase = (uint8_t*)xsdt + sizeof(ACPISDTHeader);
 
     for (int i = 0; i < entries; i++) {
-        ACPISDTHeader *h = (ACPISDTHeader *) xsdt->Entries[i];
-        basicConsole->Print("Signature: ");
-        basicConsole->Println(h->Signature);
-        if (!strncmp(h->Signature, "APIC", 4)) {
-            return (MADT*) h;
+        uint64_t entryAddr = ReadUnaligned64(entriesBase + i * sizeof(uint64_t));
+
+        ks->pageTableManager.MapMemory((void*)entryAddr, (void*)entryAddr, false);
+
+        ACPISDTHeader* h = (ACPISDTHeader*)entryAddr;
+
+        if (strncmp((const char*)h->Signature, "APIC", 4) == 0) {
+            return (MADT*)h;
         }
     }
 
     basicConsole->Println("MADT not found in XSDT!");
-    return NULL;
+    return nullptr;
 }
 
 BGRT* ACPI::GetBGRT() {
     int entries = (xsdt->h.Length - sizeof(xsdt->h)) / 8;
+    uint8_t* entriesBase = (uint8_t*)xsdt + sizeof(ACPISDTHeader);
 
     for (int i = 0; i < entries; i++) {
-        ACPISDTHeader *h = (ACPISDTHeader *) xsdt->Entries[i];
-        if (!strncmp(h->Signature, "BGRT", 4)) {
-            return (BGRT*) h;
+        uint64_t entryAddr = ReadUnaligned64(entriesBase + i * sizeof(uint64_t));
+
+        ks->pageTableManager.MapMemory((void*)entryAddr, (void*)entryAddr, false);
+
+        ACPISDTHeader* h = (ACPISDTHeader*)entryAddr;
+
+        if (strncmp((const char*)h->Signature, "BGRT", 4) == 0) {
+            return (BGRT*)h;
         }
     }
 
@@ -121,11 +150,17 @@ BGRT* ACPI::GetBGRT() {
 
 RSDT* ACPI::GetRSDT() {
     int entries = (xsdt->h.Length - sizeof(xsdt->h)) / 8;
+    uint8_t* entriesBase = (uint8_t*)xsdt + sizeof(ACPISDTHeader);
 
     for (int i = 0; i < entries; i++) {
-        ACPISDTHeader *h = (ACPISDTHeader *) xsdt->Entries[i];
-        if (!strncmp(h->Signature, "RSDT", 4)) {
-            return (RSDT*) h;
+        uint64_t entryAddr = ReadUnaligned64(entriesBase + i * sizeof(uint64_t));
+
+        ks->pageTableManager.MapMemory((void*)entryAddr, (void*)entryAddr, false);
+
+        ACPISDTHeader* h = (ACPISDTHeader*)entryAddr;
+
+        if (strncmp((const char*)h->Signature, "RSDT", 4) == 0) {
+            return (RSDT*)h;
         }
     }
 
@@ -135,11 +170,17 @@ RSDT* ACPI::GetRSDT() {
 
 SRAT* ACPI::GetSRAT() {
     int entries = (xsdt->h.Length - sizeof(xsdt->h)) / 8;
+    uint8_t* entriesBase = (uint8_t*)xsdt + sizeof(ACPISDTHeader);
 
     for (int i = 0; i < entries; i++) {
-        ACPISDTHeader *h = (ACPISDTHeader *) xsdt->Entries[i];
-        if (!strncmp(h->Signature, "SRAT", 4)) {
-            return (SRAT*) h;
+        uint64_t entryAddr = ReadUnaligned64(entriesBase + i * sizeof(uint64_t));
+
+        ks->pageTableManager.MapMemory((void*)entryAddr, (void*)entryAddr, false);
+
+        ACPISDTHeader* h = (ACPISDTHeader*)entryAddr;
+
+        if (strncmp((const char*)h->Signature, "SRAT", 4) == 0) {
+            return (SRAT*)h;
         }
     }
 
@@ -165,6 +206,9 @@ MADT_ProcessorLocalAPIC* ACPI::GetProcessorLocalAPIC() {
 
         ptr += hdr->Length;
     }
+
+    basicConsole->Println("Processor Local APIC not found in MADT!");
+    return nullptr;
 }
 
 MADT_IOAPIC* ACPI::GetIOAPIC() {
@@ -185,4 +229,6 @@ MADT_IOAPIC* ACPI::GetIOAPIC() {
 
         ptr += hdr->Length;
     }
+    basicConsole->Println("I/O APIC not found in MADT!");
+    return nullptr;
 }

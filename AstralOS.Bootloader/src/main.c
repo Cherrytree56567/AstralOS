@@ -3,13 +3,56 @@
 
 EFI_GUID Acpi20TableGuid = { 0x8868e871, 0xe4f1, 0x11d3, {0xbc,0x22,0x00,0x80,0xc7,0x3c,0x88,0x81} };
 
-void* FindRSDP(EFI_SYSTEM_TABLE* SystemTable) {
-    for (UINTN i = 0; i < SystemTable->NumberOfTableEntries; i++) {
-        if (CompareGuid(&SystemTable->ConfigurationTable[i].VendorGuid, &Acpi20TableGuid)) {
-            return SystemTable->ConfigurationTable[i].VendorTable;
-        }
+EFI_GUID Acpi10TableGuid = {
+    0xeb9d2d30, 0x2d88, 0x11d3,
+    { 0x9a, 0x16, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d }
+};
+
+void DumpMemory(EFI_SYSTEM_TABLE* SystemTable, void* addr, UINTN length) {
+    if (addr == NULL) {
+        Print(L"NULL pointer, cannot dump.\r\n");
+        return;
     }
-    return (void*)0;
+
+    CHAR8* sig = (CHAR8*)addr;
+    if (!(sig[0] == 'R' && sig[1] == 'S' && sig[2] == 'D' && sig[3] == ' ' &&
+          sig[4] == 'P' && sig[5] == 'T' && sig[6] == 'R' && sig[7] == ' ')) {
+        Print(L"Invalid RSDP signature at %p\r\n", addr);
+        return;
+    }
+
+    UINT8* bytes = (UINT8*)addr;
+    for (UINTN i = 0; i < length; i++) {
+        if (i % 16 == 0) {
+            SystemTable->ConOut->OutputString(SystemTable->ConOut, L"\r\n");
+            Print(L"%08lx: ", (UINT64)(uintptr_t)(bytes + i));
+        }
+        Print(L"%02x ", bytes[i]);
+    }
+    SystemTable->ConOut->OutputString(SystemTable->ConOut, L"\r\n");
+}
+
+void* FindRSDP(EFI_SYSTEM_TABLE* SystemTable) {
+    void* rsdp = NULL;
+
+    if (LibGetSystemConfigurationTable(&Acpi20TableGuid, &rsdp) == EFI_SUCCESS && rsdp != NULL) {
+        CHAR8* sig = (CHAR8*)rsdp;
+        if (CompareMem(sig, "RSD PTR ", 8) == 0) {
+            Print(L"Found ACPI 2.0 RSDP at: %p\r\n", rsdp);
+        } else {
+            Print(L"Invalid ACPI 2.0 signature\r\n");
+        }
+    } else if (LibGetSystemConfigurationTable(&Acpi10TableGuid, &rsdp) == EFI_SUCCESS && rsdp != NULL) {
+        CHAR8* sig = (CHAR8*)rsdp;
+        if (CompareMem(sig, "RSD PTR ", 8) == 0) {
+            Print(L"Found ACPI 1.0 RSDP at: %p\r\n", rsdp);
+        } else {
+            Print(L"Invalid ACPI 1.0 signature\r\n");
+        }
+    } else {
+        Print(L"RSDP not found in UEFI system table.\r\n");
+    }
+    return rsdp;
 }
 
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {

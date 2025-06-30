@@ -21,8 +21,6 @@ extern "C" int _start(BootInfo* pBootInfo) {
     memsetC(pBootInfo->pFramebuffer->BaseAddress, 0, pBootInfo->pFramebuffer->BufferSize);
     kernelServices.basicConsole.Println("Framebuffer Cleared");
 
-    kernelServices.acpi.Initialize(&kernelServices.basicConsole, pBootInfo->rsdp);
-
     kernelServices.gdt.Create64BitGDT();
 
     uint16_t cs;
@@ -35,6 +33,8 @@ extern "C" int _start(BootInfo* pBootInfo) {
     kernelServices.basicConsole.Print(to_hstring(cs));
     kernelServices.basicConsole.Print(", DS = ");
     kernelServices.basicConsole.Println(to_hstring(ds));
+
+    kernelServices.acpi.Initialize(&kernelServices.basicConsole, pBootInfo->rsdp);
 
     InitializeIDT(&kernelServices, pBootInfo);
 
@@ -76,21 +76,34 @@ extern "C" int _start(BootInfo* pBootInfo) {
     /*
      * Test I/O APIC
     */
-    RedirectionEntry entry = {};
-    entry.vector = 0x21;         // vector = your IDT index
-    entry.delvMode = 0;          // fixed
-    entry.destMode = 0;          // physical
-    entry.mask = 0;              // ENABLED
-    entry.triggerMode = 0;       // edge-triggered for IRQ1
-    entry.pinPolarity = 0;       // high active
-    entry.destination = 0;       // LAPIC ID of current CPU
+    uint8_t gsi = 1; // IRQ1 for keyboard
+    uint32_t gsib = kernelServices.ioapic.globalInterruptBase();
 
-    kernelServices.ioapic.writeRedirEntry(1, &entry); // IRQ1 = GSI 1
+    if (gsi < gsib || gsi >= gsib + kernelServices.ioapic.redirectionEntries()) {
+        kernelServices.basicConsole.Println("GSI out of range for this IOAPIC.");
+    } else {
+        uint8_t pin = gsi - gsib;
 
-    kernelServices.idt.SetDescriptor(0x21, (void*)irq_stub, 0x8E); // Set IDT entry for IRQ1
+        RedirectionEntry entry = {};
+        entry.vector = 0x21;         // IDT vector to call
+        entry.delvMode = 0;          // fixed
+        entry.destMode = 0;          // physical
+        entry.mask = 0;              // ENABLED
+        entry.triggerMode = 0;       // edge
+        entry.pinPolarity = 0;       // high
+        entry.destination = 0;       // LAPIC ID (usually 0 for BSP)
 
-    kernelServices.basicConsole.Print("I/O APIC Addr: ");
-    kernelServices.basicConsole.Println(to_hstring(kernelServices.acpi.GetIOAPIC()->IOAPIC_Addr));
+        kernelServices.ioapic.writeRedirEntry(pin, &entry);
+        kernelServices.idt.SetDescriptor(0x21, (void*)irq_stub, 0x8E); // interrupt gate
+    }
+
+    kernelServices.basicConsole.Print("MADT Address: ");
+    kernelServices.basicConsole.Println(to_hstring((uint64_t)kernelServices.acpi.GetMADT()));
+    kernelServices.basicConsole.Print("MADT Processor Local APIC: ");
+    kernelServices.basicConsole.Println(to_hstring((uint64_t)kernelServices.acpi.GetProcessorLocalAPIC()));
+    kernelServices.basicConsole.Print("MADT I/O APIC: ");
+    kernelServices.basicConsole.Println(to_hstring((uint64_t)kernelServices.acpi.GetIOAPIC()));
+
 
     while (true) {
         

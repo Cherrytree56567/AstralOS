@@ -39,16 +39,6 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
     */
     kernelServices->pageTableManager.MapMemory((void*)0xFEE00000, (void*)0xFEE00000, false);
 
-    /*
-     * Map I/O APIC
-    */
-    kernelServices->pageTableManager.MapMemory((void*)0xFEC00000, (void*)0xFEC00000, false);
-
-    /*
-     * Map RSDP
-    */
-    //kernelServices->pageTableManager.MapMemory((void*)pBootInfo->rsdp, (void*)pBootInfo->rsdp, false);
-
     __asm__("mov %0, %%cr3" : : "r" (kernelServices->PML4));
 }
 
@@ -58,8 +48,21 @@ extern "C" void InitializeIDT(KernelServices* kernelServices, BootInfo* pBootInf
     kernelServices->basicConsole.Println("Interrupts Initialized.");
     if (kernelServices->apic.CheckAPIC()) {
         kernelServices->basicConsole.Println("APIC is Supported.");
+
+        /*
+         * Enable APIC
+         */
         kernelServices->apic.EnableAPIC();
-        kernelServices->ioapic.Initialize(&kernelServices->basicConsole, 0xFEC00000, 0, 0);
+
+        /*
+        * Map I/O APIC
+        */
+        kernelServices->pageTableManager.MapMemory((void*)kernelServices->acpi.GetIOAPIC()->IOAPIC_Addr, (void*)kernelServices->acpi.GetIOAPIC()->IOAPIC_Addr, false);
+
+        /*
+         * Initialize I/O APIC
+         */
+        kernelServices->ioapic.Initialize(&kernelServices->basicConsole, kernelServices->acpi.GetIOAPIC()->IOAPIC_Addr, kernelServices->acpi.GetIOAPIC()->IOAPIC_ID, kernelServices->acpi.GetIOAPIC()->GSI_Base);
         kernelServices->basicConsole.Println("APIC is Enabled.");
     }
 
