@@ -4,6 +4,8 @@
 #include "../../BasicConsole/BasicConsole.h"
 #include "../../../cstr/cstr.h"
 
+#define PAGE_SIZE 4096
+
 class PageFrameAllocator {
 public:
     PageFrameAllocator();

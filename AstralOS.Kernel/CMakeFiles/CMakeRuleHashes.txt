@@ -1,6 +1,6 @@
 # Hashes of file build rules.
 7d106a6e4971c7cf6f52b19633402577 CMakeFiles/_clean
-712e0eb0034d08711137ef83af079665 CMakeFiles/build
+7d7c99c8cdeb0d7393b710a5f9995449 CMakeFiles/build
 4d444417996319ccb69cf6c2a3b3d1be CMakeFiles/init
 7df7bbebe8abc86ebf156226999b548c obj/ACPI.o
 70287fb48586b8773daaeb2553b9ebb8 obj/APIC.o
@@ -8,6 +8,7 @@ e07e221661d4c69e11c0f1f18aaf60a0 obj/BasicConsole.o
 0d000b99c3f229b7ebb96e0c3dde814a obj/Bitmap.o
 c85676680db0bb3cf3f35f14ab14a3de obj/EFIMemoryMap.o
 9b40f59018f9d038fad03c756f3e746e obj/GDT.o
+7a5c336d6c3a9b028cb807a77e44bf7f obj/Heap.o
 10865d7a36c44e4cce67d9d538cbad26 obj/IDT.o
 0982c18910f5841493043ccc6a0468f5 obj/IOAPIC.o
 b81343681409e8b56b360b645f96098e obj/KernelServices.o
