@@ -1,6 +1,6 @@
 # Hashes of file build rules.
 7d106a6e4971c7cf6f52b19633402577 CMakeFiles/_clean
-7d7c99c8cdeb0d7393b710a5f9995449 CMakeFiles/build
+bb94ad992a19efd488a7a2d874a89989 CMakeFiles/build
 4d444417996319ccb69cf6c2a3b3d1be CMakeFiles/init
 7df7bbebe8abc86ebf156226999b548c obj/ACPI.o
 70287fb48586b8773daaeb2553b9ebb8 obj/APIC.o
@@ -13,6 +13,7 @@ c85676680db0bb3cf3f35f14ab14a3de obj/EFIMemoryMap.o
 0982c18910f5841493043ccc6a0468f5 obj/IOAPIC.o
 b81343681409e8b56b360b645f96098e obj/KernelServices.o
 34b7075602c5d9227be97e28526d6f65 obj/KernelUtils.o
+1824a0e4362a103b94ebbfe06cf45301 obj/PCI.o
 f795451882b916623e5130b955905e3b obj/PIC.o
 158649b088b50fea36bab69cb7bbcb1f obj/PageFrameAllocator.o
 f4ca1897c095e84bdc814b985663a3e3 obj/PageMapIndexer.o

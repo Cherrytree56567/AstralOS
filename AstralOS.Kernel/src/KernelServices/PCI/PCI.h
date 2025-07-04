@@ -6,7 +6,7 @@
  * This code is from the OSDev Wiki:
  * https://wiki.osdev.org/PCI#The_PCI_Bus
 */
-enum class HeaderType : uint8_t {
+enum class PCIHeaderType : uint8_t {
     General = 0x0,
     PCI_PCI_BRIDGE = 0x1,
     PCI_CARDBus_BRIDGE = 0x2
@@ -96,8 +96,8 @@ struct PCI_Header {
     void SetSignaledSystemError();
     void SetDetectedParityError();
 
-    HeaderType GetHeaderType(uint8_t raw);
-    bool IsMultiFunction(uint8_t raw);
+    PCIHeaderType GetHeaderType();
+    bool IsMultiFunction();
 
     /*
      * BIST
@@ -183,6 +183,100 @@ struct PCICardBus_Header {
     uint16_t SubsystemVendorID;
     uint32_t _16BitPCCardLegacyModeBaseAddr;
 } __attribute__((packed));
+
+enum class ClassCode {
+    Unclassified = 0x0,
+    MassStorageController = 0x1,
+    NetworkController = 0x2,
+    DisplayController = 0x3,
+    MultimediaController = 0x4,
+    MemoryController = 0x5,
+    Bridge = 0x6,
+    SimpleCommunicationController = 0x7,
+    BaseSystemPeripheral = 0x8,
+    InputDeviceController = 0x9,
+    DockingStation = 0xA,
+    Processor = 0xB,
+    SerialBusController = 0xC,
+    WirelessController = 0xD,
+    IntelligentController = 0xE,
+    SatelliteCommunication = 0xF,
+    EncryptionController = 0x10,
+    SignalProcessingController = 0x11,
+    ProcessingAccelerator = 0x12,
+    NonEssentialInstrumentation = 0x13,
+    x3FReserved = 0x14,
+    CoProcessor = 0x40,
+    xFEReserved = 0x41,
+    UnAssignedClass = 0xFF // Vendor Specific
+};
+
+enum UnclassifiedSubClass {
+    Non_VGACompatible = 0x0,
+    VGACompatible = 0x1
+};
+
+enum class MassStorageControllerSubClass {
+    SCSIBusController = 0x0,
+    IDEController = 0x01,
+    FloppyDiskController = 0x02,
+    IPIBusController = 0x03,
+    RAIDController = 0x04,
+    ATAController = 0x05,
+    SerialATAController = 0x06,
+    SerialAttachedSCSIController = 0x07,
+    Non_VolatileMemoryController = 0x08,
+    Other = 0x80
+};
+
+enum class NetworkControllerSubClass {
+    EthernetController = 0x0,
+    TokenRingController = 0x1,
+    FDDIController = 0x2,
+    ATMController = 0x3,
+    ISDNController = 0x4,
+    WorldFipController = 0x5,
+    PICMGController = 0x6,
+    InfinibandController = 0x7,
+    FabricController = 0x8,
+    Other = 0x80
+};
+
+enum class DisplayControllerSubClass {
+    VGACompatibleController = 0x0,
+    XGAController = 0x1,
+    _3DController = 0x2,
+    Other = 0x80
+};
+
+enum class MultimediaControllerSubClass {
+    MultimediaVideoController = 0x0,
+    MultimediaAudioController = 0x1,
+    ComputerTelephonyDevice = 0x2,
+    AudioDevice = 0x3,
+    Other = 0x80
+};
+
+enum class MemoryControllerSubClass {
+    RAMController = 0x0,
+    FlashController = 0x1,
+    Other = 0x80
+};
+
+enum class BridgeSubClass {
+    HostBridge = 0x0,
+    ISABridge = 0x1,
+    EISABridge = 0x2,
+    MCABridge = 0x3,
+    PCIToPCIBridge = 0x4,
+    PCMCIABridge = 0x5,
+    NuBusBridge = 0x6,
+    CardBusBridge = 0x7,
+    RACEwayBridge = 0x8,
+    _PCIToPCIBridge = 0x9,
+    InfiniBandToPCIHostBridge = 0x0A,
+    Other = 0x80
+};
 
 class PCI {
 public:
