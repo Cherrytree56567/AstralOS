@@ -98,7 +98,7 @@ uint16_t PCI::ConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func, uint8_t of
 */
 bool PCI::PCIExists() {
     for (uint8_t device = 0; device < 32; device++) {
-        uint16_t vendor = pci_read_config(0, device, 0, 0x00) & 0xFFFF;
+        uint16_t vendor = ConfigReadWord(0, device, 0, 0x00) & 0xFFFF;
         if (vendor != 0xFFFF) {
             return true;
         }
@@ -350,12 +350,12 @@ void PCI_Header::SetDetectedParityError() {
     Status |= (1 << 15);
 }
 
-HeaderType PCI_Header::GetHeaderType(uint8_t raw) {
-    return static_cast<HeaderType>(raw & 0x7F);
+PCIHeaderType PCI_Header::GetHeaderType() {
+    return static_cast<PCIHeaderType>(HeaderType & 0x7F);
 }
 
-bool PCI_Header::IsMultiFunction(uint8_t raw) {
-    return (raw & 0x80) != 0;
+bool PCI_Header::IsMultiFunction() {
+    return (HeaderType & 0x80) != 0;
 }
 
 /*
