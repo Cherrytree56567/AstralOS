@@ -278,6 +278,67 @@ enum class BridgeSubClass {
     Other = 0x80
 };
 
+enum class SimpleCommunicationControllerSubClass {
+    SerialController = 0x0,
+    ParallelController = 0x1,
+    MultiportSerialController = 0x2,
+    Modem = 0x3,
+    GPIBController = 0x4,
+    SmartCardController = 0x5,
+    Other = 0x80
+};
+
+enum class BaseSystemPeripheralSubClass {
+    PIC = 0x0,
+    DMAController = 0x01,
+    Timer = 0x02,
+    RTCController = 0x3,
+    PCIHotPlugController = 0x4,
+    SDHostController = 0x5,
+    IOMMU = 0x6,
+    Other = 0x80
+};
+
+enum class InputDeviceControllerSubClass {
+    KeyboardController = 0x0,
+    DigitizerPen = 0x1,
+    MouseController = 0x2,
+    ScannerController = 0x3,
+    GameportController = 0x4,
+    Other = 0x80
+};
+
+enum class DockingStationSubClass {
+    Generic = 0x0,
+    Other = 0x80
+};
+
+enum class ProcessorSubClass {
+    _386 = 0x0,
+    _486 = 0x1,
+    Pentium = 0x2,
+    PentiumPro = 0x3,
+    Alpha = 0x10,
+    PowerPC = 0x20,
+    MIPS = 0x30,
+    CoProcessor = 0x40,
+    Other = 0x80
+};
+
+enum class SerialBusControllerSubClass {
+    FireWireController = 0x0,
+    AccessBusController = 0x1,
+    SSA = 0x2,
+    USBController = 0x3,
+    FibreChannel = 0x4,
+    SMBusController = 0x5,
+    InfiniBandController = 0x6,
+    IPMIInterface = 0x7,
+    SERCOSInterface = 0x8,
+    CANbusController = 0x9,
+    Other = 0x80
+};
+
 class PCI {
 public:
     PCI() {}
