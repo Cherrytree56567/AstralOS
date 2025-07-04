@@ -349,3 +349,42 @@ bool PCI_Header::DetectedParityError() {
 void PCI_Header::SetDetectedParityError() {
     Status |= (1 << 15);
 }
+
+HeaderType PCI_Header::GetHeaderType(uint8_t raw) {
+    return static_cast<HeaderType>(raw & 0x7F);
+}
+
+bool PCI_Header::IsMultiFunction(uint8_t raw) {
+    return (raw & 0x80) != 0;
+}
+
+/*
+ * Will return 0, after BIST execution, if the test completed successfully.
+*/
+uint8_t PCI_Header::GetCompletionCode() {
+    return BIST & 0x0F;
+}
+
+/*
+ * When set to 1 the BIST is invoked. 
+ * This bit is reset when BIST completes. 
+ * If BIST does not complete after 2 seconds the device should be failed by system software.
+*/
+void PCI_Header::SetStartBIST(bool start) {
+    if (start) {
+        BIST |= (1 << 6);
+    } else {
+        BIST &= ~(1 << 6);
+    }
+}
+
+bool PCI_Header::IsStartBIST() {
+    return (BIST >> 6) & 0x1;
+}
+
+/*
+ * Will return 1 the device supports BIST.
+*/
+bool PCI_Header::IsBISTCapable() {
+    return (BIST >> 7) & 0x1;
+}
