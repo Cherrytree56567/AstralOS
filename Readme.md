@@ -2,7 +2,7 @@
 
 A Simple AMD 64 UEFI EXT4 Operating System made in C and C++.
 
-![Keyboard Test](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/Keyboard_Test.png?raw=true)
+![ACPI](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/ACPI.png?raw=true)
 
 ## Building
 To build on Windows, install WSL (Windows Subsystem For Linux) and upgrade your distro to WSL 2.
@@ -22,6 +22,11 @@ cmake --build . --target build
 
 ## Features
  - Paging
+ - GDT
+ - IDT
+ - Heap Allocator
+ - ACPI
+ - APIC
 
 ## Thanks
 OSDev.org
