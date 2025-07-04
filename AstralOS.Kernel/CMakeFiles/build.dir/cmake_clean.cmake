@@ -11,6 +11,7 @@ file(REMOVE_RECURSE
   "obj/IOAPIC.o"
   "obj/KernelServices.o"
   "obj/KernelUtils.o"
+  "obj/PCI.o"
   "obj/PIC.o"
   "obj/PageFrameAllocator.o"
   "obj/PageMapIndexer.o"

@@ -61,6 +61,5 @@ enum {
 void cpuid(uint32_t code, uint32_t* eax, uint32_t* edx);
 void outb(unsigned short port, unsigned char val);
 uint8_t inb(uint16_t port);
-void outl(uint16_t port, uint32_t val) {
-    __asm__ volatile ("outl %0, %1" : : "a"(val), "Nd"(port));
-}
+void outl(uint16_t port, uint32_t val);
+uint32_t inl(uint16_t port);
