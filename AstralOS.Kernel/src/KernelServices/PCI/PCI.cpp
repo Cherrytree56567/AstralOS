@@ -248,60 +248,102 @@ bool PCI_Header::CapabilitiesList() {
     return Command & (1 << 4);
 }
 
+/*
+ * If set to 1 the device is capable of running at 66 MHz; otherwise, the device runs at 33 MHz.
+*/
 bool PCI_Header::MHzCapable() {
     return Command & (1 << 5);
 }
 
+/*
+ * If set to 1 the device can accept fast back-to-back 
+ * transactions that are not from the same agent; otherwise, 
+ * transactions can only be accepted from the same agent.
+*/
 bool PCI_Header::FastBBCapable() {
     return Command & (1 << 7);
+}
+
+/*
+ * This bit is only set when the following conditions are met. 
+ * The bus agent asserted PERR# on a read or observed an assertion 
+ * of PERR# on a write, the agent setting the bit acted as the bus 
+ * master for the operation in which the error occurred, and bit 6 
+ * of the Command register (Parity Error Response bit) is set to 1.
+*/
+void PCI_Header::SetMasterDataParityError() {
+    Status |= (1 << 8);
 }
 
 bool PCI_Header::MasterDataParityError() {
     return Command & (1 << 8);
 }
 
+/*
+ * Read only bits that represent the slowest time that a device will 
+ * assert DEVSEL# for any bus command except Configuration Space read 
+ * and writes. Where a value of 0x0 represents fast timing, a value 
+ * of 0x1 represents medium timing, and a value of 0x2 represents 
+ * slow timing.
+*/
 DEVSEL PCI_Header::DEVSELTiming() {
     return static_cast<DEVSEL>((Status >> 9) & 0b11);
+}
+
+/*
+ * This bit will be set to 1 whenever a target device terminates a 
+ * transaction with Target-Abort.
+*/
+void PCI_Header::SetSignaledTargetAbort() {
+    Status |= (1 << 11);
 }
 
 bool PCI_Header::SignaledTargetAbort() {
     return Command & (1 << 11);
 }
 
+/*
+ * This bit will be set to 1, by a master device, whenever its 
+ * transaction is terminated with Target-Abort.
+*/
+void PCI_Header::SetRecievedTargetAbort() {
+    Status |= (1 << 12);
+}
+
 bool PCI_Header::RecievedTargetAbort() {
     return Command & (1 << 12);
+}
+
+/*
+ * This bit will be set to 1, by a master device, whenever its 
+ * transaction (except for Special Cycle transactions) is terminated 
+ * with Master-Abort.
+*/
+void PCI_Header::SetRecievedMasterAbort() {
+    Status |= (1 << 13);
 }
 
 bool PCI_Header::RecievedMasterAbort() {
     return Command & (1 << 13);
 }
 
+/*
+ * This bit will be set to 1 whenever the device asserts SERR#.
+*/
+void PCI_Header::SetSignaledSystemError() {
+    Status |= (1 << 14);
+}
+
 bool PCI_Header::SignaledSystemError() {
     return Command & (1 << 14);
 }
 
+/*
+ * This bit will be set to 1 whenever the device detects a parity 
+ * error, even if parity error handling is disabled.
+*/
 bool PCI_Header::DetectedParityError() {
     return Command & (1 << 15);
-}
-
-void PCI_Header::SetMasterDataParityError() {
-    Status |= (1 << 8);
-}
-
-void PCI_Header::SetSignaledTargetAbort() {
-    Status |= (1 << 11);
-}
-
-void PCI_Header::SetRecievedTargetAbort() {
-    Status |= (1 << 12);
-}
-
-void PCI_Header::SetRecievedMasterAbort() {
-    Status |= (1 << 13);
-}
-
-void PCI_Header::SetSignaledSystemError() {
-    Status |= (1 << 14);
 }
 
 void PCI_Header::SetDetectedParityError() {
