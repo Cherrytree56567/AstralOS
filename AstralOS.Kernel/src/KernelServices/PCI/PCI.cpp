@@ -228,3 +228,82 @@ void PCI_Header::SetInterruptDisable(bool val) {
 bool PCI_Header::InterruptDisable() {
     return Command & (1 << 10);
 }
+
+/*
+ * Represents the state of the device's INTx# signal. 
+ * If set to 1 and bit 10 of the Command register 
+ * is set to 0 the signal will be asserted; otherwise, 
+ * the signal will be ignored.
+*/
+bool PCI_Header::InterruptStatus() {
+    return Command & (1 << 3);
+}
+
+/*
+ * If set to 1 the device implements the pointer for a 
+ * New Capabilities Linked list at offset 0x34; otherwise, 
+ * the linked list is not available.
+*/
+bool PCI_Header::CapabilitiesList() {
+    return Command & (1 << 4);
+}
+
+bool PCI_Header::MHzCapable() {
+    return Command & (1 << 5);
+}
+
+bool PCI_Header::FastBBCapable() {
+    return Command & (1 << 7);
+}
+
+bool PCI_Header::MasterDataParityError() {
+    return Command & (1 << 8);
+}
+
+DEVSEL PCI_Header::DEVSELTiming() {
+    return static_cast<DEVSEL>((Status >> 9) & 0b11);
+}
+
+bool PCI_Header::SignaledTargetAbort() {
+    return Command & (1 << 11);
+}
+
+bool PCI_Header::RecievedTargetAbort() {
+    return Command & (1 << 12);
+}
+
+bool PCI_Header::RecievedMasterAbort() {
+    return Command & (1 << 13);
+}
+
+bool PCI_Header::SignaledSystemError() {
+    return Command & (1 << 14);
+}
+
+bool PCI_Header::DetectedParityError() {
+    return Command & (1 << 15);
+}
+
+void PCI_Header::SetMasterDataParityError() {
+    Status |= (1 << 8);
+}
+
+void PCI_Header::SetSignaledTargetAbort() {
+    Status |= (1 << 11);
+}
+
+void PCI_Header::SetRecievedTargetAbort() {
+    Status |= (1 << 12);
+}
+
+void PCI_Header::SetRecievedMasterAbort() {
+    Status |= (1 << 13);
+}
+
+void PCI_Header::SetSignaledSystemError() {
+    Status |= (1 << 14);
+}
+
+void PCI_Header::SetDetectedParityError() {
+    Status |= (1 << 15);
+}
