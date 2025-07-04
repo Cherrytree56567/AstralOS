@@ -12,6 +12,13 @@ enum class HeaderType : uint8_t {
     PCI_CARDBus_BRIDGE = 0x2
 };
 
+enum class DEVSEL : uint8_t {
+    Fast = 0,
+    Medium = 1,
+    Slow = 2,
+    Reserved = 3
+};
+
 struct PCI_Header {
     uint16_t VendorID;      // Identifies the manufacturer
     uint16_t DeviceID;      // Identifies the Device
@@ -26,6 +33,9 @@ struct PCI_Header {
     uint8_t HeaderType;     // Identifies the layout of the rest of the header beginning at byte 0x10 of the header.
     uint8_t BIST;           // Represents that status and allows control of a devices BIST.
 
+    /*
+     * Command Register
+    */
     void SetIOSpace(bool val);
     bool IOSpace();
     void SetMemorySpace(bool val);
@@ -42,6 +52,27 @@ struct PCI_Header {
     bool FastBBEnable();
     void SetInterruptDisable(bool val);
     bool InterruptDisable();
+
+    /*
+     * Status Register
+    */
+    bool InterruptStatus();
+    bool CapabilitiesList();
+    bool MHzCapable();
+    bool FastBBCapable();
+    bool MasterDataParityError();
+    DEVSEL DEVSELTiming();
+    bool SignaledTargetAbort();
+    bool RecievedTargetAbort();
+    bool RecievedMasterAbort();
+    bool SignaledSystemError();
+    bool DetectedParityError();
+    void SetMasterDataParityError();
+    void SetSignaledTargetAbort();
+    void SetRecievedTargetAbort();
+    void SetRecievedMasterAbort();
+    void SetSignaledSystemError();
+    void SetDetectedParityError();
 };
 
 class PCI {
