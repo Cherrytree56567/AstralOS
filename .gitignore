@@ -1,6 +1,12 @@
-*.ipch
-**/CMakeFiles/
-**/obj/
 CMakeCache.txt
-cmake_install.cmake
 Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+CMakeUserPresets.json
+
+**/CMakeFiles/
+**/CMakeScripts/
+**/Testing/
+**/_deps/
