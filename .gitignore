@@ -7,6 +7,9 @@ CTestTestfile.cmake
 CMakeUserPresets.json
 CMakePresets.json
 
+.vs
+.vscode
+
 **/CMakeFiles/
 **/CMakeScripts/
 **/Testing/
