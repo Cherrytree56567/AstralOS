@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdint>
+#include <tuple>
 #include "../CPUutils/cpuid.h"
 
 /*
@@ -373,7 +373,7 @@ enum class SignalProcessingControllerSubClass {
     CommunicationSynchronizer = 0x10,
     SignalProcessingManagement = 0x20,
     Other = 0x80
-}
+};
 
 enum class IDEControllerProgIF {
     ISACompatibilityModeOnlyController = 0x0,
@@ -504,6 +504,12 @@ enum class IPMIInterfaceProgIF {
     BlockTransfer = 0x2
 };
 
+struct DeviceKey {
+    uint8_t bus;
+    uint8_t device;
+    uint8_t function;
+};
+
 class PCI {
 public:
     PCI() {}
@@ -513,10 +519,18 @@ public:
 
     uint32_t GetDeviceClass(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF);
     char* GetClassCode(uint8_t ClassCode);
+    char* GetDeviceCode(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF);
 
     void checkFunction(uint8_t bus, uint8_t device, uint8_t function);
     void checkDevice(uint8_t bus, uint8_t device);
     void checkAllBuses();
     uint16_t getVendorID(uint8_t bus, uint8_t device, uint8_t function);
     uint8_t getHeaderType(uint8_t bus, uint8_t device, uint8_t function);
+private:
+    int MAX_DEVICES = 256;
+    DeviceKey Devices[256];
+    int DeviceCount = 0;
+
+    bool deviceAlreadyFound(uint8_t bus, uint8_t device, uint8_t function);
+    void addDevice(uint8_t bus, uint8_t device, uint8_t function);
 };
