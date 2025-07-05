@@ -184,7 +184,7 @@ struct PCICardBus_Header {
     uint32_t _16BitPCCardLegacyModeBaseAddr;
 } __attribute__((packed));
 
-enum class ClassCode {
+enum class ClassCodes {
     Unclassified = 0x0,
     MassStorageController = 0x1,
     NetworkController = 0x2,
@@ -339,10 +339,184 @@ enum class SerialBusControllerSubClass {
     Other = 0x80
 };
 
+enum class WirelessControllerSubClass {
+    IRDACompatibleController = 0x0,
+    ConsumerIRController = 0x1,
+    RFController = 0x10,
+    BluetoothController = 0x11,
+    BroadbandController = 0x12,
+    EthernetController8021a = 0x20,
+    EthernetController8021b = 0x21,
+    Other = 0x80
+};
+
+enum class IntelligentControllerSubClass {
+    l20 = 0x0
+};
+
+enum class SatelliteCommunicationSubClass {
+    SatelliteTVController = 0x1,
+    SatelliteAudioController = 0x2,
+    SatelliteVoiceController = 0x3,
+    SatelliteDataController = 0x4
+};
+
+enum class EncryptionControllerSubClass {
+    NetworkComputingEnDecryption = 0x0,
+    EntertainmentEnDecryption = 0x10,
+    Other = 0x80
+};
+
+enum class SignalProcessingControllerSubClass {
+    DPIOModules = 0x0,
+    PerformanceCounters = 0x1,
+    CommunicationSynchronizer = 0x10,
+    SignalProcessingManagement = 0x20,
+    Other = 0x80
+}
+
+enum class IDEControllerProgIF {
+    ISACompatibilityModeOnlyController = 0x0,
+    PCINativeModeOnlyController = 0x5,
+    ISACompatibilityModeController = 0xA,
+    PCINativeModeController = 0xF,
+    ISACompatibilityModeOnlyControllerBusMastering = 0x80,
+    PCINativeModeOnlyControllerBusMastering = 0x85,
+    ISACompatibilityModeControllerBusMastering = 0x8A,
+    PCINativeModeControllerBusMastering = 0x8F
+};
+
+enum class ATAControllerProgIF {
+    SingleDMA = 0x20,
+    ChainedDMA = 0x30
+};
+
+enum class SATAControllerProgIF {
+    VendorSpecificInterface = 0x0,
+    ACHI1_0 = 0x1,
+    SerialStorageBus = 0x2
+};
+
+enum class SerialAttachedSCSIControllerProgIF {
+    SAS = 0x0,
+    SerialStorageBus = 0x1
+};
+
+enum class NonVolatileMemoryControllerProgIF {
+    NVMHCI = 0x1,
+    NVMExpress = 0x2
+};
+
+enum class VGACompatibleControllerProgIF {
+    VGAController = 0x0,
+    _8514CompatibleController = 0x1
+};
+
+enum class PCIPCIBridgeProgIF {
+    NormalDecode = 0x0,
+    SubtractiveDecode = 0x1
+};
+
+enum class RACEwayBridgeProgIF {
+    TransparantMode = 0x0,
+    EndpointMode = 0x1
+};
+
+enum class _PCIPCIBridgeProgIF {
+    PrimaryBus = 0x40,
+    SecondaryBus = 0x80
+};
+
+enum class SerialControllerProgIF {
+    _8250 = 0x0,
+    _16450 = 0x1,
+    _16550 = 0x2,
+    _16650 = 0x3,
+    _16750 = 0x4,
+    _16850 = 0x5,
+    _16950 = 0x6
+};
+
+enum class ParallelControllerProgIF {
+    StandardParallelPort = 0x0,
+    BiDirectionalParallelPort = 0x1,
+    ECPCompliantParallelPort = 0x2,
+    IEEE1284Controller = 0x3,
+    IEEE1284TargetDevice = 0xFE
+};
+
+enum class ModemProgIF {
+    GenericModem = 0x0,
+    Hayes16450Interface = 0x1,
+    Hayes16550Interface = 0x2,
+    Hayes16650Interface = 0x3,
+    Hayes16750Interface = 0x4
+};
+
+enum class PICProgIF {
+    Generic8259Compatible = 0x0,
+    ISACompatible = 0x1,
+    EISACompatible = 0x2,
+    IOAPICInterruptController = 0x10,
+    IOxAPICInterruptController = 0x20
+};
+
+enum class DMAControllerProgIF {
+    Generic8237Compatible = 0x0,
+    ISACompatible = 0x1,
+    EISACompatible = 0x2
+};
+
+enum class TimerProgIF {
+    Generic8254Compatible = 0x0,
+    ISACompatible = 0x1,
+    EISACompatible = 0x2,
+    HPET = 0x3
+};
+
+enum class RTCControllerProgIF {
+    GenericRTC = 0x0,
+    ISACompatible = 0x1
+};
+
+enum class GameportControllerProgIF {
+    Generic = 0x0,
+    Extended = 0x10
+};
+
+enum class FirewireControllerProgIF {
+    Generic = 0x0,
+    OCHI = 0x10
+};
+
+enum class USBControllerProgIF {
+    UHCI = 0x0,
+    OHCI = 0x10,
+    EHCI = 0x20,    // USB2
+    XHCI = 0x30,    // USB3
+    Unspecified = 0x80,
+    USBDevice = 0xFE
+};
+
+enum class IPMIInterfaceProgIF {
+    SMIC = 0x0,
+    KeyboardControllerStyle = 0x1,
+    BlockTransfer = 0x2
+};
+
 class PCI {
 public:
     PCI() {}
 
     uint16_t ConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
     bool PCIExists();
+
+    uint32_t GetDeviceClass(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF);
+    char* GetClassCode(uint8_t ClassCode);
+
+    void checkFunction(uint8_t bus, uint8_t device, uint8_t function);
+    void checkDevice(uint8_t bus, uint8_t device);
+    void checkAllBuses();
+    uint16_t getVendorID(uint8_t bus, uint8_t device, uint8_t function);
+    uint8_t getHeaderType(uint8_t bus, uint8_t device, uint8_t function);
 };

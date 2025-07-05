@@ -107,6 +107,143 @@ bool PCI::PCIExists() {
 }
 
 /*
+ * We can use this to quickly get the device class
+*/
+uint32_t PCI::GetDeviceClass(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF) {
+    return (static_cast<uint32_t>(ClassCode) << 24) |
+           (static_cast<uint32_t>(SubClass)  << 16) |
+           (static_cast<uint32_t>(ProgIF)    << 8);
+}
+
+/*
+ * We can use this to get the class code
+ * as a string.
+*/
+char* PCI::GetClassCode(uint8_t ClassCode) {
+    switch (ClassCode) {
+        case ClassCodes::Unclassified:
+            return "Unclassified";
+            break;
+        case ClassCodes::MassStorageController:
+            return "Mass Storage Controller";
+            break;
+        case ClassCodes::NetworkController:
+            return "Network Controller";
+            break;
+        case ClassCodes::DisplayController:
+            return "Display Controller";
+            break;
+        case ClassCodes::MultimediaController:
+            return "Multimedia Controller";
+            break; 
+        case ClassCodes::MemoryController:
+            return "Memory Controller";
+            break;
+        case ClassCodes::Bridge:
+            return "Bridge";
+            break;
+        case ClassCodes::SimpleCommunicationController:
+            return "Simple Communication Controller";
+            break;
+        case ClassCodes::BaseSystemPeripheral:
+            return "Base System Peripheral";
+            break;
+        case ClassCodes::InputDeviceController:
+            return "Input Device Controller";
+            break;
+        case ClassCodes::DockingStation:
+            return "Docking Station";
+            break;
+        case ClassCodes::Processor:
+            return "Processor";
+            break;
+        case ClassCodes::SerialBusController:
+            return "Serial Bus Controller";
+            break;
+        case ClassCodes::WirelessController:
+            return "Wireless Controller";
+            break;
+        case ClassCodes::IntelligentController:
+            return "Intelligent Controller";
+            break;
+        case ClassCodes::SatelliteCommunicationController:
+            return "Satellite Communication Controller";
+            break;
+        case ClassCodes::EncryptionController:
+            return "Encryption Controller";
+            break;
+        case ClassCodes::SignalProcessingController:
+            return "Signal Processing Controller";
+            break;
+        case ClassCodes::ProcessingAccelerator:
+            return "Processing Accelerator";
+            break;
+        default:
+            return "Unknown Class Code";
+            break;
+    }
+}
+
+uint16_t PCI::getVendorID(uint8_t bus, uint8_t device, uint8_t function) {
+    return pciConfigReadWord(bus, device, function, 0x00);
+}
+
+uint8_t PCI::getHeaderType(uint8_t bus, uint8_t device, uint8_t function) {
+    return pciConfigReadByte(bus, device, function, 0x0E);
+}
+
+/*
+ * rn, this function just prints the device.
+ * Later on, we can put this in a list
+ * and use it to load drivers.
+*/
+void PCI::checkFunction(uint8_t bus, uint8_t device, uint8_t function) {
+    uint16_t vendorID = getVendorID(bus, device, function);
+    if (vendorID == 0xFFFF) return;
+
+    uint8_t classCode = pciConfigReadByte(bus, device, function, 0x0B);
+    uint8_t subclass = pciConfigReadByte(bus, device, function, 0x0A);
+    uint8_t progIF = pciConfigReadByte(bus, device, function, 0x09);
+
+    printf("PCI Device found: bus %02x, device %02x, function %x -> class %02x subclass %02x progIF %02x\n",
+           bus, device, function, classCode, subclass, progIF);
+}
+
+/*
+ * rn, this function just prints the device.
+ * Later on, we can put this in a list
+ * and use it to load drivers.
+*/
+void PCI::checkDevice(uint8_t bus, uint8_t device) {
+    uint8_t function = 0;
+    uint16_t vendorID = getVendorID(bus, device, function);
+    if (vendorID == 0xFFFF) return;
+
+    checkFunction(bus, device, function);
+
+    uint8_t headerType = getHeaderType(bus, device, function);
+    if ((headerType & 0x80) != 0) {
+        for (function = 1; function < 8; function++) {
+            if (getVendorID(bus, device, function) != 0xFFFF) {
+                checkFunction(bus, device, function);
+            }
+        }
+    }
+}
+
+/*
+ * This is the Brute Force Method
+ * to check all PCI devices.
+ */
+void PCI::checkAllBuses() {
+    for (uint8_t bus = 0; bus < 256; bus++) {
+        for (uint8_t device = 0; device < 32; device++) {
+            checkDevice(bus, device);
+        }
+    }
+}
+
+/*
  * If set to 1 the device can respond to I/O Space accesses; otherwise, the device's response is disabled.
 */
 void PCI_Header::SetIOSpace(bool val) {
@@ -117,7 +254,7 @@ void PCI_Header::SetIOSpace(bool val) {
     }
 }
 
-bool PCI_Header::IOSpace()  {
+bool PCI_Header::IOSpace() {
     return Command & (1 << 0);
 }
 
