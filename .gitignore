@@ -1,2 +1,6 @@
-*.qcow2
 *.ipch
+**/CMakeFiles/
+**/obj/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
