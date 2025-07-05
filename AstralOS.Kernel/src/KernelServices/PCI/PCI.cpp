@@ -1,4 +1,5 @@
 #include "PCI.h"
+#include "../KernelServices.h"
 
 /*
  * The PCI wiki on the OSDev website
@@ -120,7 +121,7 @@ uint32_t PCI::GetDeviceClass(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF
  * as a string.
 */
 char* PCI::GetClassCode(uint8_t ClassCode) {
-    switch (ClassCode) {
+    switch (static_cast<ClassCodes>(ClassCode)) {
         case ClassCodes::Unclassified:
             return "Unclassified";
             break;
@@ -166,7 +167,7 @@ char* PCI::GetClassCode(uint8_t ClassCode) {
         case ClassCodes::IntelligentController:
             return "Intelligent Controller";
             break;
-        case ClassCodes::SatelliteCommunicationController:
+        case ClassCodes::SatelliteCommunication:
             return "Satellite Communication Controller";
             break;
         case ClassCodes::EncryptionController:
@@ -184,12 +185,474 @@ char* PCI::GetClassCode(uint8_t ClassCode) {
     }
 }
 
+char* PCI::GetDeviceCode(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF) {
+    switch (static_cast<ClassCodes>(ClassCode)) {
+        case ClassCodes::Unclassified: {
+            switch (static_cast<UnclassifiedSubClass>(SubClass)) {
+                case UnclassifiedSubClass::Non_VGACompatible:
+                    return "Unclassified, Non-VGA Compatible";
+                case UnclassifiedSubClass::VGACompatible:
+                    return "Unclassified, VGA Compatible";
+                default:
+                    return "Unclassified, Unknown";
+            }
+        }
+        case ClassCodes::MassStorageController: {
+            switch (static_cast<MassStorageControllerSubClass>(SubClass)) {
+                case MassStorageControllerSubClass::SCSIBusController:
+                    return "Mass Storage Controller, SCSI";
+                    break;
+                case MassStorageControllerSubClass::IDEController: {
+                    switch (static_cast<IDEControllerProgIF>(ProgIF)) {
+                        case IDEControllerProgIF::ISACompatibilityModeOnlyController:
+                            return "Mass Storage Controller, IDE, ISA Compatibility Mode Only";
+                        case IDEControllerProgIF::PCINativeModeOnlyController:
+                            return "Mass Storage Controller, IDE, PCI Native Mode Only";
+                        case IDEControllerProgIF::ISACompatibilityModeController:
+                            return "Mass Storage Controller, IDE, ISA Compatibility Mode";
+                        case IDEControllerProgIF::PCINativeModeController:
+                            return "Mass Storage Controller, IDE, PCI Native Mode";
+                        case IDEControllerProgIF::ISACompatibilityModeOnlyControllerBusMastering:
+                            return "Mass Storage Controller, IDE, ISA Compatibility Mode Only - Bus Mastering";
+                        case IDEControllerProgIF::PCINativeModeOnlyControllerBusMastering:
+                            return "Mass Storage Controller, IDE, PCI Native Mode Only - Bus Mastering";
+                        case IDEControllerProgIF::ISACompatibilityModeControllerBusMastering:
+                            return "Mass Storage Controller, IDE, ISA Compatibility Mode - Bus Mastering";
+                        case IDEControllerProgIF::PCINativeModeControllerBusMastering:
+                            return "Mass Storage Controller, IDE, PCI Native Mode - Bus Mastering";
+                        default:
+                            return "Mass Storage Controller, IDE, Unknown";
+                    }
+                    break;
+                }
+                case MassStorageControllerSubClass::FloppyDiskController:
+                    return "Mass Storage Controller, Floppy Disk";
+                    break;
+                case MassStorageControllerSubClass::IPIBusController:
+                    return "Mass Storage Controller, IPI";
+                    break;
+                case MassStorageControllerSubClass::RAIDController:
+                    return "Mass Storage Controller, RAID";
+                    break;
+                case MassStorageControllerSubClass::ATAController: {
+                    switch (static_cast<ATAControllerProgIF>(ProgIF)) {
+                        case ATAControllerProgIF::SingleDMA:
+                            return "Mass Storage Controller, ATA, Single DMA";
+                        case ATAControllerProgIF::ChainedDMA:
+                            return "Mass Storage Controller, ATA, Chained DMA";
+                        default:
+                            return "Mass Storage Controller, ATA, Unknown";
+                    }
+                    break;
+                }
+                case MassStorageControllerSubClass::SerialATAController: {
+                    switch (static_cast<SATAControllerProgIF>(ProgIF)) {
+                        case SATAControllerProgIF::VendorSpecificInterface:
+                            return "Mass Storage Controller, Serial ATA, Vendor Specific Interface";
+                        case SATAControllerProgIF::ACHI1_0:
+                            return "Mass Storage Controller, Serial ATA, ACHI 1.0";
+                        case SATAControllerProgIF::SerialStorageBus:
+                            return "Mass Storage Controller, Serial ATA, Serial Storage Bus";
+                        default:
+                            return "Mass Storage Controller, Serial ATA, Unknown";
+                    }
+                    break;
+                }
+                case MassStorageControllerSubClass::SerialAttachedSCSIController: {
+                    switch (static_cast<SerialAttachedSCSIControllerProgIF>(ProgIF)) {
+                        case SerialAttachedSCSIControllerProgIF::SAS:
+                            return "Mass Storage Controller, Serial Attached SCSI";
+                        case SerialAttachedSCSIControllerProgIF::SerialStorageBus:
+                            return "Mass Storage Controller, Serial Attached SCSI, Serial Storage Bus";
+                        default:
+                            return "Mass Storage Controller, Serial Attached SCSI, Unknown";
+                    }
+                    break;
+                }
+                case MassStorageControllerSubClass::Non_VolatileMemoryController: {
+                    switch (static_cast<NonVolatileMemoryControllerProgIF>(ProgIF)) {
+                        case NonVolatileMemoryControllerProgIF::NVMHCI:
+                            return "Mass Storage Controller, Non-Volatile Memory, NVMHCI";
+                        case NonVolatileMemoryControllerProgIF::NVMExpress:
+                            return "Mass Storage Controller, Non-Volatile Memory, NVM Express";
+                        default:
+                            return "Mass Storage Controller, Non-Volatile Memory, Unknown";
+                    }
+                    break;
+                }
+                case MassStorageControllerSubClass::Other:
+                    return "Mass Storage Controller, Other";
+                    break;
+                default:
+                    return "Mass Storage Controller, Unknown";
+            }
+            break;
+        }
+        case ClassCodes::NetworkController: {
+            switch (static_cast<NetworkControllerSubClass>(SubClass)) {
+                case NetworkControllerSubClass::EthernetController:
+                    return "Network Controller, Ethernet";
+                    break;
+                case NetworkControllerSubClass::TokenRingController:
+                    return "Network Controller, Token Ring";
+                    break;
+                case NetworkControllerSubClass::FDDIController:
+                    return "Network Controller, FDDI";
+                    break;
+                case NetworkControllerSubClass::ATMController:
+                    return "Network Controller, ATM";
+                    break;
+                case NetworkControllerSubClass::ISDNController:
+                    return "Network Controller, ISDN";
+                    break;
+                case NetworkControllerSubClass::WorldFipController:
+                    return "Network Controller, WorldFIP";
+                    break;
+                case NetworkControllerSubClass::PICMGController:
+                    return "Network Controller, PICMG";
+                    break;
+                case NetworkControllerSubClass::InfinibandController:
+                    return "Network Controller, Infiniband";
+                    break;
+                case NetworkControllerSubClass::FabricController:
+                    return "Network Controller, Fabric";
+                    break;
+                case NetworkControllerSubClass::Other:
+                    return "Network Controller, Other";
+                    break;
+                default:
+                    return "Network Controller, Unknown";
+            }
+            break;
+        }
+        case ClassCodes::DisplayController: {
+            switch (static_cast<DisplayControllerSubClass>(SubClass)) {
+                case DisplayControllerSubClass::VGACompatibleController: {
+                    switch (static_cast<VGACompatibleControllerProgIF>(ProgIF)) {
+                        case VGACompatibleControllerProgIF::VGAController:
+                            return "Display Controller, VGA";
+                        case VGACompatibleControllerProgIF::_8514CompatibleController:
+                            return "Display Controller, 8514 Compatible";
+                        default:
+                            return "Display Controller, VGA, Unknown";
+                    }
+                    break;
+                }
+                case DisplayControllerSubClass::XGAController:
+                    return "Display Controller, XGA";
+                    break;
+                case DisplayControllerSubClass::_3DController:
+                    return "Display Controller, 3D";
+                    break;
+                case DisplayControllerSubClass::Other:
+                    return "Display Controller, Other";
+                    break;
+                default:
+                    return "Display Controller, Unknown";
+            }
+            break;
+        }
+        case ClassCodes::MultimediaController: {
+            switch (static_cast<MultimediaControllerSubClass>(SubClass)) {
+                case MultimediaControllerSubClass::MultimediaVideoController:
+                    return "Multimedia Controller, Video";
+                    break;
+                case MultimediaControllerSubClass::MultimediaAudioController:
+                    return "Multimedia Controller, Audio";
+                    break;
+                case MultimediaControllerSubClass::ComputerTelephonyDevice:
+                    return "Multimedia Controller, Computer Telephony Device";
+                    break;
+                case MultimediaControllerSubClass::AudioDevice:
+                    return "Multimedia Controller, Audio Device";
+                    break;
+                case MultimediaControllerSubClass::Other:
+                    return "Multimedia Controller, Other";
+                    break;
+                default:
+                    return "Multimedia Controller, Unknown";
+            }
+            break;
+        }
+        case ClassCodes::MemoryController: {
+            switch (static_cast<MemoryControllerSubClass>(SubClass)) {
+                case MemoryControllerSubClass::RAMController:
+                    return "Memory Controller, RAM";
+                    break;
+                case MemoryControllerSubClass::FlashController:
+                    return "Memory Controller, Flash";
+                    break;
+                case MemoryControllerSubClass::Other:
+                    return "Memory Controller, Other";
+                    break;
+                default:
+                    return "Memory Controller, Unknown";
+            }
+            break;
+        }
+        case ClassCodes::Bridge: {
+            switch (static_cast<BridgeSubClass>(SubClass)) {
+                case BridgeSubClass::HostBridge:
+                    return "Bridge, Host";
+                    break;
+                case BridgeSubClass::ISABridge:
+                    return "Bridge, ISA";
+                    break;
+                case BridgeSubClass::EISABridge:
+                    return "Bridge, EISA";
+                    break;
+                case BridgeSubClass::MCABridge:
+                    return "Bridge, MCA";
+                    break;
+                case BridgeSubClass::PCItoPCI: {
+                    switch (static_cast<PCIPCIBridgeProgIF>(ProgIF)) {
+                        case PCIPCIBridgeProgIF::NormalDecode:
+                            return "Bridge, PCI to PCI, Normal Decode";
+                        case PCIPCIBridgeProgIF::SubtractiveDecode:
+                            return "Bridge, PCI to PCI, Subtractive Decode";
+                        default:
+                            return "Bridge, PCI to PCI, Unknown";
+                    }
+                    break;
+                }
+                case BridgeSubClass::PCMCIABridge:
+                    return "Bridge, PCMCIA";
+                    break;
+                case BridgeSubClass::NuBusBridge:
+                    return "Bridge, NuBus";
+                    break;
+                case BridgeSubClass::CardBusBridge:
+                    return "Bridge, CardBus";
+                    break;
+                case BridgeSubClass::RACEwayBridge: {
+                    switch (static_cast<RACEwayBridgeProgIF>(ProgIF)) {
+                        case RACEwayBridgeProgIF::TransparantMode:
+                            return "Bridge, RACEway, Transparent Mode";
+                        case RACEwayBridgeProgIF::NonTransparentMode:
+                            return "Bridge, RACEway, Non-Transparent Mode";
+                        default:
+                            return "Bridge, RACEway, Unknown";
+                    }
+                    break;
+                }
+                case BridgeSubClass::_PCItoPCIBridge: {
+                    switch (static_cast<_PCIPCIBridgeProgIF>(ProgIF)) {
+                        case _PCIPCIBridgeProgIF::NormalDecode:
+                            return "Bridge, PCI to PCI, Normal Decode";
+                        case _PCIPCIBridgeProgIF::SubtractiveDecode:
+                            return "Bridge, PCI to PCI, Subtractive Decode";
+                        default:
+                            return "Bridge, PCI to PCI, Unknown";
+                    }
+                    break;
+                }
+                case BridgeSubClass::InfiniBandToPCIHostBridge:
+                    return "Bridge, InfiniBand to PCI Host";
+                    break;
+                case BridgeSubClass::Other:
+                    return "Bridge, Other";
+                    break;
+                default:
+                    return "Bridge, Unknown";
+            }
+            break;
+        }
+        case ClassCodes::SimpleCommunicationController: {
+            switch (static_cast<SimpleCommunicationControllerSubClass>(SubClass)) {
+                case SimpleCommunicationControllerSubClass::SerialController: {
+                    switch (static_cast<SerialControllerProgIF>(ProgIF)) {
+                        case SerialControllerProgIF::8250Compatible:
+                            return "Simple Communication Controller, Serial, 8250 Compatible";
+                        case SerialControllerProgIF::16450Compatible:
+                            return "Simple Communication Controller, Serial, 16450 Compatible";
+                        case SerialControllerProgIF::16550Compatible:
+                            return "Simple Communication Controller, Serial, 16550 Compatible";
+                        case SerialControllerProgIF::16550ACompatible:
+                            return "Simple Communication Controller, Serial, 16550A Compatible";
+                        case SerialControllerProgIF::16650Compatible:
+                            return "Simple Communication Controller, Serial, 16650 Compatible";
+                        case SerialControllerProgIF::16750Compatible:
+                            return "Simple Communication Controller, Serial, 16750 Compatible";
+                        case SerialControllerProgIF::16850Compatible:
+                            return "Simple Communication Controller, Serial, 16850 Compatible";
+                        case SerialControllerProgIF::16950Compatible:
+                            return "Simple Communication Controller, Serial, 16950 Compatible";
+                        default:
+                            return "Simple Communication Controller, Serial, Unknown";
+                    }
+                    break;
+                }
+                case SimpleCommunicationControllerSubClass::ParallelController: {
+                    switch (static_cast<ParallelControllerProgIF>(ProgIF)) {
+                        case ParallelControllerProgIF::StandardParallelPort:
+                            return "Simple Communication Controller, Parallel, Standard";
+                        case ParallelControllerProgIF::BiDirectionalParallelPort:
+                            return "Simple Communication Controller, Parallel, Bi-Directional";
+                        case ParallelControllerProgIF::ECPCompliantParallelPort:
+                            return "Simple Communication Controller, Parallel, ECP Compliant";
+                        case ParallelControllerProgIF::IEEE1284Controller:
+                            return "Simple Communication Controller, Parallel, IEEE 1284 Controller";
+                        case ParallelControllerProgIF::IEEE1284TargetDevice:
+                            return "Simple Communication Controller, Parallel, IEEE 1284 Target Device";
+                        default:
+                            return "Simple Communication Controller, Parallel, Unknown";
+                    }
+                    break;
+                }
+                case SimpleCommunicationControllerSubClass::MultiportSerialController:
+                    return "Simple Communication Controller, Multiport Serial";
+                    break;
+                case SimpleCommunicationControllerSubClass::Modem: {
+                    switch (static_cast<ModemProgIF>(ProgIF)) {
+                        case ModemProgIF::GenericModem:
+                            return "Simple Communication Controller, Modem, Generic";
+                        case ModemProgIF::Hayes16450Interface:
+                            return "Simple Communication Controller, Modem, Hayes 16450 Interface";
+                        case ModemProgIF::Hayes16550Interface:
+                            return "Simple Communication Controller, Modem, Hayes 16550 Interface";
+                        case ModemProgIF::Hayes16650Interface:
+                            return "Simple Communication Controller, Modem, Hayes 16650 Interface";
+                        case ModemProgIF::Hayes16750Interface:
+                            return "Simple Communication Controller, Modem, Hayes 16750 Interface";
+                        default:
+                            return "Simple Communication Controller, Modem, Unknown";
+                    }
+                    break;
+                }
+                case SimpleCommunicationControllerSubClass::GPIBController:
+                    return "Simple Communication Controller, GPIB";
+                    break;
+                case SimpleCommunicationControllerSubClass::SmartCardController:
+                    return "Simple Communication Controller, Smart Card";
+                    break;
+                case SimpleCommunicationControllerSubClass::Other:
+                    return "Simple Communication Controller, Other";
+                    break;
+                default:
+                    return "Simple Communication Controller, Unknown";
+            }
+            break;
+        }
+        case ClassCodes::BaseSystemPeripheral: {
+            switch (static_cast<BaseSystemPeripheralSubClass>(SubClass)) {
+                case BaseSystemPeripheralSubClass::PIC: {
+                    switch (static_cast<PICProgIF>(ProgIF)) {
+                        case PICProgIF::Generic8259Compatible:
+                            return "Base System Peripheral, PIC, Generic 8259 Compatible";
+                        case PICProgIF::ISABusCompatible:
+                            return "Base System Peripheral, PIC, ISA Bus Compatible";
+                        case PICProgIF::EISABusCompatible:
+                            return "Base System Peripheral, PIC, EISA Bus Compatible";
+                        case PICProgIF::IOAPICInterruptController:
+                            return "Base System Peripheral, PIC, IOAPIC Interrupt Controller";
+                        case PICProgIF::IOxAPICInterruptController:
+                            return "Base System Peripheral, PIC, IOxAPIC Interrupt Controller";
+                        default:
+                            return "Base System Peripheral, PIC, Unknown";
+                    }
+                    break;
+                }
+                case BaseSystemPeripheralSubClass::DMAController: {
+                    switch (static_cast<DMAControllerProgIF>(ProgIF)) {
+                        case DMAControllerProgIF::Generic8237Compatible:
+                            return "Base System Peripheral, DMA, Generic 8237 Compatible";
+                        case DMAControllerProgIF::ISABusCompatible:
+                            return "Base System Peripheral, DMA, ISA Bus Compatible";
+                        case DMAControllerProgIF::EISABusCompatible:
+                            return "Base System Peripheral, DMA, EISA Bus Compatible";
+                        default:
+                            return "Base System Peripheral, DMA, Unknown";
+                    }
+                    break;
+                }
+                case BaseSystemPeripheralSubClass::Timer: {
+                    switch (static_cast<TimerProgIF>(ProgIF)) {
+                        case TimerProgIF::Generic8254Compatible:
+                            return "Base System Peripheral, Timer, Generic 8254 Compatible";
+                        case TimerProgIF::ISABusCompatible:
+                            return "Base System Peripheral, Timer, ISA Bus Compatible";
+                        case TimerProgIF::EISABusCompatible:
+                            return "Base System Peripheral, Timer, EISA Bus Compatible";
+                        case TimerProgIF::HPETimer:
+                            return "Base System Peripheral, Timer, HPET";
+                        default:
+                            return "Base System Peripheral, Timer, Unknown";
+                    }
+                    break;
+                }
+                case BaseSystemPeripheralSubClass::RTCController: {
+                    switch (static_cast<RTCControllerProgIF>(ProgIF)) {
+                        case RTCControllerProgIF::GenericRTC:
+                            return "Base System Peripheral, RTC, Generic";
+                        case RTCControllerProgIF::ISABusCompatible:
+                            return "Base System Peripheral, RTC, ISA Bus Compatible";
+                        default:
+                            return "Base System Peripheral, RTC, Unknown";
+                    }
+                    break;
+                }
+            }
+            break;
+        }
+        case ClassCodes::InputDeviceController:
+            return "Input Device Controller";
+            break;
+        case ClassCodes::DockingStation:
+            return "Docking Station";
+            break;
+        case ClassCodes::Processor:
+            return "Processor";
+            break;
+        case ClassCodes::SerialBusController:
+            return "Serial Bus Controller";
+            break;
+        case ClassCodes::WirelessController:
+            return "Wireless Controller";
+            break;
+        case ClassCodes::IntelligentController:
+            return "Intelligent Controller";
+            break;
+        case ClassCodes::SatelliteCommunication:
+            return "Satellite Communication Controller";
+            break;
+        case ClassCodes::EncryptionController:
+            return "Encryption Controller";
+            break;
+        case ClassCodes::SignalProcessingController:
+            return "Signal Processing Controller";
+            break;
+        case ClassCodes::ProcessingAccelerator:
+            return "Processing Accelerator";
+            break;
+        default:
+            return "Unknown Class Code";
+            break;
+    };
+}
+
 uint16_t PCI::getVendorID(uint8_t bus, uint8_t device, uint8_t function) {
-    return pciConfigReadWord(bus, device, function, 0x00);
+    return ConfigReadWord(bus, device, function, 0x00);
 }
 
 uint8_t PCI::getHeaderType(uint8_t bus, uint8_t device, uint8_t function) {
-    return pciConfigReadByte(bus, device, function, 0x0E);
+    return ConfigReadWord(bus, device, function, 0x0E);
+}
+
+bool PCI::deviceAlreadyFound(uint8_t bus, uint8_t device, uint8_t function) {
+    for (int i = 0; i < DeviceCount; i++) {
+        if (Devices[i].bus == bus &&
+            Devices[i].device == device &&
+            Devices[i].function == function) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void PCI::addDevice(uint8_t bus, uint8_t device, uint8_t function) {
+    if (DeviceCount < MAX_DEVICES) {
+        Devices[DeviceCount++] = {bus, device, function};
+    }
 }
 
 /*
@@ -198,15 +661,18 @@ uint8_t PCI::getHeaderType(uint8_t bus, uint8_t device, uint8_t function) {
  * and use it to load drivers.
 */
 void PCI::checkFunction(uint8_t bus, uint8_t device, uint8_t function) {
+    if (deviceAlreadyFound(bus, device, function)) return;
+
+    addDevice(bus, device, function);
+
     uint16_t vendorID = getVendorID(bus, device, function);
     if (vendorID == 0xFFFF) return;
 
-    uint8_t classCode = pciConfigReadByte(bus, device, function, 0x0B);
-    uint8_t subclass = pciConfigReadByte(bus, device, function, 0x0A);
-    uint8_t progIF = pciConfigReadByte(bus, device, function, 0x09);
+    uint8_t classCode = ConfigReadWord(bus, device, function, 0x0B);
+    uint8_t subclass = ConfigReadWord(bus, device, function, 0x0A);
+    uint8_t progIF = ConfigReadWord(bus, device, function, 0x09);
 
-    printf("PCI Device found: bus %02x, device %02x, function %x -> class %02x subclass %02x progIF %02x\n",
-           bus, device, function, classCode, subclass, progIF);
+    ks->basicConsole.Println(GetDeviceCode(classCode, subclass, progIF));
 }
 
 /*
@@ -373,7 +839,7 @@ bool PCI_Header::InterruptDisable() {
  * the signal will be ignored.
 */
 bool PCI_Header::InterruptStatus() {
-    return Command & (1 << 3);
+    return Status & (1 << 3);
 }
 
 /*
@@ -382,14 +848,14 @@ bool PCI_Header::InterruptStatus() {
  * the linked list is not available.
 */
 bool PCI_Header::CapabilitiesList() {
-    return Command & (1 << 4);
+    return Status & (1 << 4);
 }
 
 /*
  * If set to 1 the device is capable of running at 66 MHz; otherwise, the device runs at 33 MHz.
 */
 bool PCI_Header::MHzCapable() {
-    return Command & (1 << 5);
+    return Status & (1 << 5);
 }
 
 /*
@@ -398,7 +864,7 @@ bool PCI_Header::MHzCapable() {
  * transactions can only be accepted from the same agent.
 */
 bool PCI_Header::FastBBCapable() {
-    return Command & (1 << 7);
+    return Status & (1 << 7);
 }
 
 /*
@@ -413,7 +879,7 @@ void PCI_Header::SetMasterDataParityError() {
 }
 
 bool PCI_Header::MasterDataParityError() {
-    return Command & (1 << 8);
+    return Status & (1 << 8);
 }
 
 /*
@@ -436,7 +902,7 @@ void PCI_Header::SetSignaledTargetAbort() {
 }
 
 bool PCI_Header::SignaledTargetAbort() {
-    return Command & (1 << 11);
+    return Status & (1 << 11);
 }
 
 /*
@@ -448,7 +914,7 @@ void PCI_Header::SetRecievedTargetAbort() {
 }
 
 bool PCI_Header::RecievedTargetAbort() {
-    return Command & (1 << 12);
+    return Status & (1 << 12);
 }
 
 /*
@@ -461,7 +927,7 @@ void PCI_Header::SetRecievedMasterAbort() {
 }
 
 bool PCI_Header::RecievedMasterAbort() {
-    return Command & (1 << 13);
+    return Status & (1 << 13);
 }
 
 /*
@@ -472,7 +938,7 @@ void PCI_Header::SetSignaledSystemError() {
 }
 
 bool PCI_Header::SignaledSystemError() {
-    return Command & (1 << 14);
+    return Status & (1 << 14);
 }
 
 /*
@@ -480,7 +946,7 @@ bool PCI_Header::SignaledSystemError() {
  * error, even if parity error handling is disabled.
 */
 bool PCI_Header::DetectedParityError() {
-    return Command & (1 << 15);
+    return Status & (1 << 15);
 }
 
 void PCI_Header::SetDetectedParityError() {

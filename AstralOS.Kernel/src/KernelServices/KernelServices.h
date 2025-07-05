@@ -9,6 +9,7 @@
 #include "IOAPIC/IOAPIC.h"
 #include "ACPI/ACPI.h"
 #include "Paging/MemoryAlloc/Heap.h"
+#include "PCI/PCI.h"
 
 struct BootInfo {
 	FrameBuffer* pFramebuffer;
@@ -33,6 +34,7 @@ public:
 	IOAPIC ioapic;
 	ACPI acpi;
 	HeapAllocator heapAllocator;
+	PCI pci;
 };
 
 extern KernelServices* ks;
