@@ -504,33 +504,65 @@ enum class IPMIInterfaceProgIF {
     BlockTransfer = 0x2
 };
 
+struct MSIMCRegister {
+    uint16_t Enable : 1;
+    uint16_t MultipleMessageCapable : 3;
+    uint16_t MultipleMessageEnable : 3;
+    uint16_t _64Bit : 1;
+    uint16_t PerVectorMasking : 1;
+    uint16_t Reserved : 7;
+} __attribute__((packed));
+
+struct MSICapability {
+    uint8_t CapabilityID;
+    uint8_t NextPointer;
+    MSIMCRegister MessageControl;
+    uint32_t MessageAddrLow;
+    uint32_t MessageAddrHigh;
+    uint16_t MessageData;
+    uint16_t Reserved;
+    uint32_t Mask;
+    uint32_t Pending;
+} __attribute__((packed));
+
 struct DeviceKey {
     uint8_t bus;
     uint8_t device;
     uint8_t function;
+    bool hasMSI;
 };
 
 class PCI {
 public:
     PCI() {}
 
-    uint16_t ConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
+    void Initialize();
     bool PCIExists();
 
     uint32_t GetDeviceClass(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF);
     char* GetClassCode(uint8_t ClassCode);
     char* GetDeviceCode(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF);
 
-    void checkFunction(uint8_t bus, uint8_t device, uint8_t function);
-    void checkDevice(uint8_t bus, uint8_t device);
     void checkAllBuses();
-    uint16_t getVendorID(uint8_t bus, uint8_t device, uint8_t function);
-    uint8_t getHeaderType(uint8_t bus, uint8_t device, uint8_t function);
+    void checkBus(uint8_t bus);
+
+    bool EnableMSI(uint8_t bus, uint8_t device, uint8_t function, uint8_t vector);
+
+    DeviceKey* GetDevices(int& outCount);
 private:
-    int MAX_DEVICES = 256;
-    DeviceKey Devices[256];
+    int MAX_DEVICES = 65536;
+    DeviceKey Devices[65536];
     int DeviceCount = 0;
 
     bool deviceAlreadyFound(uint8_t bus, uint8_t device, uint8_t function);
-    void addDevice(uint8_t bus, uint8_t device, uint8_t function);
+    void addDevice(uint8_t bus, uint8_t device, uint8_t function, bool hasMSI);
+    uint16_t ConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
+    void ConfigWriteWord(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint16_t value);
+    void ConfigWriteDWord(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint32_t value);
+    uint8_t ConfigReadByte(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
+    uint32_t ConfigReadDWord(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
+    void checkFunction(uint8_t bus, uint8_t device, uint8_t function);
+    void checkDevice(uint8_t bus, uint8_t device);
+    uint16_t getVendorID(uint8_t bus, uint8_t device, uint8_t function);
+    uint8_t getHeaderType(uint8_t bus, uint8_t device, uint8_t function);
 };
