@@ -67,7 +67,7 @@ extern "C" int _start(BootInfo* pBootInfo) {
 
     if (kernelServices.pci.PCIExists()) {
         kernelServices.basicConsole.Println("PCI Exists.");
-        kernelServices.pci.checkAllBuses();
+        kernelServices.pci.Initialize();
     } else {
         kernelServices.basicConsole.Println("No PCI devices found.");
     }
