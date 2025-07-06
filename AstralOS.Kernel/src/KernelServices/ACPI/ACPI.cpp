@@ -188,6 +188,26 @@ SRAT* ACPI::GetSRAT() {
     return NULL;
 }
 
+MCFG* ACPI::GetMCFG() {
+    int entries = (xsdt->h.Length - sizeof(xsdt->h)) / 8;
+    uint8_t* entriesBase = (uint8_t*)xsdt + sizeof(ACPISDTHeader);
+
+    for (int i = 0; i < entries; i++) {
+        uint64_t entryAddr = ReadUnaligned64(entriesBase + i * sizeof(uint64_t));
+
+        ks->pageTableManager.MapMemory((void*)entryAddr, (void*)entryAddr, false);
+
+        ACPISDTHeader* h = (ACPISDTHeader*)entryAddr;
+
+        if (strncmp((const char*)h->Signature, "MCFG", 4) == 0) {
+            return (MCFG*)h;
+        }
+    }
+
+    basicConsole->Println("MCFG not found in XSDT!");
+    return NULL;
+}
+
 MADT_ProcessorLocalAPIC* ACPI::GetProcessorLocalAPIC() {
     MADT* madt = GetMADT();
     if (!madt) {
