@@ -107,6 +107,28 @@ struct BGRT {
     uint32_t ImageYOffset;
 };
 
+struct MCFGEntry {
+    uint64_t BaseAddr;
+    uint16_t PCISegmentGroupNum;
+    uint8_t StartPCIBusNum;
+    uint8_t EndPCIBusNum;
+    uint32_t Reserved;
+}
+
+struct MCFG {
+    char Signature[4];
+    uint32_t Length;
+    uint8_t Revision;
+    uint8_t Checksum;
+    char OEMID[6];
+    char OEMTableID[8];
+    uint32_t OEMRevision;
+    uint32_t CreatorID;
+    uint32_t CreatorRevision;
+    uint64_t Reserved;
+    MCFGEntry entries[];
+};
+
 /*
  * Code from the OSDev Wiki:
  * https://wiki.osdev.org/FADT
@@ -256,6 +278,7 @@ public:
     BGRT* GetBGRT();
     RSDT* GetRSDT();
     SRAT* GetSRAT();
+    MCFG* GetMCFG();
 
     MADT_ProcessorLocalAPIC* GetProcessorLocalAPIC();
     MADT_IOAPIC* GetIOAPIC();
