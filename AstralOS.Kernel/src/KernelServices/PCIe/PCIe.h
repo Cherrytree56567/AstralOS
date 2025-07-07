@@ -1,5 +1,53 @@
 #pragma once
 #include "../PCI/PCI.h"
+#include "../ACPI/ACPI.h"
+
+struct MSIXMCRegs {
+    uint16_t TableSize : 11;
+    uint16_t Reserved : 3;
+    uint16_t FunctionMask : 1;
+    uint16_t Enable : 1;
+} __attribute__((packed));
+
+struct MSIX {
+    uint8_t CapabilityID;
+    uint8_t NextPointer;
+    uint16_t MessageControl;
+    uint32_t Table;
+    uint32_t PendingBit;
+
+    uint8_t ReadBIR() const {
+        return Table & 0x7;
+    }
+
+    void WriteBIR(uint8_t bir) {
+        Table = (Table & ~0x7) | (bir & 0x7);
+    }
+
+    uint32_t ReadTableOffset() const {
+        return Table >> 3;
+    }
+
+    void WriteTableOffset(uint32_t offset) {
+        Table = (Table & 0x7) | (offset << 3);
+    }
+
+    uint8_t ReadPendingBitBIR() const {
+        return PendingBit & 0x7;
+    }
+
+    void WritePendingBitBIR(uint8_t bir) {
+        PendingBit = (PendingBit & ~0x7) | (bir & 0x7);
+    }
+
+    uint32_t ReadPendingBitOffset() const {
+        return PendingBit >> 3;
+    }
+
+    void WritePendingBitOffset(uint32_t offset) {
+        PendingBit = (PendingBit & 0x7) | (offset << 3);
+    }
+} __attribute__((packed));
 
 struct PCIeDeviceKey {
     uint16_t Segment;
@@ -14,6 +62,7 @@ public:
     PCIe() {}
 
     void Initialize();
+    void InitializePCIe(MCFG* mcfg);
     bool PCIeExists();
 
     uint32_t GetDeviceClass(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF);
@@ -23,11 +72,15 @@ public:
     void checkAllSegments();
     void checkBus(uint16_t segment, uint8_t bus);
 
-    bool EnableMSI(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t vector);
+    bool EnableMSIx(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t vector);
 
     Array<PCIeDeviceKey> GetDevices();
 private:
     Array<PCIeDeviceKey> Devices;
+    MCFG* mcfgTable;
+    int numSegments;
+
+    volatile uint32_t* GetECAMBase(uint16_t segment);
 
     uint16_t ConfigReadWord(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
     void ConfigWriteWord(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint16_t value);

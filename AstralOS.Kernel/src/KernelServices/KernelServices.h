@@ -10,6 +10,7 @@
 #include "ACPI/ACPI.h"
 #include "Paging/MemoryAlloc/Heap.h"
 #include "PCI/PCI.h"
+#include "PCIe/PCIe.h"
 
 struct BootInfo {
 	FrameBuffer* pFramebuffer;
@@ -35,6 +36,7 @@ public:
 	ACPI acpi;
 	HeapAllocator heapAllocator;
 	PCI pci;
+	PCIe pcie;
 };
 
 extern KernelServices* ks;
