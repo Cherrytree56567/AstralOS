@@ -162,3 +162,16 @@ void HeapAllocator::free(void* ptr) {
         }
     }
 }
+
+/*
+ * We can use this func to easily malloc
+ * without having to pass the KernelServices
+ * var pointer.
+*/
+void* malloc(size_t size) {
+    return ks->heapAllocator.malloc(size);
+}
+
+void free(void* ptr) {
+    ks->heapAllocator.free(ptr);
+}

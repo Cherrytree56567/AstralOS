@@ -113,7 +113,7 @@ struct MCFGEntry {
     uint8_t StartPCIBusNum;
     uint8_t EndPCIBusNum;
     uint32_t Reserved;
-}
+};
 
 struct MCFG {
     char Signature[4];
