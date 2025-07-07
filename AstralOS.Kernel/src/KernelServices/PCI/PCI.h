@@ -1,6 +1,7 @@
 #pragma once
 #include <tuple>
 #include "../CPUutils/cpuid.h"
+#include "../Array/Array.h"
 
 /*
  * This code is from the OSDev Wiki:
@@ -548,19 +549,19 @@ public:
 
     bool EnableMSI(uint8_t bus, uint8_t device, uint8_t function, uint8_t vector);
 
-    DeviceKey* GetDevices(int& outCount);
+    Array<DeviceKey> GetDevices();
 private:
-    int MAX_DEVICES = 65536;
-    DeviceKey Devices[65536];
-    int DeviceCount = 0;
+    Array<DeviceKey> Devices;
 
-    bool deviceAlreadyFound(uint8_t bus, uint8_t device, uint8_t function);
-    void addDevice(uint8_t bus, uint8_t device, uint8_t function, bool hasMSI);
     uint16_t ConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
     void ConfigWriteWord(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint16_t value);
     void ConfigWriteDWord(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint32_t value);
     uint8_t ConfigReadByte(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
     uint32_t ConfigReadDWord(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
+
+    bool deviceAlreadyFound(uint8_t bus, uint8_t device, uint8_t function);
+    void addDevice(uint8_t bus, uint8_t device, uint8_t function, bool hasMSI);
+    
     void checkFunction(uint8_t bus, uint8_t device, uint8_t function);
     void checkDevice(uint8_t bus, uint8_t device);
     uint16_t getVendorID(uint8_t bus, uint8_t device, uint8_t function);

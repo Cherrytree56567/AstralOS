@@ -17,6 +17,9 @@ struct BlockHeader {
     BlockHeader* prev;
 };
 
+void* malloc(size_t size);
+void free(void* ptr);
+
 class HeapAllocator {
 public:
     HeapAllocator() {}
