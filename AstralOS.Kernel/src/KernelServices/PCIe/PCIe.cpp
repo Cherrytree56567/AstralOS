@@ -1,93 +1,120 @@
 #include "PCIe.h"
+#include "../KernelServices.h"
 
-uint16_t PCI::ConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset) {
-    uint32_t address;
-    uint32_t lbus  = (uint32_t)bus;
-    uint32_t lslot = (uint32_t)slot;
-    uint32_t lfunc = (uint32_t)func;
-    uint16_t tmp = 0;
-  
-    address = (uint32_t)((lbus << 16) | (lslot << 11) |
-              (lfunc << 8) | (offset & 0xFC) | ((uint32_t)0x80000000));
-  
-    outl(0xCF8, address);
-
-    tmp = (uint16_t)((inl(0xCFC) >> ((offset & 2) * 8)) & 0xFFFF);
-    return tmp;
+void PCIe::Initialize() {
+    numSegments = (mcfgTable->Length - sizeof(MCFG)) / sizeof(MCFGEntry);
+    checkAllSegments();
 }
 
-void PCI::ConfigWriteWord(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint16_t value) {
-    uint32_t address = (1 << 31) 
-                    | (bus << 16) 
-                    | (device << 11) 
-                    | (function << 8) 
-                    | (offset & 0xFC);
-    outl(0xCF8, address);
-    uint32_t data = inl(0xCFC);
-    uint32_t mask = 0xFFFF << ((offset & 2) * 8);
-    data = (data & ~mask) | ((uint32_t)value << ((offset & 2) * 8));
-    outl(0xCFC, data);
-}
-
-void PCI::ConfigWriteDWord(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint32_t value) {
-    uint32_t address = (1U << 31)
-                    | (bus << 16)
-                    | (device << 11)
-                    | (function << 8)
-                    | (offset & 0xFC);
-
-    outl(0xCF8, address);
-    outl(0xCFC, value);
-}
-
-uint8_t PCI::ConfigReadByte(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset) {
-    uint32_t alignedOffset = offset & ~0x3;
-    uint32_t data = ConfigReadDWord(bus, device, function, alignedOffset);
-
-    uint8_t byteShift = (offset & 0x3) * 8;
-
-    return (data >> byteShift) & 0xFF;
-}
-
-uint32_t PCI::ConfigReadDWord(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset) {
-    uint32_t address = (uint32_t)(
-        (1 << 31)              |
-        ((bus & 0xFF) << 16)   |
-        ((device & 0x1F) << 11) |
-        ((function & 0x07) << 8)  | 
-        (offset & 0xFC)
-    );
-
-    outl(0xCF8, address);
-
-    return inl(0xCFC);
+void PCIe::InitializePCIe(MCFG* mcfg) {
+    mcfgTable = mcfg;
 }
 
 /*
- * We can Test if PCI Exists by
- * reading all 32 devices because
- * PCI only allows 32 devices per
- * bus.
- * 
- * This won't be able to check if
- * PCIe is supported but it will
- * check if PCI is supported.
- * Usually both are supported.
+ * We can check if the PCIe exists
+ * by checking if our MCFG Table
+ * Exists or not. We can then verify
+ * if our table is Indeed the MCFG
+ * table by checking it signature.
 */
-bool PCI::PCIExists() {
-    for (uint8_t device = 0; device < 32; device++) {
-        uint16_t vendor = ConfigReadWord(0, device, 0, 0x00) & 0xFFFF;
-        if (vendor != 0xFFFF) {
-            return true;
-        }
+bool PCIe::PCIeExists() {
+    if (mcfgTable == NULL) {
+        return false;
+    } else if (mcfgTable->Signature == "MCFG") {
+        return true;
     }
     return false;
+}
+
+void PCIe::checkAllSegments() {
+    for (size_t i = 0; i < numSegments; i++) {
+        MCFGEntry entry = mcfgTable->entries[i];
+        checkBus(entry.PCISegmentGroupNum, 0);
+    }
+}
+
+/*
+ * This is the Recursive Method
+ * to check all PCI devices.
+ */
+void PCIe::checkBus(uint16_t segment, uint8_t bus) {
+    for (uint8_t device = 0; device < 32; device++) {
+        checkDevice(segment, bus, device);
+    }
+}
+
+/*
+ * We can use this func to check the
+ * device in a specific segment and
+ * add it to our devices array.
+*/
+void PCIe::checkDevice(uint16_t segment, uint8_t bus, uint8_t device) {
+    uint8_t function = 0;
+    uint16_t vendorID = getVendorID(segment, bus, device, function);
+    if (vendorID == 0xFFFF) return;
+
+    checkFunction(segment, bus, device, function);
+
+    uint8_t headerType = getHeaderType(segment, bus, device, function);
+    if ((headerType & 0x80) != 0) {
+        for (function = 1; function < 8; function++) {
+            if (getVendorID(segment, bus, device, function) != 0xFFFF) {
+                checkFunction(segment, bus, device, function);
+            }
+        }
+    }
+}
+
+/*
+ * rn, this function just prints the device.
+ * Later on, we can put this in a list
+ * and use it to load drivers.
+ * 
+ * OK, it now add's the device. So now, we can
+ * scan PCI to PCI Bridges to get all devices 
+ * behind it.
+ * 
+ * tbf, I just copied this from the PCI class,
+ * since both are really similar.
+*/
+void PCIe::checkFunction(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function) {
+    if (deviceAlreadyFound(segment, bus, device, function)) return;
+
+    bool hasMSIx = false;
+
+    if ((ConfigReadWord(segment, bus, device, function, 0x06) >> 4) & 1) {
+        uint8_t capPtr = ConfigReadByte(segment, bus, device, function, 0x34);
+        while (capPtr != 0) {
+            uint8_t capID = ConfigReadByte(segment, bus, device, function, capPtr);
+            if (capID == 0x11) {
+                hasMSIx = true;
+                break;
+            }
+            capPtr = ConfigReadByte(segment, bus, device, function, capPtr + 1);
+        }
+    }
+
+    addDevice(segment, bus, device, function, hasMSIx);
+
+    uint16_t vendorID = getVendorID(segment, bus, device, function);
+    if (vendorID == 0xFFFF) return;
+
+    uint8_t classCode = ConfigReadWord(segment, bus, device, function, 0x0B);
+    uint8_t subclass = ConfigReadWord(segment, bus, device, function, 0x0A);
+    uint8_t progIF = ConfigReadWord(segment, bus, device, function, 0x09);
+
+    ks->basicConsole.Println(GetDeviceCode(classCode, subclass, progIF));
+
+    if (classCode == 0x06 && subclass == 0x04) {
+        uint8_t secondaryBus = ConfigReadWord(segment, bus, device, function, 0x19) & 0xFF;
+        checkBus(segment, secondaryBus);
+    }
 }
 
 /*
  * We can use this to quickly get the device class
 */
-uint32_t PCI::GetDeviceClass(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF) {
+uint32_t PCIe::GetDeviceClass(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF) {
     return (static_cast<uint32_t>(ClassCode) << 24) |
            (static_cast<uint32_t>(SubClass)  << 16) |
            (static_cast<uint32_t>(ProgIF)    << 8);
@@ -97,7 +124,7 @@ uint32_t PCI::GetDeviceClass(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF
  * We can use this to get the class code
  * as a string.
 */
-char* PCI::GetClassCode(uint8_t ClassCode) {
+char* PCIe::GetClassCode(uint8_t ClassCode) {
     switch (static_cast<ClassCodes>(ClassCode)) {
         case ClassCodes::Unclassified:
             return "Unclassified";
@@ -162,7 +189,7 @@ char* PCI::GetClassCode(uint8_t ClassCode) {
     }
 }
 
-char* PCI::GetDeviceCode(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF) {
+char* PCIe::GetDeviceCode(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF) {
     switch (static_cast<ClassCodes>(ClassCode)) {
         case ClassCodes::Unclassified: {
             switch (static_cast<UnclassifiedSubClass>(SubClass)) {
@@ -869,21 +896,84 @@ char* PCI::GetDeviceCode(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF) {
     };
 }
 
-void PCI::Initialize() {
-    checkAllBuses();
+volatile uint32_t* PCIe::GetECAMBase(uint16_t segment) {
+    for (int i = 0; i < numSegments; i++) {
+        if (mcfgTable->entries[i].PCISegmentGroupNum == segment) {
+            return (volatile uint32_t*)(uintptr_t)(mcfgTable->entries[i].BaseAddr);
+        }
+    }
+    return nullptr;
 }
 
-uint16_t PCI::getVendorID(uint8_t bus, uint8_t device, uint8_t function) {
-    return ConfigReadWord(bus, device, function, 0x00);
+uint16_t PCIe::ConfigReadWord(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset) {
+    uint32_t dword = ConfigReadDWord(segment, bus, slot, func, offset & ~0x3);
+    uint8_t shift = (offset & 2) * 8;
+    return (dword >> shift) & 0xFFFF;
 }
 
-uint8_t PCI::getHeaderType(uint8_t bus, uint8_t device, uint8_t function) {
-    return ConfigReadWord(bus, device, function, 0x0E);
+void PCIe::ConfigWriteWord(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint16_t value) {
+    volatile uint32_t* ecam_base = GetECAMBase(segment);
+    if (!ecam_base) return;
+
+    uint64_t ecam_offset = ((uint64_t)bus << 20) 
+                         | ((uint64_t)device << 15) 
+                         | ((uint64_t)function << 12) 
+                         | (offset & ~0x3);
+
+    volatile uint32_t* addr = (volatile uint32_t*)((uintptr_t)ecam_base + ecam_offset);
+
+    uint32_t current_value = *addr;
+    uint32_t shift = (offset & 2) * 8;
+    uint32_t mask = 0xFFFF << shift;
+
+    uint32_t new_value = (current_value & ~mask) | ((uint32_t)value << shift);
+    *addr = new_value;
 }
 
-bool PCI::deviceAlreadyFound(uint8_t bus, uint8_t device, uint8_t function) {
+void PCIe::ConfigWriteDWord(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint32_t value) {
+    volatile uint32_t* ecam_base = GetECAMBase(segment);
+    if (!ecam_base) return;
+
+    uint64_t ecam_offset = ((uint64_t)bus << 20) 
+                         | ((uint64_t)device << 15) 
+                         | ((uint64_t)function << 12)
+                         | (offset & ~0x3);
+
+    volatile uint32_t* addr = (volatile uint32_t*)((uintptr_t)ecam_base + ecam_offset);
+    *addr = value;
+}
+
+uint8_t PCIe::ConfigReadByte(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset) {
+    uint32_t dword = ConfigReadDWord(segment, bus, device, function, offset & ~0x3);
+    uint8_t shift = (offset & 3) * 8;
+    return (dword >> shift) & 0xFF;
+}
+
+uint32_t PCIe::ConfigReadDWord(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset) {
+    volatile uint32_t* ecam_base = GetECAMBase(segment);
+    if (!ecam_base) return 0xFFFFFFFF;
+    
+    uint64_t ecam_offset = ((uint64_t)bus << 20)
+                         | ((uint64_t)device << 15)
+                         | ((uint64_t)function << 12)
+                         | (offset & ~0x3);
+
+    volatile uint32_t* addr = (volatile uint32_t*)((uintptr_t)ecam_base + ecam_offset);
+    return *addr;
+}
+
+uint16_t PCIe::getVendorID(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function) {
+    return ConfigReadWord(segment, bus, device, function, 0x00);
+}
+
+uint8_t PCIe::getHeaderType(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function) {
+    return ConfigReadWord(segment, bus, device, function, 0x0E);
+}
+
+bool PCIe::deviceAlreadyFound(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function) {
     for (int i = 0; i < Devices.size; i++) {
-        if (Devices[i].bus == bus &&
+        if (Devices[i].Segment == segment &&
+            Devices[i].bus == bus &&
             Devices[i].device == device &&
             Devices[i].function == function) {
             return true;
@@ -892,133 +982,17 @@ bool PCI::deviceAlreadyFound(uint8_t bus, uint8_t device, uint8_t function) {
     return false;
 }
 
-void PCI::addDevice(uint8_t bus, uint8_t device, uint8_t function, bool hasMSI) {
-    Devices.push_back({bus, device, function, hasMSI});
-}
-
-/*
- * rn, this function just prints the device.
- * Later on, we can put this in a list
- * and use it to load drivers.
- * 
- * OK, it now add's the device. So now, we can
- * scan PCI to PCI Bridges to get all devices 
- * behind it.
-*/
-void PCI::checkFunction(uint8_t bus, uint8_t device, uint8_t function) {
-    if (deviceAlreadyFound(bus, device, function)) return;
-
-    bool hasMSI = false;
-
-    if ((ConfigReadWord(bus, device, function, 0x06) >> 4) & 1) {
-        uint8_t capPtr = ConfigReadByte(bus, device, function, 0x34);
-        while (capPtr != 0) {
-            uint8_t capID = ConfigReadByte(bus, device, function, capPtr);
-            if (capID == 0x05) {
-                hasMSI = true;
-                break;
-            }
-            capPtr = ConfigReadByte(bus, device, function, capPtr + 1);
-        }
-    }
-
-    addDevice(bus, device, function, hasMSI);
-
-    uint16_t vendorID = getVendorID(bus, device, function);
-    if (vendorID == 0xFFFF) return;
-
-    uint8_t classCode = ConfigReadWord(bus, device, function, 0x0B);
-    uint8_t subclass = ConfigReadWord(bus, device, function, 0x0A);
-    uint8_t progIF = ConfigReadWord(bus, device, function, 0x09);
-
-    ks->basicConsole.Println(GetDeviceCode(classCode, subclass, progIF));
-
-    if (classCode == 0x06 && subclass == 0x04) {
-        uint8_t secondaryBus = ConfigReadWord(bus, device, function, 0x19) & 0xFF;
-        checkBus(secondaryBus);
-    }
+void PCIe::addDevice(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, bool hasMSIx) {
+    Devices.push_back({segment, bus, device, function, hasMSIx});
 }
 
 /*
  * This too, was made by ChatGPT.
 */
-Array<DeviceKey> PCI::GetDevices() {
+Array<PCIeDeviceKey> PCIe::GetDevices() {
     return Devices;
 }
 
-/*
- * This code is created by GPT.
- * We can use this function to enable
- * the MSI and get interrupts at our LAPIC.
-*/
-bool PCI::EnableMSI(uint8_t bus, uint8_t device, uint8_t function, uint8_t vector) {
-    uint16_t status = ConfigReadWord(bus, device, function, 0x06);
-    if (!(status & (1 << 4))) return false;
-
-    uint8_t capPtr = ConfigReadByte(bus, device, function, 0x34);
-    while (capPtr != 0) {
-        uint8_t capID = ConfigReadByte(bus, device, function, capPtr);
-        if (capID == 0x05) break;
-        capPtr = ConfigReadByte(bus, device, function, capPtr + 1);
-    }
-
-    if (capPtr == 0) return false;
-
-    uint16_t mc = ConfigReadWord(bus, device, function, capPtr + 2);
-    bool is64 = mc & (1 << 7);
-    int offset = capPtr + 4;
-
-    uint32_t lapicAddr = 0xFEE00000; 
-    ConfigWriteDWord(bus, device, function, offset, lapicAddr);
-    offset += 4;
-
-    if (is64) {
-        ConfigWriteDWord(bus, device, function, offset, 0x0);
-        offset += 4;
-    }
-
-    uint16_t msgData = vector & 0xFF;
-    ConfigWriteWord(bus, device, function, offset, msgData);
-    offset += 2;
-
-    mc |= 1 << 0;
-    ConfigWriteWord(bus, device, function, capPtr + 2, mc);
-
-    return true;
-}
-
-/*
- * rn, this function just prints the device.
- * Later on, we can put this in a list
- * and use it to load drivers.
-*/
-void PCI::checkDevice(uint8_t bus, uint8_t device) {
-    uint8_t function = 0;
-    uint16_t vendorID = getVendorID(bus, device, function);
-    if (vendorID == 0xFFFF) return;
-
-    checkFunction(bus, device, function);
-
-    uint8_t headerType = getHeaderType(bus, device, function);
-    if ((headerType & 0x80) != 0) {
-        for (function = 1; function < 8; function++) {
-            if (getVendorID(bus, device, function) != 0xFFFF) {
-                checkFunction(bus, device, function);
-            }
-        }
-    }
-}
-
-/*
- * This is the Recursive Method
- * to check all PCI devices.
- */
-void PCI::checkBus(uint8_t bus) {
-    for (uint8_t device = 0; device < 32; device++) {
-        checkDevice(bus, device);
-    }
-}
-
-void PCI::checkAllBuses() {
-    checkBus(0);
+bool PCIe::EnableMSIx(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t vector) {
+    ks->basicConsole.Println("MSI-X isn't implemented yet!");
 }

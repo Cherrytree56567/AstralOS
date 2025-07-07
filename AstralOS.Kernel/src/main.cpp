@@ -65,11 +65,15 @@ extern "C" int _start(BootInfo* pBootInfo) {
     kernelServices.heapAllocator.free(ptr3);
     kernelServices.basicConsole.Println("Freed remaining blocks");
 
-    if (kernelServices.pci.PCIExists()) {
+    kernelServices.pcie.InitializePCIe(kernelServices.acpi.GetMCFG());
+    if (kernelServices.pcie.PCIeExists()) {
+        kernelServices.basicConsole.Println("PCIe Exists");
+        kernelServices.pcie.Initialize();
+    } else if (kernelServices.pci.PCIExists()) {
         kernelServices.basicConsole.Println("PCI Exists.");
         kernelServices.pci.Initialize();
     } else {
-        kernelServices.basicConsole.Println("No PCI devices found.");
+        kernelServices.basicConsole.Println("No PCI/PCIe devices found.");
     }
 
     while (true) {
