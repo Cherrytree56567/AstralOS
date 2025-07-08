@@ -7,7 +7,7 @@ set(OBJ_DIR "${CMAKE_SOURCE_DIR}/obj")
 
 set(CC "g++")
 set(LD "ld")
-set(CFLAGS "-ffreestanding" "-fshort-wchar")
+set(CFLAGS "-ffreestanding" "-fshort-wchar" "-fno-exceptions" "-fno-rtti")
 
 set(AS "nasm")
 set(ASFLAGS "-felf64")

@@ -3,6 +3,7 @@ project(AstralOSBin)
 
 # Set up directories
 set(QCOW2_FILE "AstralOS.qcow2")
+set(VHDX_FILE "AstralOS.vhdx")
 set(QCOW2_SIZE "10G")
 set(MOUNT_POINT1 "MountEFI")
 set(MOUNT_POINT2 "MountRoot")

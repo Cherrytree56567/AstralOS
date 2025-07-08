@@ -1,6 +1,9 @@
 #pragma once
 #include "../Paging/MemoryAlloc/Heap.h"
+#include "../../cstr/cstr.h"
 #include <cstdint>
+
+void Print(const char* str);
 
 template<typename T>
 struct Array {
@@ -8,21 +11,42 @@ struct Array {
     size_t size = 0;
     size_t capacity = 0;
 
+    Array() {
+        size = 0;
+        capacity = 0;
+    }
+
+    ~Array() {
+        if (data) free(data);
+        data = nullptr;
+        size = 0;
+        capacity = 0;
+    }
+
     void push_back(const T& value) {
         if (size >= capacity) {
             grow();
         }
-        data[size++] = value;
+        if (data) {
+            data[size++] = value;
+        } else {
+            Print("OUT OF MEM!");
+        }
     }
 
     void grow() {
-        capacity = (capacity == 0) ? 16 : capacity * 2;
-        T* newData = (T*)malloc(sizeof(T) * capacity);
+        size_t newCapacity = (capacity == 0) ? 16 : capacity * 2;
+        T* newData = (T*)malloc(sizeof(T) * newCapacity);
+        if (!newData) {
+            Print("ALLOCATION FAILURE");
+            return;
+        }
         for (size_t i = 0; i < size; ++i) {
             newData[i] = data[i];
         }
         if (data) free(data);
         data = newData;
+        capacity = newCapacity;
     }
 
     void clear() {

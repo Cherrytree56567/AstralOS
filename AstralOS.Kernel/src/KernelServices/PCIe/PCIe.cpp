@@ -8,6 +8,7 @@ void PCIe::Initialize() {
 
 void PCIe::InitializePCIe(MCFG* mcfg) {
     mcfgTable = mcfg;
+    Devices.clear();
 }
 
 /*

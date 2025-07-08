@@ -14,7 +14,7 @@ add_custom_target(build
 )
 
 add_custom_target(run
-    COMMAND cp ../AstralOS.Bin/bin/AstralOS.qcow2 AstralOS.qcow2 && sudo qemu-system-x86_64 -m 256M -cpu qemu64 -drive if=pflash,format=raw,unit=0,file="../OVMFbin/OVMF_CODE-pure-efi.fd",readonly=on -drive if=pflash,format=raw,unit=1,file="../OVMFbin/OVMF_VARS-pure-efi.fd" -net none -drive file=AstralOS.qcow2,format=raw
+    COMMAND cp ../AstralOS.Bin/bin/AstralOS.qcow2 AstralOS.qcow2 && sudo qemu-system-x86_64 -machine q35 -cpu host -enable-kvm -m 4G -drive file=AstralOS.qcow2,format=qcow2,if=none,id=hd -device nvme,serial=nvme0,drive=hd -bios ../OVMFbin/OVMF_CODE-pure-efi.fd -no-reboot -rtc base=utc -smp 2
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Running Testing"
 )
