@@ -943,6 +943,7 @@ char* PCI::GetDeviceCode(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF) {
 }
 
 void PCI::Initialize() {
+    Devices.clear();
     checkAllBuses();
 }
 
@@ -955,7 +956,7 @@ uint8_t PCI::getHeaderType(uint8_t bus, uint8_t device, uint8_t function) {
 }
 
 bool PCI::deviceAlreadyFound(uint8_t bus, uint8_t device, uint8_t function) {
-    for (int i = 0; i < Devices.size; i++) {
+    for (size_t i = 0; i < Devices.size; i++) {
         if (Devices[i].bus == bus &&
             Devices[i].device == device &&
             Devices[i].function == function) {
