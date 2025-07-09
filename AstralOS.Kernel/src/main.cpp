@@ -15,6 +15,8 @@ extern "C" int _start(BootInfo* pBootInfo) {
     asm volatile("cli" ::: "memory");
 	KernelServices kernelServices(pBootInfo);
 
+    kernelServices.basicConsole.Println("Kernel INIT!");
+
     InitializePaging(&kernelServices, pBootInfo);
 
     /*

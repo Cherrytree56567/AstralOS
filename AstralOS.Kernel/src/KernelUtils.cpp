@@ -31,15 +31,30 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
     kernelServices->pageFrameAllocator.LockPages((void*)fbBase, fbSize / 4096 + 1);
 
     for (uint64_t t = fbBase; t < fbBase + fbSize; t += 4096) {
-        kernelServices->pageTableManager.MapMemory((void*)t, (void*)t);
+        kernelServices->pageTableManager.MapMemory((void*)0xFFFFFFFFFEE00000, (void*)t);
     }
 
     /*
      * Map APIC
     */
-    kernelServices->pageTableManager.MapMemory((void*)0xFEE00000, (void*)0xFEE00000, false);
+    kernelServices->pageTableManager.MapMemory((void*)(KERNEL_VIRT_ADDR + 0xFEE00000), (void*)0xFEE00000, false);
+
+    uintptr_t kernelPhysBase = 0x1000;
+    uintptr_t kernelVirtBase = KERNEL_VIRT_ADDR;
+    uint64_t kPages = (kernelSize + 4095) / 4096;
+
+    for (uint64_t i = 0; i < kPages; i++) {
+        kernelServices->pageTableManager.MapMemory(
+            (void*)(kernelVirtBase + i * 4096),
+            (void*)(kernelPhysBase + i * 4096)
+        );
+    }
 
     __asm__("mov %0, %%cr3" : : "r" (kernelServices->PML4));
+
+    /*
+     * TODO: Map the I/O APIC and stuff
+    */
 }
 
 IDTR64 idtr;
