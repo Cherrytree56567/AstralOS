@@ -76,3 +76,38 @@ void PageTableManager::MapMemory(void* virtualMemory, void* physicalMemory, bool
     }
     PT->entries[indexer.P_i] = PDE;
 }
+
+void PageTableManager::UnmapMemory(void* virtualMemory) {
+    if (!initialized) {
+        basicConsole->Println("PageTableManager not initialized, cannot unmap memory.");
+        return;
+    }
+
+    PageMapIndexer indexer = PageMapIndexer((uint64_t)virtualMemory);
+    
+    PageDirectoryEntry PDE = PML4->entries[indexer.PDP_i];
+    if (!PDE.GetFlag(PT_Flag::Present)) return;
+
+    PageTable* PDP = (PageTable*)((uint64_t)PDE.GetAddress() << 12);
+    PDE = PDP->entries[indexer.PD_i];
+    if (!PDE.GetFlag(PT_Flag::Present)) return;
+
+    PageTable* PD = (PageTable*)((uint64_t)PDE.GetAddress() << 12);
+    PDE = PD->entries[indexer.PT_i];
+    if (!PDE.GetFlag(PT_Flag::Present)) return;
+
+    PageTable* PT = (PageTable*)((uint64_t)PDE.GetAddress() << 12);
+    PDE = PT->entries[indexer.P_i];
+
+    if (!PDE.GetFlag(PT_Flag::Present)) return;
+
+    PDE.Value &= ~((uint64_t)PT_Flag::Present);
+    PT->entries[indexer.P_i] = PDE;
+
+    asm volatile("invlpg (%0)" : : "r"(virtualMemory) : "memory");
+}
+
+PageTable* PageTableManager::GetNextTable(PageTable* table, uint64_t index) {
+    if (!(table->entries[index].Value & 1)) return nullptr;
+    return (PageTable*)(table->entries[index].Value & ~0xFFFULL);
+}

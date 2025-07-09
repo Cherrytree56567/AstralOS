@@ -13,10 +13,13 @@ public:
     PageTableManager() {}
     void MapMemory(void* virtualMemory, void* physicalMemory, bool cache = true);
     void Initialize(PageTable* PML4Address, PageFrameAllocator *pfa, BasicConsole* console);
+    void UnmapMemory(void* virtualMemory);
 
 private:
 	PageFrameAllocator* pageFrameAlloc;
     PageTable* PML4;
     BasicConsole* basicConsole;
     bool initialized = false;
+
+    PageTable* GetNextTable(PageTable* table, uint64_t index);
 };

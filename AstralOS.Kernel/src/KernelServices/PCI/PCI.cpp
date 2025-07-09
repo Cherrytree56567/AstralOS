@@ -40,6 +40,9 @@
  * goes in steps of 4: 0x00, 0x04, 0x08... 
  * up to 0xFC.
  * 
+ * This stuff is way too big, go have a break.
+ * Play some minecraft.
+ * 
  * There are other ways to config the PCI
  * too like the Configuration Space Access 
  * Mechanism #2. This method was deprecated 

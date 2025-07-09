@@ -21,6 +21,12 @@
  * 
  * We don't need to map the memory, bc the
  * memory is already identity mapped.
+ * 
+ * Now, since we are using a higher half kernel
+ * we need to map it since we un mapped it.
+ * 
+ * Linux usually allocates its heap at 0xFFFF880000000000
+ * so we should be good.
 */
 void HeapAllocator::Initialize() {
     void* heapStartPtr = ks->pageFrameAllocator.RequestPage();
@@ -29,7 +35,9 @@ void HeapAllocator::Initialize() {
         return;
     }
 
-    heapStart = (uint64_t)heapStartPtr;
+    ks->pageTableManager.MapMemory((void*)0xFFFF880000000000, heapStartPtr);
+
+    heapStart = 0xFFFF880000000000;
     heapEnd = heapStart + PAGE_SIZE;
     heapCurrent = heapStart;
 
@@ -98,11 +106,12 @@ void* HeapAllocator::malloc(size_t size) {
         current = current->next;
     }
     
+    // Dont forget to map.
     void* physPage = ks->pageFrameAllocator.RequestPage();
-
     if (!physPage) {
         return nullptr;
     }
+    ks->pageTableManager.MapMemory((void*)heapEnd, physPage);
 
     heapEnd += PAGE_SIZE;
 
