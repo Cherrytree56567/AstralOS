@@ -3,8 +3,15 @@
 /*
  * Most of the paging code is based on
  * https://github.com/Absurdponcho/PonchoOS
+ * 
+ * Not any more. ¯\_(ツ)_/¯
 */
 extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBootInfo) {
+    /*
+     * Simple Memory Mapping.
+     * 
+     * Make sure we lock the kernel and the framebuffer
+    */
     uint64_t kernel_start = (uint64_t)&_kernel_start;
     uint64_t kernel_end = (uint64_t)&_kernel_end;
 
@@ -31,18 +38,40 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
     kernelServices->pageFrameAllocator.LockPages((void*)fbBase, fbSize / 4096 + 1);
 
     for (uint64_t t = fbBase; t < fbBase + fbSize; t += 4096) {
-        kernelServices->pageTableManager.MapMemory((void*)0xFFFFFFFFFEE00000, (void*)t);
+        kernelServices->pageTableManager.MapMemory((void*)(KERNEL_VIRT_ADDR + t), (void*)t);
     }
 
     /*
-     * Map APIC
+     * We must translate our base addr and our ACPI Address.
+     * Here, we are using a custom pBootInfo, because we may
+     * not have access to it once we unmap the memory.
     */
-    kernelServices->pageTableManager.MapMemory((void*)(KERNEL_VIRT_ADDR + 0xFEE00000), (void*)0xFEE00000, false);
+    kernelServices->pBootInfo.pFramebuffer->BaseAddress += KERNEL_VIRT_ADDR;
+    kernelServices->pBootInfo.rsdp += KERNEL_VIRT_ADDR;
+
+    /*
+     * Gotcha: 
+     * Dont do `(KERNEL_VIRT_ADDR + kernelServices->pBootInfo.rsdp)`
+     * because we already added the KERNEL_VIRT_ADDR before.
+     */
+    kernelServices->pageTableManager.MapMemory((void*)kernelServices->pBootInfo.rsdp, (void*)pBootInfo->rsdp);
+
+    kernelServices->basicConsole.Println(to_hstring((uint64_t)kernelServices->pBootInfo.rsdp));
+
+    /*
+     * Map and Set the APIC
+    */
+    kernelServices->pageTableManager.MapMemory((void*)0xFFFFFFFFFEE00000, (void*)0xFEE00000, false);
+    kernelServices->apic.SetAPICBase(0xFFFFFFFFFEE00000);
+    kernelServices->pageFrameAllocator.LockPage((void*)0xFFFFFFFFFEE00000); // Un-necessary
 
     uintptr_t kernelPhysBase = 0x1000;
     uintptr_t kernelVirtBase = KERNEL_VIRT_ADDR;
     uint64_t kPages = (kernelSize + 4095) / 4096;
 
+    /*
+     * Higher Half Mapping
+    */
     for (uint64_t i = 0; i < kPages; i++) {
         kernelServices->pageTableManager.MapMemory(
             (void*)(kernelVirtBase + i * 4096),
@@ -51,10 +80,6 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
     }
 
     __asm__("mov %0, %%cr3" : : "r" (kernelServices->PML4));
-
-    /*
-     * TODO: Map the I/O APIC and stuff
-    */
 }
 
 IDTR64 idtr;
@@ -72,12 +97,11 @@ extern "C" void InitializeIDT(KernelServices* kernelServices, BootInfo* pBootInf
         /*
         * Map I/O APIC
         */
-        kernelServices->pageTableManager.MapMemory((void*)kernelServices->acpi.GetIOAPIC()->IOAPIC_Addr, (void*)kernelServices->acpi.GetIOAPIC()->IOAPIC_Addr, false);
-
+        kernelServices->pageTableManager.MapMemory((void*)(KERNEL_VIRT_ADDR + kernelServices->acpi.GetIOAPIC()->IOAPIC_Addr), (void*)kernelServices->acpi.GetIOAPIC()->IOAPIC_Addr, false);
         /*
          * Initialize I/O APIC
          */
-        kernelServices->ioapic.Initialize(&kernelServices->basicConsole, kernelServices->acpi.GetIOAPIC()->IOAPIC_Addr, kernelServices->acpi.GetIOAPIC()->IOAPIC_ID, kernelServices->acpi.GetIOAPIC()->GSI_Base);
+        kernelServices->ioapic.Initialize(&kernelServices->basicConsole, (KERNEL_VIRT_ADDR + kernelServices->acpi.GetIOAPIC()->IOAPIC_Addr), kernelServices->acpi.GetIOAPIC()->IOAPIC_ID, kernelServices->acpi.GetIOAPIC()->GSI_Base);
         kernelServices->basicConsole.Println("APIC is Enabled.");
     }
 

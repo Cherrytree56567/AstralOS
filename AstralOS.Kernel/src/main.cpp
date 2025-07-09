@@ -10,25 +10,64 @@
 extern "C" int _start(BootInfo* pBootInfo) {
     /*
      * Disable Interrupts
-     * If you don't, you WILL get wierd errors.
+     * If you don't, you WILL get weird errors.
     */
     asm volatile("cli" ::: "memory");
 	KernelServices kernelServices(pBootInfo);
 
-    kernelServices.basicConsole.Println("Kernel INIT!");
+    kernelServices.pBootInfo.rsdp = pBootInfo->rsdp;
+    kernelServices.pBootInfo.mMap = pBootInfo->mMap;
+    kernelServices.pBootInfo.pFramebuffer = pBootInfo->pFramebuffer;
+    kernelServices.pBootInfo.mMapSize = pBootInfo->mMapSize;
+    kernelServices.pBootInfo.mMapDescSize = pBootInfo->mMapDescSize;
 
     InitializePaging(&kernelServices, pBootInfo);
+
+    uint64_t ptr = (uint64_t)&start;
+    uintptr_t virt_ptr = (ptr - 0x1000) + KERNEL_VIRT_ADDR;
+
+    auto typed_func = (void(*)(KernelServices&, BootInfo*))virt_ptr;
+    typed_func(kernelServices, &kernelServices.pBootInfo);
+}
+/*
+ * We have separated these into 2, 
+ * to implement the Higher Half Kernel.
+ * The first part, initializes paging,
+ * and then normalizes the `start` func
+ * into a virtual address.
+*/
+extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
+    kernelServices.basicConsole.pFramebuffer->BaseAddress = pBootInfo->pFramebuffer->BaseAddress;
+    /*
+     * Here we can unmap the memory
+     * to know which parts of our kernel
+     * are still using the lower mapped part.
+    */
+    uint64_t mMapEntries = pBootInfo->mMapSize / pBootInfo->mMapDescSize;
+	uint64_t memorySize = GetMemorySize(pBootInfo->mMap, mMapEntries, pBootInfo->mMapDescSize);
+
+    for (uint64_t t = 0; t < memorySize; t += 0x1000){
+        kernelServices.pageTableManager.UnmapMemory((void*)t);
+    }
+
+    /*
+     * Check if we are indeed at the higher half address.
+    */
+    uint64_t current_addr;
+    __asm__ volatile ("lea (%%rip), %0" : "=r"(current_addr));
 
     /*
      * Clear the framebuffer
     */
-    memsetC(pBootInfo->pFramebuffer->BaseAddress, 0, pBootInfo->pFramebuffer->BufferSize);
+    memsetC(kernelServices.pBootInfo.pFramebuffer->BaseAddress, 0, kernelServices.pBootInfo.pFramebuffer->BufferSize);
+
+    kernelServices.basicConsole.Println(to_hstring(current_addr));
 
     kernelServices.heapAllocator.Initialize();
 
     kernelServices.gdt.Create64BitGDT();
 
-    kernelServices.acpi.Initialize(&kernelServices.basicConsole, pBootInfo->rsdp);
+    kernelServices.acpi.Initialize(&kernelServices.basicConsole, kernelServices.pBootInfo.rsdp);
 
     InitializeIDT(&kernelServices, pBootInfo);
 

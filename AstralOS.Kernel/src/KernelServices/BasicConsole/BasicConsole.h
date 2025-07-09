@@ -25,7 +25,7 @@ public:
 	void Print(const char* str, unsigned int colour = 0xffffffff);
 	void Println(const char* str, unsigned int colour = 0xffffffff);
 	Point CursorPosition;
-private:
+public:
 	void putChar(unsigned int colour, char chr, unsigned int xOff, unsigned int yOff);
 
 	FrameBuffer* pFramebuffer;

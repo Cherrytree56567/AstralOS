@@ -37,6 +37,7 @@ public:
 	HeapAllocator heapAllocator;
 	PCI pci;
 	PCIe pcie;
+	BootInfo pBootInfo;
 };
 
 extern KernelServices* ks;
