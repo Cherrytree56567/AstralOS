@@ -303,6 +303,9 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
                 Print(L"Invalid ELF file\n");
                 return EFI_LOAD_ERROR;
             }
+            
+            uint64_t phys_load_base = 0x1000;
+            uint64_t virt_load_base = 0xFFFFFFFF80000000;
 
             for (int i = 0; i < ehdr.e_phnum; i++) {
                 // Seek to program header
@@ -315,7 +318,10 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
                 // Only load segments with type PT_LOAD
                 if (phdr.p_type == PT_LOAD) {
                     // Allocate memory
+                    UINT64 seg_offset = phdr.p_vaddr - virt_load_base;
                     EFI_PHYSICAL_ADDRESS addr = phdr.p_paddr;
+                    Print(L"Offset: 0x%lx", addr);
+                    Print(L"Addr: 0x%lx", phdr.p_paddr);
                     EFI_STATUS status = uefi_call_wrapper(BS->AllocatePages, 4, AllocateAnyPages, EfiLoaderData, EFI_SIZE_TO_PAGES(phdr.p_memsz), &addr);
                     if (EFI_ERROR(status)) {
                         Print(L"Failed to allocate pages: %r\n", status);
