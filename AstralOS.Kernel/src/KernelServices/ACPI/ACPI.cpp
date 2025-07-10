@@ -2,6 +2,7 @@
 #include "../KernelServices.h"
 
 #define KERNEL_VIRT_ADDR 0xFFFFFFFF80000000
+#define HIGHER_VIRT_ADDR 0xFFFFFFFF00000000
 
 extern "C" int strncmp(const char* s1, const char* s2, size_t n) {
     for (size_t i = 0; i < n; ++i) {
@@ -53,10 +54,10 @@ void ACPI::Initialize(BasicConsole* bc, void* rsdpAddr) {
         rsdp = rsdpBase;
 
         basicConsole->Print("ACPI XSDT Addr: ");
-        basicConsole->Println(to_hstring((KERNEL_VIRT_ADDR + xsdp->XsdtAddress)));
+        basicConsole->Println(to_hstring((HIGHER_VIRT_ADDR + xsdp->XsdtAddress)));
 
-        ks->pageTableManager.MapMemory((void*)(KERNEL_VIRT_ADDR + xsdp->XsdtAddress), (void*)xsdp->XsdtAddress, false);
-        xsdt = (XSDT*)(KERNEL_VIRT_ADDR + xsdp->XsdtAddress);
+        ks->pageTableManager.MapMemory((void*)(HIGHER_VIRT_ADDR + xsdp->XsdtAddress), (void*)xsdp->XsdtAddress, false);
+        xsdt = (XSDT*)(HIGHER_VIRT_ADDR + xsdp->XsdtAddress);
 
         basicConsole->Print("XSDT Length: ");
         basicConsole->Println(to_hstring(xsdt->h.Length));
@@ -97,9 +98,9 @@ FADT* ACPI::GetFADT() {
     for (int i = 0; i < entries; i++) {
         uint64_t entryAddr = ReadUnaligned64(entriesBase + i * sizeof(uint64_t));
 
-        ks->pageTableManager.MapMemory((void*)(KERNEL_VIRT_ADDR + entryAddr), (void*)entryAddr, false);
+        ks->pageTableManager.MapMemory((void*)(HIGHER_VIRT_ADDR + entryAddr), (void*)entryAddr, false);
 
-        ACPISDTHeader* h = (ACPISDTHeader*)(KERNEL_VIRT_ADDR + entryAddr);
+        ACPISDTHeader* h = (ACPISDTHeader*)(HIGHER_VIRT_ADDR + entryAddr);
 
         if (strncmp((const char*)h->Signature, "FACP", 4) == 0) {
             return (FADT*)h;
@@ -117,9 +118,9 @@ MADT* ACPI::GetMADT() {
     for (int i = 0; i < entries; i++) {
         uint64_t entryAddr = ReadUnaligned64(entriesBase + i * sizeof(uint64_t));
 
-        ks->pageTableManager.MapMemory((void*)(KERNEL_VIRT_ADDR + entryAddr), (void*)entryAddr, false);
+        ks->pageTableManager.MapMemory((void*)(HIGHER_VIRT_ADDR + entryAddr), (void*)entryAddr, false);
 
-        ACPISDTHeader* h = (ACPISDTHeader*)(KERNEL_VIRT_ADDR + entryAddr);
+        ACPISDTHeader* h = (ACPISDTHeader*)(HIGHER_VIRT_ADDR + entryAddr);
 
         if (strncmp((const char*)h->Signature, "APIC", 4) == 0) {
             return (MADT*)h;
@@ -137,9 +138,9 @@ BGRT* ACPI::GetBGRT() {
     for (int i = 0; i < entries; i++) {
         uint64_t entryAddr = ReadUnaligned64(entriesBase + i * sizeof(uint64_t));
 
-        ks->pageTableManager.MapMemory((void*)(KERNEL_VIRT_ADDR + entryAddr), (void*)entryAddr, false);
+        ks->pageTableManager.MapMemory((void*)(HIGHER_VIRT_ADDR + entryAddr), (void*)entryAddr, false);
 
-        ACPISDTHeader* h = (ACPISDTHeader*)(KERNEL_VIRT_ADDR + entryAddr);
+        ACPISDTHeader* h = (ACPISDTHeader*)(HIGHER_VIRT_ADDR + entryAddr);
 
         if (strncmp((const char*)h->Signature, "BGRT", 4) == 0) {
             return (BGRT*)h;
@@ -157,9 +158,9 @@ RSDT* ACPI::GetRSDT() {
     for (int i = 0; i < entries; i++) {
         uint64_t entryAddr = ReadUnaligned64(entriesBase + i * sizeof(uint64_t));
 
-        ks->pageTableManager.MapMemory((void*)(KERNEL_VIRT_ADDR + entryAddr), (void*)entryAddr, false);
+        ks->pageTableManager.MapMemory((void*)(HIGHER_VIRT_ADDR + entryAddr), (void*)entryAddr, false);
 
-        ACPISDTHeader* h = (ACPISDTHeader*)(KERNEL_VIRT_ADDR + entryAddr);
+        ACPISDTHeader* h = (ACPISDTHeader*)(HIGHER_VIRT_ADDR + entryAddr);
 
         if (strncmp((const char*)h->Signature, "RSDT", 4) == 0) {
             return (RSDT*)h;
@@ -177,9 +178,9 @@ SRAT* ACPI::GetSRAT() {
     for (int i = 0; i < entries; i++) {
         uint64_t entryAddr = ReadUnaligned64(entriesBase + i * sizeof(uint64_t));
 
-        ks->pageTableManager.MapMemory((void*)(KERNEL_VIRT_ADDR + entryAddr), (void*)entryAddr, false);
+        ks->pageTableManager.MapMemory((void*)(HIGHER_VIRT_ADDR + entryAddr), (void*)entryAddr, false);
 
-        ACPISDTHeader* h = (ACPISDTHeader*)(KERNEL_VIRT_ADDR + entryAddr);
+        ACPISDTHeader* h = (ACPISDTHeader*)(HIGHER_VIRT_ADDR + entryAddr);
 
         if (strncmp((const char*)h->Signature, "SRAT", 4) == 0) {
             return (SRAT*)h;
@@ -197,9 +198,9 @@ MCFG* ACPI::GetMCFG() {
     for (int i = 0; i < entries; i++) {
         uint64_t entryAddr = ReadUnaligned64(entriesBase + i * sizeof(uint64_t));
 
-        ks->pageTableManager.MapMemory((void*)(KERNEL_VIRT_ADDR + entryAddr), (void*)entryAddr, false);
+        ks->pageTableManager.MapMemory((void*)(HIGHER_VIRT_ADDR + entryAddr), (void*)entryAddr, false);
 
-        ACPISDTHeader* h = (ACPISDTHeader*)(KERNEL_VIRT_ADDR + entryAddr);
+        ACPISDTHeader* h = (ACPISDTHeader*)(HIGHER_VIRT_ADDR + entryAddr);
 
         if (strncmp((const char*)h->Signature, "MCFG", 4) == 0) {
             return (MCFG*)h;

@@ -21,6 +21,11 @@ Then Build the Bootloader and Kernel by running:
 cmake --build . --target build
 ```
 
+## Testing
+If you would like to test the OS. Get the newest release and setup VirtualBox with `Other Linux x64`
+<br>
+Unfortunatly, because of Higher Half Mapping, the kernel has gotten a bit slow. It will take a while to initialize.
+
 ## Features
  - Paging
  - GDT

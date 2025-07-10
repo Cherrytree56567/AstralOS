@@ -1,5 +1,8 @@
 #include "KernelUtils.h"
 
+#define KERNEL_VIRT_ADDR 0xFFFFFFFF80000000
+#define HIGHER_VIRT_ADDR 0xFFFFFFFF00000000
+
 /*
  * Most of the paging code is based on
  * https://github.com/Absurdponcho/PonchoOS
@@ -46,8 +49,8 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
      * Here, we are using a custom pBootInfo, because we may
      * not have access to it once we unmap the memory.
     */
-    kernelServices->pBootInfo.pFramebuffer->BaseAddress += KERNEL_VIRT_ADDR;
-    kernelServices->pBootInfo.rsdp += KERNEL_VIRT_ADDR;
+    kernelServices->pBootInfo.rsdp = (void*)((uint64_t)HIGHER_VIRT_ADDR + (uint64_t)kernelServices->pBootInfo.rsdp);
+    kernelServices->pBootInfo.pFramebuffer->BaseAddress = (void*)((uint64_t)KERNEL_VIRT_ADDR + (uint64_t)kernelServices->pBootInfo.pFramebuffer->BaseAddress);
 
     /*
      * Gotcha: 
@@ -56,14 +59,11 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
      */
     kernelServices->pageTableManager.MapMemory((void*)kernelServices->pBootInfo.rsdp, (void*)pBootInfo->rsdp);
 
-    kernelServices->basicConsole.Println(to_hstring((uint64_t)kernelServices->pBootInfo.rsdp));
-
     /*
      * Map and Set the APIC
     */
     kernelServices->pageTableManager.MapMemory((void*)0xFFFFFFFFFEE00000, (void*)0xFEE00000, false);
     kernelServices->apic.SetAPICBase(0xFFFFFFFFFEE00000);
-    kernelServices->pageFrameAllocator.LockPage((void*)0xFFFFFFFFFEE00000); // Un-necessary
 
     uintptr_t kernelPhysBase = 0x1000;
     uintptr_t kernelVirtBase = KERNEL_VIRT_ADDR;
