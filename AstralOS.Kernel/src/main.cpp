@@ -15,9 +15,13 @@ extern "C" int _start(BootInfo* pBootInfo) {
     asm volatile("cli" ::: "memory");
 	KernelServices kernelServices(pBootInfo);
 
-    kernelServices.pBootInfo.rsdp = pBootInfo->rsdp;
     kernelServices.pBootInfo.mMap = pBootInfo->mMap;
-    kernelServices.pBootInfo.pFramebuffer = pBootInfo->pFramebuffer;
+    kernelServices.pBootInfo.rsdp = pBootInfo->rsdp;
+    kernelServices.pBootInfo.pFramebuffer->BaseAddress = pBootInfo->pFramebuffer->BaseAddress;
+    kernelServices.pBootInfo.pFramebuffer->BufferSize = pBootInfo->pFramebuffer->BufferSize;
+    kernelServices.pBootInfo.pFramebuffer->Height = pBootInfo->pFramebuffer->Height;
+    kernelServices.pBootInfo.pFramebuffer->PixelsPerScanLine = pBootInfo->pFramebuffer->PixelsPerScanLine;
+    kernelServices.pBootInfo.pFramebuffer->Width = pBootInfo->pFramebuffer->Width;
     kernelServices.pBootInfo.mMapSize = pBootInfo->mMapSize;
     kernelServices.pBootInfo.mMapDescSize = pBootInfo->mMapDescSize;
 
@@ -62,6 +66,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     memsetC(kernelServices.pBootInfo.pFramebuffer->BaseAddress, 0, kernelServices.pBootInfo.pFramebuffer->BufferSize);
 
     kernelServices.basicConsole.Println(to_hstring(current_addr));
+    kernelServices.basicConsole.Println(to_hstring((uint64_t)kernelServices.pBootInfo.rsdp));
 
     kernelServices.heapAllocator.Initialize();
 
