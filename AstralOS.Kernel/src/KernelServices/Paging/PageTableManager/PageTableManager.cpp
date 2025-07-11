@@ -7,6 +7,12 @@ void PageTableManager::Initialize(PageTable* PML4Address, PageFrameAllocator *pf
     this->initialized = true;
 }
 
+/*
+ * TODO: GOTCHA:
+ * Map this when you switch to higher half,
+ * otherwise spend countless hours debugging this.
+*/
+
 void PageTableManager::MapMemory(void* virtualMemory, void* physicalMemory, bool cache) {
     if (!initialized) {
         basicConsole->Println("PageTableManager not initialized, cannot map memory.");
