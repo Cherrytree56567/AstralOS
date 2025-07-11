@@ -20,7 +20,7 @@ typedef struct {
 
 class BasicConsole {
 public:
-	BasicConsole(FrameBuffer* fb);
+	BasicConsole(FrameBuffer fb);
 
 	void Print(const char* str, unsigned int colour = 0xffffffff);
 	void Println(const char* str, unsigned int colour = 0xffffffff);
@@ -28,6 +28,6 @@ public:
 public:
 	void putChar(unsigned int colour, char chr, unsigned int xOff, unsigned int yOff);
 
-	FrameBuffer* pFramebuffer;
+	FrameBuffer pFramebuffer;
 };
 

@@ -390,7 +390,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
             }
 
             BootInfo bi;
-			bi.pFramebuffer = &framebuffer;
+			bi.pFramebuffer = framebuffer;
             bi.mMap = Map;
 			bi.mMapSize = MapSize;
 			bi.mMapDescSize = DescriptorSize;
