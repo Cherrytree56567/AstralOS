@@ -30,20 +30,8 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
 	memsetC(kernelServices->PML4, 0, 0x1000);
     kernelServices->pageTableManager.Initialize(kernelServices->PML4, &kernelServices->pageFrameAllocator, &kernelServices->basicConsole);
 
-    for (uint64_t i = 0; i < mMapEntries; i++) {
-        EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((uint64_t)pBootInfo->mMap + (i * pBootInfo->mMapDescSize));
-
-        if (desc->Type == EfiConventionalMemory || desc->Type == EfiLoaderCode || desc->Type == EfiLoaderData) {
-            uint64_t base = desc->PhysicalStart;
-            uint64_t length = desc->NumberOfPages * 4096;
-
-            for (uint64_t offset = 0; offset < length; offset += 0x1000) {
-                kernelServices->pageTableManager.MapMemory(
-                    (void*)(base + offset),
-                    (void*)(base + offset)
-                );
-            }
-        }
+    for (uint64_t t = 0; t < memorySize; t += 0x1000){
+        kernelServices->pageTableManager.MapMemory((void*)t, (void*)t);
     }
 
     uint64_t stack_start = (uint64_t)&_stack_start;
