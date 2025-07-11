@@ -1,7 +1,6 @@
 #include "ACPI.h"
 #include "../KernelServices.h"
 
-#define KERNEL_VIRT_ADDR 0xFFFFFFFF80000000
 #define HIGHER_VIRT_ADDR 0xFFFFFFFF00000000
 
 extern "C" int strncmp(const char* s1, const char* s2, size_t n) {

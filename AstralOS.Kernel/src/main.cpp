@@ -13,22 +13,20 @@ extern "C" int _start(BootInfo* pBootInfo) {
      * If you don't, you WILL get weird errors.
     */
     asm volatile("cli" ::: "memory");
+
+    /*
+     * Use our own stack
+    */
+    asm volatile ("mov %0, %%rsp" :: "r"(&_stack_end));
+
 	KernelServices kernelServices(pBootInfo);
 
-    kernelServices.pBootInfo.mMap = pBootInfo->mMap;
-    kernelServices.pBootInfo.rsdp = pBootInfo->rsdp;
-    kernelServices.pBootInfo.pFramebuffer->BaseAddress = pBootInfo->pFramebuffer->BaseAddress;
-    kernelServices.pBootInfo.pFramebuffer->BufferSize = pBootInfo->pFramebuffer->BufferSize;
-    kernelServices.pBootInfo.pFramebuffer->Height = pBootInfo->pFramebuffer->Height;
-    kernelServices.pBootInfo.pFramebuffer->PixelsPerScanLine = pBootInfo->pFramebuffer->PixelsPerScanLine;
-    kernelServices.pBootInfo.pFramebuffer->Width = pBootInfo->pFramebuffer->Width;
-    kernelServices.pBootInfo.mMapSize = pBootInfo->mMapSize;
-    kernelServices.pBootInfo.mMapDescSize = pBootInfo->mMapDescSize;
+    kernelServices.pBootInfo = *pBootInfo;
 
     InitializePaging(&kernelServices, pBootInfo);
 
     uint64_t ptr = (uint64_t)&start;
-    uintptr_t virt_ptr = (ptr - 0x1000) + KERNEL_VIRT_ADDR;
+    uintptr_t virt_ptr = (ptr - 0x1000) + HIGHER_VIRT_ADDR;
 
     auto typed_func = (void(*)(KernelServices&, BootInfo*))virt_ptr;
     typed_func(kernelServices, &kernelServices.pBootInfo);
@@ -41,17 +39,25 @@ extern "C" int _start(BootInfo* pBootInfo) {
  * into a virtual address.
 */
 extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
-    kernelServices.basicConsole.pFramebuffer->BaseAddress = pBootInfo->pFramebuffer->BaseAddress;
+    /*
+     * Use our own *Higher Half* stack
+    */
+    uint64_t stackVirtAddr = (uint64_t)&_stack_end + HIGHER_VIRT_ADDR;
+    uint64_t stack_start = (uint64_t)&_stack_start;
+    uint64_t stack_end   = (uint64_t)&_stack_end;
+    uint64_t stack_size  = stack_end - stack_start;
+    uint64_t stack_pages = (stack_size + 0xFFF) / 0x1000;
+    //asm volatile ("mov %0, %%rsp" :: "r"(stackVirtAddr));
+
+    kernelServices.basicConsole.pFramebuffer.BaseAddress = pBootInfo->pFramebuffer.BaseAddress;
+
     /*
      * Here we can unmap the memory
      * to know which parts of our kernel
      * are still using the lower mapped part.
     */
-    uint64_t mMapEntries = pBootInfo->mMapSize / pBootInfo->mMapDescSize;
-	uint64_t memorySize = GetMemorySize(pBootInfo->mMap, mMapEntries, pBootInfo->mMapDescSize);
-
-    for (uint64_t t = 0; t < memorySize; t += 0x1000){
-        kernelServices.pageTableManager.UnmapMemory((void*)t);
+    for (uint64_t i = 0; i < stack_pages; i++) {
+        //kernelServices.pageTableManager.UnmapMemory((void*)(stack_start + i * 0x1000));
     }
 
     /*
@@ -63,7 +69,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     /*
      * Clear the framebuffer
     */
-    memsetC(kernelServices.pBootInfo.pFramebuffer->BaseAddress, 0, kernelServices.pBootInfo.pFramebuffer->BufferSize);
+    memsetC(kernelServices.pBootInfo.pFramebuffer.BaseAddress, 0, kernelServices.pBootInfo.pFramebuffer.BufferSize);
 
     kernelServices.basicConsole.Println(to_hstring(current_addr));
     kernelServices.basicConsole.Println(to_hstring((uint64_t)kernelServices.pBootInfo.rsdp));

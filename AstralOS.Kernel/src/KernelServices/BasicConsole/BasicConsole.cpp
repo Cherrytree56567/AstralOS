@@ -1,12 +1,12 @@
 #include "BasicConsole.h"
 
-BasicConsole::BasicConsole(FrameBuffer* fb) : pFramebuffer(fb) {
+BasicConsole::BasicConsole(FrameBuffer fb) : pFramebuffer(fb) {
     CursorPosition.X = 10;
     CursorPosition.Y = 10;
 }
 
 void BasicConsole::putChar(unsigned int colour, char chr, unsigned int xOff, unsigned int yOff) {
-    unsigned int* pixPtr = (unsigned int*)pFramebuffer->BaseAddress;
+    unsigned int* pixPtr = (unsigned int*)pFramebuffer.BaseAddress;
 
     // Check if the character is within the font range
     if (chr < 0 || chr >= 256) return;  // Assuming 256 characters for simplicity
@@ -18,8 +18,8 @@ void BasicConsole::putChar(unsigned int colour, char chr, unsigned int xOff, uns
             // Check if the bit is set
             if (fontPtr[y] & (0b10000000 >> x)) {
                 // Calculate pixel position in framebuffer
-                unsigned long pixelIndex = (x + xOff) + ((y + yOff) * pFramebuffer->PixelsPerScanLine);
-                if (pixelIndex < (pFramebuffer->Width * pFramebuffer->Height)) { // Ensure we don't write out of bounds
+                unsigned long pixelIndex = (x + xOff) + ((y + yOff) * pFramebuffer.PixelsPerScanLine);
+                if (pixelIndex < (pFramebuffer.Width * pFramebuffer.Height)) { // Ensure we don't write out of bounds
                     pixPtr[pixelIndex] = colour; // Write the pixel colour
                 }
             }
@@ -37,7 +37,7 @@ void BasicConsole::Print(const char* str, unsigned int colour) {
         else {
             putChar(colour, *chr, CursorPosition.X, CursorPosition.Y);
             CursorPosition.X += 8;          // Move cursor right by 8 pixels for the next character
-            if (CursorPosition.X + 10 > pFramebuffer->Width) {
+            if (CursorPosition.X + 10 > pFramebuffer.Width) {
                 CursorPosition.X = 10;       // Reset X position
                 CursorPosition.Y += 16;     // Move cursor down by 16 pixels for a new line
             }
@@ -56,7 +56,7 @@ void BasicConsole::Println(const char* str, unsigned int colour) {
         else {
             putChar(colour, *chr, CursorPosition.X, CursorPosition.Y);
             CursorPosition.X += 8;          // Move cursor right by 8 pixels for the next character
-            if (CursorPosition.X + 10 > pFramebuffer->Width) {
+            if (CursorPosition.X + 10 > pFramebuffer.Width) {
                 CursorPosition.X = 10;       // Reset X position
                 CursorPosition.Y += 16;     // Move cursor down by 16 pixels for a new line
             }

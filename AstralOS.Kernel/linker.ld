@@ -21,6 +21,12 @@ SECTIONS {
         *(COMMON)
     }
 
+    .stack : ALIGN(4K) {
+        _stack_start = .;
+        . = . + 0x4000;
+        _stack_end = .;
+    }
+
     .isr_stubs ALIGN(4K) : {
         KEEP(*(.isr_stubs))
     }

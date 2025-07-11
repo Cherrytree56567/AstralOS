@@ -1,6 +1,5 @@
 #include "KernelUtils.h"
 
-#define KERNEL_VIRT_ADDR 0xFFFFFFFF80000000
 #define HIGHER_VIRT_ADDR 0xFFFFFFFF00000000
 
 /*
@@ -31,17 +30,63 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
 	memsetC(kernelServices->PML4, 0, 0x1000);
     kernelServices->pageTableManager.Initialize(kernelServices->PML4, &kernelServices->pageFrameAllocator, &kernelServices->basicConsole);
 
-    for (uint64_t t = 0; t < memorySize; t += 0x1000){
-        kernelServices->pageTableManager.MapMemory((void*)t, (void*)t);
+    for (uint64_t i = 0; i < mMapEntries; i++) {
+        EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((uint64_t)pBootInfo->mMap + (i * pBootInfo->mMapDescSize));
+
+        if (desc->Type == EfiConventionalMemory || desc->Type == EfiLoaderCode || desc->Type == EfiLoaderData) {
+            uint64_t base = desc->PhysicalStart;
+            uint64_t length = desc->NumberOfPages * 4096;
+
+            for (uint64_t offset = 0; offset < length; offset += 0x1000) {
+                kernelServices->pageTableManager.MapMemory(
+                    (void*)(base + offset),
+                    (void*)(base + offset)
+                );
+            }
+        }
     }
 
-    uint64_t fbBase = (uint64_t)pBootInfo->pFramebuffer->BaseAddress;
-    uint64_t fbSize = (uint64_t)pBootInfo->pFramebuffer->BufferSize + 0x1000;
+    uint64_t stack_start = (uint64_t)&_stack_start;
+    uint64_t stack_end   = (uint64_t)&_stack_end;
+    uint64_t stack_size  = stack_end - stack_start;
+    uint64_t stack_pages = (stack_size + 0xFFF) / 0x1000;
+    uint64_t stackPhysStart = (uint64_t)&_stack_start;
+    uint64_t stackVirtStart = stackPhysStart + HIGHER_VIRT_ADDR;
+
+    for (uint64_t i = 0; i < stack_pages; i++) {
+        kernelServices->pageTableManager.MapMemory(
+            (void*)(stack_start + i * 0x1000),
+            (void*)(stack_start + i * 0x1000)
+        );
+        kernelServices->pageTableManager.MapMemory(
+            (void*)(stackVirtStart + i * 0x1000),
+            (void*)(stack_start + i * 0x1000)
+        );
+    }
+
+    uint64_t mMapPhys = (uint64_t)pBootInfo->mMap;
+    uint64_t mMapSize = pBootInfo->mMapSize;
+    uint64_t mMapPages = (mMapSize + 0xFFF) / 0x1000;
+
+    for (uint64_t i = 0; i < mMapPages; i++) {
+        kernelServices->pageTableManager.MapMemory(
+            (void*)((uint64_t)pBootInfo->mMap + i * 0x1000),
+            (void*)((uint64_t)pBootInfo->mMap + i * 0x1000)
+        );
+
+        kernelServices->pageTableManager.MapMemory(
+            (void*)(HIGHER_VIRT_ADDR + (uint64_t)pBootInfo->mMap + i * 0x1000),
+            (void*)((uint64_t)pBootInfo->mMap + i * 0x1000)
+        );
+    }
+
+    uint64_t fbBase = (uint64_t)pBootInfo->pFramebuffer.BaseAddress;
+    uint64_t fbSize = (uint64_t)pBootInfo->pFramebuffer.BufferSize + 0x1000;
 
     kernelServices->pageFrameAllocator.LockPages((void*)fbBase, fbSize / 4096 + 1);
 
     for (uint64_t t = fbBase; t < fbBase + fbSize; t += 4096) {
-        kernelServices->pageTableManager.MapMemory((void*)(KERNEL_VIRT_ADDR + t), (void*)t);
+        kernelServices->pageTableManager.MapMemory((void*)(HIGHER_VIRT_ADDR + t), (void*)t);
     }
 
     /*
@@ -50,12 +95,13 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
      * not have access to it once we unmap the memory.
     */
     kernelServices->pBootInfo.rsdp = (void*)((uint64_t)HIGHER_VIRT_ADDR + (uint64_t)kernelServices->pBootInfo.rsdp);
-    kernelServices->pBootInfo.pFramebuffer->BaseAddress = (void*)((uint64_t)KERNEL_VIRT_ADDR + (uint64_t)kernelServices->pBootInfo.pFramebuffer->BaseAddress);
+    kernelServices->pBootInfo.pFramebuffer.BaseAddress = (void*)((uint64_t)HIGHER_VIRT_ADDR + (uint64_t)kernelServices->pBootInfo.pFramebuffer.BaseAddress);
+    kernelServices->pBootInfo.mMap = (EFI_MEMORY_DESCRIPTOR*)(HIGHER_VIRT_ADDR + (uint64_t)pBootInfo->mMap);
 
     /*
      * Gotcha: 
-     * Dont do `(KERNEL_VIRT_ADDR + kernelServices->pBootInfo.rsdp)`
-     * because we already added the KERNEL_VIRT_ADDR before.
+     * Dont do `(HIGHER_VIRT_ADDR + kernelServices->pBootInfo.rsdp)`
+     * because we already added the HIGHER_VIRT_ADDR before.
      */
     kernelServices->pageTableManager.MapMemory((void*)kernelServices->pBootInfo.rsdp, (void*)pBootInfo->rsdp);
 
@@ -66,7 +112,7 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
     kernelServices->apic.SetAPICBase(0xFFFFFFFFFEE00000);
 
     uintptr_t kernelPhysBase = 0x1000;
-    uintptr_t kernelVirtBase = KERNEL_VIRT_ADDR;
+    uintptr_t kernelVirtBase = HIGHER_VIRT_ADDR;
     uint64_t kPages = (kernelSize + 4095) / 4096;
 
     /*
@@ -75,6 +121,10 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
     for (uint64_t i = 0; i < kPages; i++) {
         kernelServices->pageTableManager.MapMemory(
             (void*)(kernelVirtBase + i * 4096),
+            (void*)(kernelPhysBase + i * 4096)
+        );
+        kernelServices->pageTableManager.MapMemory(
+            (void*)(kernelPhysBase + i * 4096),
             (void*)(kernelPhysBase + i * 4096)
         );
     }
@@ -97,11 +147,11 @@ extern "C" void InitializeIDT(KernelServices* kernelServices, BootInfo* pBootInf
         /*
         * Map I/O APIC
         */
-        kernelServices->pageTableManager.MapMemory((void*)(KERNEL_VIRT_ADDR + kernelServices->acpi.GetIOAPIC()->IOAPIC_Addr), (void*)kernelServices->acpi.GetIOAPIC()->IOAPIC_Addr, false);
+        kernelServices->pageTableManager.MapMemory((void*)(HIGHER_VIRT_ADDR + kernelServices->acpi.GetIOAPIC()->IOAPIC_Addr), (void*)kernelServices->acpi.GetIOAPIC()->IOAPIC_Addr, false);
         /*
          * Initialize I/O APIC
          */
-        kernelServices->ioapic.Initialize(&kernelServices->basicConsole, (KERNEL_VIRT_ADDR + kernelServices->acpi.GetIOAPIC()->IOAPIC_Addr), kernelServices->acpi.GetIOAPIC()->IOAPIC_ID, kernelServices->acpi.GetIOAPIC()->GSI_Base);
+        kernelServices->ioapic.Initialize(&kernelServices->basicConsole, (HIGHER_VIRT_ADDR + kernelServices->acpi.GetIOAPIC()->IOAPIC_Addr), kernelServices->acpi.GetIOAPIC()->IOAPIC_ID, kernelServices->acpi.GetIOAPIC()->GSI_Base);
         kernelServices->basicConsole.Println("APIC is Enabled.");
     }
 

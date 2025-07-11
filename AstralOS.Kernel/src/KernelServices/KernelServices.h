@@ -13,7 +13,7 @@
 #include "PCIe/PCIe.h"
 
 struct BootInfo {
-	FrameBuffer* pFramebuffer;
+	FrameBuffer pFramebuffer;
 	EFI_MEMORY_DESCRIPTOR* mMap;
 	uint64_t mMapSize;
 	uint64_t mMapDescSize;
