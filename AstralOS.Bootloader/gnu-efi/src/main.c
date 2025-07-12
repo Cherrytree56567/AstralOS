@@ -346,6 +346,78 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
                 Status = uefi_call_wrapper(BS->CloseProtocol, 6, Handles[Index], &bioGuid, BlockIo, gImageHandle, NULL, EFI_OPEN_PROTOCOL_GET_PROTOCOL);
             }
 
+            EFI_FILE_HANDLE InitrdHandle;
+            EFI_FILE_INFO* InitrdInfo;
+            UINTN InitrdInfoSize = sizeof(EFI_FILE_INFO) + 512;
+            UINTN InitrdSize;
+            void* InitrdBuffer = NULL;
+
+            EFI_LOADED_IMAGE_PROTOCOL* ALoadedImage = NULL;
+            EFI_STATUS AStatus = gBS->OpenProtocol(
+                ImageHandle,
+                &gEfiLoadedImageProtocolGuid,
+                (VOID**)&ALoadedImage,
+                ImageHandle,
+                NULL,
+                EFI_OPEN_PROTOCOL_GET_PROTOCOL
+            );
+
+            if (EFI_ERROR(AStatus)) {
+                Print(L"Failed to get LoadedImage protocol: %r\n", AStatus);
+                return AStatus;
+            }
+
+            EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* AFileSystem = NULL;
+            AStatus = gBS->OpenProtocol(
+                ALoadedImage->DeviceHandle,
+                &gEfiSimpleFileSystemProtocolGuid,
+                (VOID**)&AFileSystem,
+                ImageHandle,
+                NULL,
+                EFI_OPEN_PROTOCOL_GET_PROTOCOL
+            );
+            if (EFI_ERROR(AStatus)) {
+                Print(L"Failed to get FileSystem protocol: %r\n", AStatus);
+                return AStatus;
+            }
+
+            EFI_FILE_PROTOCOL* ARoot = NULL;
+            AStatus = AFileSystem->OpenVolume(AFileSystem, &ARoot);
+            if (EFI_ERROR(AStatus)) {
+                Print(L"Failed to open volume: %r\n", AStatus);
+                return AStatus;
+            }
+
+            // Open initramfs.cpio
+            Status = ARoot->Open(ARoot, &InitrdHandle, L"\\EFI\\AstralBoot\\initramfs.cpio", EFI_FILE_MODE_READ, 0);
+            if (EFI_ERROR(Status)) {
+                Print(L"Failed to open initramfs: %r\n", Status);
+                return Status;
+            }
+
+            // Get initramfs file size
+            InitrdInfo = (EFI_FILE_INFO*)AllocatePool(InitrdInfoSize);
+            Status = InitrdHandle->GetInfo(InitrdHandle, &gEfiFileInfoGuid, &InitrdInfoSize, InitrdInfo);
+            if (EFI_ERROR(Status)) {
+                Print(L"Failed to get initramfs file info: %r\n", Status);
+                return Status;
+            }
+            InitrdSize = InitrdInfo->FileSize;
+            FreePool(InitrdInfo);
+
+            // Allocate memory and read file
+            Status = uefi_call_wrapper(BS->AllocatePages, 4, AllocateAnyPages, EfiLoaderData, EFI_SIZE_TO_PAGES(InitrdSize), (EFI_PHYSICAL_ADDRESS*)&InitrdBuffer);
+            if (EFI_ERROR(Status)) {
+                Print(L"Failed to allocate pages for initramfs: %r\n", Status);
+                return Status;
+            }
+
+            Status = InitrdHandle->Read(InitrdHandle, &InitrdSize, InitrdBuffer);
+            if (EFI_ERROR(Status)) {
+                Print(L"Failed to read initramfs: %r\n", Status);
+                return Status;
+            }
+
 			InitializeGOP();
 
             EFI_GRAPHICS_OUTPUT_PROTOCOL* GraphicsOutput;
@@ -395,6 +467,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
 			bi.mMapSize = MapSize;
 			bi.mMapDescSize = DescriptorSize;
             bi.rsdp = rsdsp;
+            bi.initrdBase = InitrdBuffer;
+            bi.initrdSize = InitrdSize;
 
             int (*kernel_main)(BootInfo*) = (int (*)(BootInfo*))ehdr.e_entry;
 
