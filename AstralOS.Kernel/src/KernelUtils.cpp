@@ -84,6 +84,7 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
     */
     kernelServices->pBootInfo.rsdp = (void*)((uint64_t)HIGHER_VIRT_ADDR + (uint64_t)kernelServices->pBootInfo.rsdp);
     kernelServices->pBootInfo.pFramebuffer.BaseAddress = (void*)((uint64_t)HIGHER_VIRT_ADDR + (uint64_t)kernelServices->pBootInfo.pFramebuffer.BaseAddress);
+    kernelServices->pBootInfo.initrdBase = (void*)((uint64_t)HIGHER_VIRT_ADDR + (uint64_t)kernelServices->pBootInfo.initrdBase);
     kernelServices->pBootInfo.mMap = (EFI_MEMORY_DESCRIPTOR*)(HIGHER_VIRT_ADDR + (uint64_t)pBootInfo->mMap);
 
     /*
@@ -92,6 +93,8 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
      * because we already added the HIGHER_VIRT_ADDR before.
      */
     kernelServices->pageTableManager.MapMemory((void*)kernelServices->pBootInfo.rsdp, (void*)pBootInfo->rsdp);
+
+    kernelServices->pageTableManager.MapMemory(kernelServices->pBootInfo.initrdBase, pBootInfo->initrdBase);
 
     /*
      * Map and Set the APIC

@@ -72,7 +72,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     memsetC(kernelServices.pBootInfo.pFramebuffer.BaseAddress, 0, kernelServices.pBootInfo.pFramebuffer.BufferSize);
 
     kernelServices.basicConsole.Println(to_hstring(current_addr));
-    kernelServices.basicConsole.Println(to_hstring((uint64_t)kernelServices.pBootInfo.rsdp));
+    kernelServices.basicConsole.Println(to_hstring((uint64_t)kernelServices.pBootInfo.initrdBase));
 
     kernelServices.heapAllocator.Initialize();
 

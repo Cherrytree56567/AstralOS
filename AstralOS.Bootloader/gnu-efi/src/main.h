@@ -65,6 +65,8 @@ typedef struct {
     uint64_t mMapSize;
     uint64_t mMapDescSize;
     void* rsdp;
+    void* initrdBase;
+    uint64_t initrdSize;
 } BootInfo;
 
 /*
