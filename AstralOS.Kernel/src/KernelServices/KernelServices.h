@@ -11,6 +11,7 @@
 #include "Paging/MemoryAlloc/Heap.h"
 #include "PCI/PCI.h"
 #include "PCIe/PCIe.h"
+#include "InitialRamFS/InitialRamFS.h"
 
 struct BootInfo {
 	FrameBuffer pFramebuffer;
@@ -39,6 +40,7 @@ public:
 	HeapAllocator heapAllocator;
 	PCI pci;
 	PCIe pcie;
+	InitialRamFS initram;
 	BootInfo pBootInfo;
 };
 
