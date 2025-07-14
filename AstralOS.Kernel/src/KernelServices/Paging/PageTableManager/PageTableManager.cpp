@@ -23,6 +23,10 @@ void PageTableManager::MapMemory(void* virtualMemory, void* physicalMemory, bool
     PageMapIndexer indexer = PageMapIndexer((uint64_t)virtualMemory);
     PageDirectoryEntry PDE;
 
+    bool isPDPRequested = false;
+    bool isPDRequested = false;
+    bool isPTRequested = false;
+
     PDE = PML4->entries[indexer.PDP_i];
     PageTable* PDP;
     if (!PDE.GetFlag(PT_Flag::Present)) {
@@ -32,6 +36,7 @@ void PageTableManager::MapMemory(void* virtualMemory, void* physicalMemory, bool
         PDE.SetFlag(PT_Flag::Present, true);
         PDE.SetFlag(PT_Flag::ReadWrite, true);
         PML4->entries[indexer.PDP_i] = PDE;
+        isPDPRequested = true;
     }
     else
     {
@@ -48,6 +53,7 @@ void PageTableManager::MapMemory(void* virtualMemory, void* physicalMemory, bool
         PDE.SetFlag(PT_Flag::Present, true);
         PDE.SetFlag(PT_Flag::ReadWrite, true);
         PDP->entries[indexer.PD_i] = PDE;
+        isPDRequested = true;
     }
     else
     {
@@ -63,6 +69,7 @@ void PageTableManager::MapMemory(void* virtualMemory, void* physicalMemory, bool
         PDE.SetFlag(PT_Flag::Present, true);
         PDE.SetFlag(PT_Flag::ReadWrite, true);
         PD->entries[indexer.PT_i] = PDE;
+        isPTRequested = true;
     }
     else
     {
@@ -81,6 +88,19 @@ void PageTableManager::MapMemory(void* virtualMemory, void* physicalMemory, bool
         PDE.SetFlag(PT_Flag::CacheDisabled, true);
     }
     PT->entries[indexer.P_i] = PDE;
+
+    /*
+     * TODO: Higher Half Map this.
+    */
+    if (isPDPRequested) {
+        MapMemory((void*)PDP, (void*)PDP);
+    }
+    if (isPDRequested) {
+        MapMemory((void*)PD, (void*)PD);
+    }
+    if (isPTRequested) {
+        MapMemory((void*)PT, (void*)PT);
+    }
 }
 
 void PageTableManager::UnmapMemory(void* virtualMemory) {

@@ -5,6 +5,7 @@ SECTIONS {
     _kernel_start = .;
 
     .text : ALIGN(4K) {
+        KEEP(*(.text._start))
         *(.text*)
     }
 
@@ -19,9 +20,7 @@ SECTIONS {
     .bss : ALIGN(4K) {
         *(.bss*)
         *(COMMON)
-    }
 
-    .stack : ALIGN(4K) {
         _stack_start = .;
         . = . + 0x4000;
         _stack_end = .;

@@ -29,27 +29,10 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
     kernelServices->PML4 = (PageTable*)kernelServices->pageFrameAllocator.RequestPage();
 	memsetC(kernelServices->PML4, 0, 0x1000);
     kernelServices->pageTableManager.Initialize(kernelServices->PML4, &kernelServices->pageFrameAllocator, &kernelServices->basicConsole);
+    kernelServices->pageTableManager.MapMemory((void*)kernelServices->PML4, (void*)kernelServices->PML4);
 
     for (uint64_t t = 0; t < memorySize; t += 0x1000){
         kernelServices->pageTableManager.MapMemory((void*)t, (void*)t);
-    }
-
-    uint64_t stack_start = (uint64_t)&_stack_start;
-    uint64_t stack_end   = (uint64_t)&_stack_end;
-    uint64_t stack_size  = stack_end - stack_start;
-    uint64_t stack_pages = (stack_size + 0xFFF) / 0x1000;
-    uint64_t stackPhysStart = (uint64_t)&_stack_start;
-    uint64_t stackVirtStart = stackPhysStart + HIGHER_VIRT_ADDR;
-
-    for (uint64_t i = 0; i < stack_pages; i++) {
-        kernelServices->pageTableManager.MapMemory(
-            (void*)(stack_start + i * 0x1000),
-            (void*)(stack_start + i * 0x1000)
-        );
-        kernelServices->pageTableManager.MapMemory(
-            (void*)(stackVirtStart + i * 0x1000),
-            (void*)(stack_start + i * 0x1000)
-        );
     }
 
     uint64_t mMapPhys = (uint64_t)pBootInfo->mMap;
@@ -75,7 +58,10 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
 
     for (uint64_t t = fbBase; t < fbBase + fbSize; t += 4096) {
         kernelServices->pageTableManager.MapMemory((void*)(HIGHER_VIRT_ADDR + t), (void*)t);
+        kernelServices->pageTableManager.MapMemory((void*)(t), (void*)t);
     }
+
+    kernelServices->pageTableManager.MapMemory((void*)((uint64_t)pBootInfo->initrdBase + HIGHER_VIRT_ADDR), pBootInfo->initrdBase);
 
     /*
      * We must translate our base addr and our ACPI Address.
@@ -86,6 +72,7 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
     kernelServices->pBootInfo.pFramebuffer.BaseAddress = (void*)((uint64_t)HIGHER_VIRT_ADDR + (uint64_t)kernelServices->pBootInfo.pFramebuffer.BaseAddress);
     kernelServices->pBootInfo.initrdBase = (void*)((uint64_t)HIGHER_VIRT_ADDR + (uint64_t)kernelServices->pBootInfo.initrdBase);
     kernelServices->pBootInfo.mMap = (EFI_MEMORY_DESCRIPTOR*)(HIGHER_VIRT_ADDR + (uint64_t)pBootInfo->mMap);
+    kernelServices->pBootInfo.initrdBase = (void*)((uint64_t)pBootInfo->initrdBase + HIGHER_VIRT_ADDR);
 
     /*
      * Gotcha: 
@@ -93,14 +80,37 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
      * because we already added the HIGHER_VIRT_ADDR before.
      */
     kernelServices->pageTableManager.MapMemory((void*)kernelServices->pBootInfo.rsdp, (void*)pBootInfo->rsdp);
+    kernelServices->pageTableManager.MapMemory((void*)pBootInfo->rsdp, (void*)pBootInfo->rsdp);
 
-    kernelServices->pageTableManager.MapMemory(kernelServices->pBootInfo.initrdBase, pBootInfo->initrdBase);
+    uint64_t initrdPages = (pBootInfo->initrdSize + 0xFFF) / 0x1000;
+    uint64_t initrdPhys = (uint64_t)pBootInfo->initrdBase;
+    for (uint64_t i = 0; i < initrdPages; ++i) {
+        void* physPage = (void*)(initrdPhys + i * 0x1000);
+        kernelServices->pageTableManager.MapMemory(physPage, physPage);
+        kernelServices->pageTableManager.MapMemory(
+            (void*)(HIGHER_VIRT_ADDR + initrdPhys + i * 0x1000),
+            physPage
+        );
+    }
 
     /*
      * Map and Set the APIC
     */
     kernelServices->pageTableManager.MapMemory((void*)0xFFFFFFFFFEE00000, (void*)0xFEE00000, false);
     kernelServices->apic.SetAPICBase(0xFFFFFFFFFEE00000);
+
+    /*
+     * Map the bitmap at the end,
+     * so that we don't forget to 
+     * map the new ones.
+    */
+    uint64_t bitmapPages = (kernelServices->pageFrameAllocator.GetBitmap().size + 4095) / 4096;
+    for (uint64_t i = 0; i < bitmapPages; i++) {
+        kernelServices->pageTableManager.MapMemory(
+            (void*)((uint64_t)kernelServices->pageFrameAllocator.GetBitmap().buffer + i * 4096),
+            (void*)((uint64_t)kernelServices->pageFrameAllocator.GetBitmap().buffer + i * 4096)
+        );
+    }
 
     uintptr_t kernelPhysBase = 0x1000;
     uintptr_t kernelVirtBase = HIGHER_VIRT_ADDR;
@@ -120,7 +130,10 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
         );
     }
 
-    __asm__("mov %0, %%cr3" : : "r" (kernelServices->PML4));
+    kernelServices->basicConsole.Print("PML4 addr: ");
+    kernelServices->basicConsole.Println(to_hstring((uint64_t)kernelServices->PML4));
+
+    __asm__ volatile("mov %0, %%cr3" : : "r" (kernelServices->PML4));
 }
 
 IDTR64 idtr;

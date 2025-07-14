@@ -18,18 +18,26 @@ extern "C" int _start(BootInfo* pBootInfo) {
      * Use our own stack
     */
     asm volatile ("mov %0, %%rsp" :: "r"(&_stack_end));
+    uint64_t stackVirtAddr = ((uint64_t)&_stack_end - 0x1000) + HIGHER_VIRT_ADDR;
+    uint64_t ptr = (uint64_t)&start;
+    uintptr_t virt_ptr = (ptr - 0x1000) + HIGHER_VIRT_ADDR;
+    auto startFunc = reinterpret_cast<void (*)(KernelServices&, BootInfo*)>(virt_ptr);
 
 	KernelServices kernelServices(pBootInfo);
 
     kernelServices.pBootInfo = *pBootInfo;
 
+    kernelServices.basicConsole.Println(to_hstring(stackVirtAddr));
+
     InitializePaging(&kernelServices, pBootInfo);
 
-    uint64_t ptr = (uint64_t)&start;
-    uintptr_t virt_ptr = (ptr - 0x1000) + HIGHER_VIRT_ADDR;
-
-    auto typed_func = (void(*)(KernelServices&, BootInfo*))virt_ptr;
-    typed_func(kernelServices, &kernelServices.pBootInfo);
+    asm volatile (
+        "mov %0, %%rsp\n"
+        "jmp *%1\n"
+        :
+        : "r"((void*)stackVirtAddr), "r"(startFunc), "D"(&kernelServices), "S"(&kernelServices.pBootInfo)
+        : "memory"
+    );
 }
 /*
  * We have separated these into 2, 
@@ -40,31 +48,12 @@ extern "C" int _start(BootInfo* pBootInfo) {
 */
 extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     /*
-     * Use our own *Higher Half* stack
-    */
-    uint64_t stackVirtAddr = (uint64_t)&_stack_end + HIGHER_VIRT_ADDR;
-    uint64_t stack_start = (uint64_t)&_stack_start;
-    uint64_t stack_end   = (uint64_t)&_stack_end;
-    uint64_t stack_size  = stack_end - stack_start;
-    uint64_t stack_pages = (stack_size + 0xFFF) / 0x1000;
-    //asm volatile ("mov %0, %%rsp" :: "r"(stackVirtAddr));
-
-    kernelServices.basicConsole.pFramebuffer.BaseAddress = pBootInfo->pFramebuffer.BaseAddress;
-
-    /*
-     * Here we can unmap the memory
-     * to know which parts of our kernel
-     * are still using the lower mapped part.
-    */
-    for (uint64_t i = 0; i < stack_pages; i++) {
-        //kernelServices.pageTableManager.UnmapMemory((void*)(stack_start + i * 0x1000));
-    }
-
-    /*
      * Check if we are indeed at the higher half address.
     */
     uint64_t current_addr;
     __asm__ volatile ("lea (%%rip), %0" : "=r"(current_addr));
+
+    kernelServices.basicConsole.pFramebuffer.BaseAddress = pBootInfo->pFramebuffer.BaseAddress;
 
     /*
      * Clear the framebuffer
@@ -73,13 +62,57 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
     kernelServices.basicConsole.Println(to_hstring(current_addr));
     kernelServices.basicConsole.Println(to_hstring((uint64_t)kernelServices.pBootInfo.initrdBase));
+//while (true) {}
+    kernelServices.initram.Initialize(pBootInfo->initrdBase, pBootInfo->initrdSize);
 
+    char* files = kernelServices.initram.list((char*)"");
+    if (!files) {
+        kernelServices.basicConsole.Println("No files in root dir");
+    }
+
+    kernelServices.basicConsole.Println("Files in root: ");
+
+    char* current = files;
+    while (*current) {
+        kernelServices.basicConsole.Print(" - ");
+        kernelServices.basicConsole.Println(current);
+        size_t len = 0;
+        while (current[len] != '\0') {
+            ++len;
+        }
+        current += len + 1;
+    }
+
+    size_t size;
+    char* content = (char*)kernelServices.initram.read("", "a.txt", &size);
+
+    if (!content) {
+        kernelServices.basicConsole.Println("Could not find a.txt");
+    } else {
+        kernelServices.basicConsole.Println("Contents of a.txt:");
+        kernelServices.basicConsole.Print(content);
+    }
+
+    /*
+     * Initialize our Heap.
+    */
     kernelServices.heapAllocator.Initialize();
 
+    /*
+     * Create our GDT.
+    */
     kernelServices.gdt.Create64BitGDT();
 
+    /*
+     * Initialize the ACPI.
+    */
     kernelServices.acpi.Initialize(&kernelServices.basicConsole, kernelServices.pBootInfo.rsdp);
 
+    /*
+     * Initialize the IDT
+     * Create the APIC
+     * Initialize the I/O APIC
+    */
     InitializeIDT(&kernelServices, pBootInfo);
 
     /*
