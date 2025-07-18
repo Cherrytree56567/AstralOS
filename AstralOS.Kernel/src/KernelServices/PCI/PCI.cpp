@@ -969,8 +969,27 @@ bool PCI::deviceAlreadyFound(uint8_t bus, uint8_t device, uint8_t function) {
     return false;
 }
 
-void PCI::addDevice(uint8_t bus, uint8_t device, uint8_t function, bool hasMSI) {
-    Devices.push_back({bus, device, function, hasMSI});
+void PCI::addDevice(uint8_t bus, uint8_t device, uint8_t function, bool hasMSI, uint16_t vendorID, uint8_t classCode, uint8_t subClass, uint8_t progIF) {
+    DeviceKey dev;
+    
+    dev.bus = bus;
+    dev.device = device;
+    dev.function = function;
+    dev.hasMSI = hasMSI;
+    dev.hasMSIx = false;
+    dev.PCIe = false;
+
+    dev.vendorID = vendorID;
+
+    dev.classCode = classCode;
+    dev.subclass = subClass;
+    dev.progIF = progIF;
+
+    for (int i = 0; i < 6; i++) {
+        dev.bars[i] = ConfigReadDWord(bus, device, function, 0x10 + (i * 4));
+    }
+
+    Devices.push_back(dev);
 }
 
 /*
@@ -999,14 +1018,14 @@ void PCI::checkFunction(uint8_t bus, uint8_t device, uint8_t function) {
         }
     }
 
-    addDevice(bus, device, function, hasMSI);
-
     uint16_t vendorID = getVendorID(bus, device, function);
     if (vendorID == 0xFFFF) return;
 
     uint8_t classCode = ConfigReadWord(bus, device, function, 0x0B);
     uint8_t subclass = ConfigReadWord(bus, device, function, 0x0A);
     uint8_t progIF = ConfigReadWord(bus, device, function, 0x09);
+
+    addDevice(bus, device, function, hasMSI, vendorID, classCode, subclass, progIF);
 
     ks->basicConsole.Println(GetDeviceCode(classCode, subclass, progIF));
 
@@ -1075,7 +1094,7 @@ void PCI::checkDevice(uint8_t bus, uint8_t device) {
     if (vendorID == 0xFFFF) return;
 
     checkFunction(bus, device, function);
-
+    
     uint8_t headerType = getHeaderType(bus, device, function);
     if ((headerType & 0x80) != 0) {
         for (function = 1; function < 8; function++) {

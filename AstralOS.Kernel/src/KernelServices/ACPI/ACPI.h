@@ -1,8 +1,8 @@
 #pragma once
 #include <cstdint>
-#include <cstring>
 #include "../BasicConsole/BasicConsole.h"
 #include "../../cstr/cstr.h"
+#include "../CPUutils/cpuid.h"
 
 /*
  * The implementation of the RSDP is found on the OSDev Wiki:

@@ -49,14 +49,6 @@ struct MSIX {
     }
 } __attribute__((packed));
 
-struct PCIeDeviceKey {
-    uint16_t Segment;
-    uint8_t bus;
-    uint8_t device;
-    uint8_t function;
-    bool hasMSIx;
-};
-
 class PCIe {
 public:
     PCIe() {}
@@ -74,9 +66,9 @@ public:
 
     bool EnableMSIx(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t vector);
 
-    Array<PCIeDeviceKey> GetDevices();
+    Array<DeviceKey> GetDevices();
 private:
-    Array<PCIeDeviceKey> Devices;
+    Array<DeviceKey> Devices;
     MCFG* mcfgTable;
     int numSegments;
 
@@ -89,7 +81,7 @@ private:
     uint32_t ConfigReadDWord(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
 
     bool deviceAlreadyFound(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function);
-    void addDevice(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, bool hasMSIs);
+    void addDevice(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, bool hasMSIx, uint16_t vendorID, uint8_t classCode, uint8_t subClass, uint8_t progIF);
     
     void checkFunction(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function);
     void checkDevice(uint16_t segment, uint8_t bus, uint8_t device);

@@ -95,14 +95,14 @@ void PCIe::checkFunction(uint16_t segment, uint8_t bus, uint8_t device, uint8_t 
         }
     }
 
-    addDevice(segment, bus, device, function, hasMSIx);
-
     uint16_t vendorID = getVendorID(segment, bus, device, function);
     if (vendorID == 0xFFFF) return;
 
     uint8_t classCode = ConfigReadWord(segment, bus, device, function, 0x0B);
     uint8_t subclass = ConfigReadWord(segment, bus, device, function, 0x0A);
     uint8_t progIF = ConfigReadWord(segment, bus, device, function, 0x09);
+
+    addDevice(segment, bus, device, function, hasMSIx, vendorID, classCode, subclass, progIF);
 
     ks->basicConsole.Println(GetDeviceCode(classCode, subclass, progIF));
 
@@ -973,7 +973,7 @@ uint8_t PCIe::getHeaderType(uint16_t segment, uint8_t bus, uint8_t device, uint8
 
 bool PCIe::deviceAlreadyFound(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function) {
     for (int i = 0; i < Devices.size; i++) {
-        if (Devices[i].Segment == segment &&
+        if (Devices[i].segment == segment &&
             Devices[i].bus == bus &&
             Devices[i].device == device &&
             Devices[i].function == function) {
@@ -983,14 +983,33 @@ bool PCIe::deviceAlreadyFound(uint16_t segment, uint8_t bus, uint8_t device, uin
     return false;
 }
 
-void PCIe::addDevice(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, bool hasMSIx) {
-    Devices.push_back({segment, bus, device, function, hasMSIx});
+void PCIe::addDevice(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, bool hasMSIx, uint16_t vendorID, uint8_t classCode, uint8_t subClass, uint8_t progIF) {
+    DeviceKey dev;
+    dev.segment = segment;
+    dev.bus = bus;
+    dev.device = device;
+    dev.function = function;
+    dev.hasMSIx = hasMSIx;
+    dev.hasMSI = false;
+    dev.PCIe = true;
+
+    dev.vendorID = vendorID;
+
+    dev.classCode = classCode;
+    dev.subclass = subClass;
+    dev.progIF = progIF;
+
+    for (int i = 0; i < 6; i++) {
+        dev.bars[i] = ConfigReadDWord(segment, bus, device, function, 0x10 + (i * 4));
+    }
+
+    Devices.push_back(dev);
 }
 
 /*
  * This too, was made by ChatGPT.
 */
-Array<PCIeDeviceKey> PCIe::GetDevices() {
+Array<DeviceKey> PCIe::GetDevices() {
     return Devices;
 }
 
