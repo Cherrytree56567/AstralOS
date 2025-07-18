@@ -39,6 +39,7 @@ private:
     size_t mMapSize;
     size_t mMapDescSize;
     Bitmap page_bitmap;
+    uint64_t bitmapBase;
     uint64_t total_pages;
     bool initialized = false;
     uint64_t freeMemory;

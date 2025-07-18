@@ -88,19 +88,6 @@ void PageTableManager::MapMemory(void* virtualMemory, void* physicalMemory, bool
         PDE.SetFlag(PT_Flag::CacheDisabled, true);
     }
     PT->entries[indexer.P_i] = PDE;
-
-    /*
-     * TODO: Higher Half Map this.
-    */
-    if (isPDPRequested) {
-        MapMemory((void*)PDP, (void*)PDP);
-    }
-    if (isPDRequested) {
-        MapMemory((void*)PD, (void*)PD);
-    }
-    if (isPTRequested) {
-        MapMemory((void*)PT, (void*)PT);
-    }
 }
 
 void PageTableManager::UnmapMemory(void* virtualMemory) {

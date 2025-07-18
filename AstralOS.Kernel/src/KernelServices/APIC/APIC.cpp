@@ -33,6 +33,7 @@ void APIC::SetAPICBase(uintptr_t apic) {
  * make sure you map it to virtual memory ;)
  */
 uintptr_t APIC::GetAPICBase() {
+    if (false) {
    uint32_t eax, edx;
    ReadMSR(IA32_APIC_BASE_MSR, &eax, &edx);
 
@@ -41,6 +42,9 @@ uintptr_t APIC::GetAPICBase() {
 #else
    return (eax & 0xfffff000);
 #endif
+    } else {
+        return 0xFFFFFFFFFEE00000;
+    }
 }
 
 /*

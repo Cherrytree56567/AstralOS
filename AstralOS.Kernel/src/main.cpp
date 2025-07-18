@@ -27,8 +27,6 @@ extern "C" int _start(BootInfo* pBootInfo) {
 
     kernelServices.pBootInfo = *pBootInfo;
 
-    kernelServices.basicConsole.Println(to_hstring(stackVirtAddr));
-
     InitializePaging(&kernelServices, pBootInfo);
 
     asm volatile (
@@ -62,7 +60,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
     kernelServices.basicConsole.Println(to_hstring(current_addr));
     kernelServices.basicConsole.Println(to_hstring((uint64_t)kernelServices.pBootInfo.initrdBase));
-//while (true) {}
+
     kernelServices.initram.Initialize(pBootInfo->initrdBase, pBootInfo->initrdSize);
 
     char* files = kernelServices.initram.list((char*)"");
@@ -90,7 +88,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
         kernelServices.basicConsole.Println("Could not find a.txt");
     } else {
         kernelServices.basicConsole.Println("Contents of a.txt:");
-        kernelServices.basicConsole.Print(content);
+        kernelServices.basicConsole.Println(content);
     }
 
     /*
@@ -114,7 +112,6 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
      * Initialize the I/O APIC
     */
     InitializeIDT(&kernelServices, pBootInfo);
-
     /*
      * Test ACPI
     */
