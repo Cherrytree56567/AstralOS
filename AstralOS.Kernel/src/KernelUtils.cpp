@@ -130,9 +130,6 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
         );
     }
 
-    kernelServices->basicConsole.Print("PML4 addr: ");
-    kernelServices->basicConsole.Println(to_hstring((uint64_t)kernelServices->PML4));
-
     __asm__ volatile("mov %0, %%cr3" : : "r" (kernelServices->PML4));
 }
 

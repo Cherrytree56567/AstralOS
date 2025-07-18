@@ -1,5 +1,8 @@
 #include "PageFrameAllocator.h"
 
+/*
+ * This code is mostly from Poncho OS.
+*/
 PageFrameAllocator::PageFrameAllocator() {
 	usedMemory = 0;
 	freeMemory = 0;
@@ -15,9 +18,19 @@ void PageFrameAllocator::ReadEFIMemoryMap(EFI_MEMORY_DESCRIPTOR* map, size_t Map
 	mMapSize = MapSize;
 	mMapDescSize = MapDescSize;
 
-	total_pages = GetMemorySize(mMap, mMapSize, mMapDescSize) / 4096;
-
+    uint64_t maxPhysAddr = 0;
     uint64_t mMapEntries = mMapSize / mMapDescSize;
+
+    bitmapBase = 0xFFFFFFFFFFFFFFFFULL;
+    for (uint64_t i = 0; i < mMapEntries; i++) {
+        EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((uint64_t)mMap + i * mMapDescSize);
+        if (desc->PhysicalStart < bitmapBase)
+            bitmapBase = desc->PhysicalStart;
+        uint64_t end = desc->PhysicalStart + desc->NumberOfPages * 4096;
+        if (end > maxPhysAddr)
+            maxPhysAddr = end;
+    }
+    total_pages = (maxPhysAddr - bitmapBase + 0xFFF) / 4096;
 
     void* largestFreeMemSeg = NULL;
     size_t largestFreeMemSegSize = 0;
@@ -25,8 +38,7 @@ void PageFrameAllocator::ReadEFIMemoryMap(EFI_MEMORY_DESCRIPTOR* map, size_t Map
     for (int i = 0; i < mMapEntries; i++){
         EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((uint64_t)mMap + (i * mMapDescSize));
         if (desc->Type == 7){ // type = EfiConventionalMemory
-            if (desc->NumberOfPages * 4096 > largestFreeMemSegSize)
-            {
+            if (desc->NumberOfPages * 4096 > largestFreeMemSegSize) {
                 largestFreeMemSeg = (void*)desc->PhysicalStart;
                 largestFreeMemSegSize = desc->NumberOfPages * 4096;
             }
@@ -39,13 +51,11 @@ void PageFrameAllocator::ReadEFIMemoryMap(EFI_MEMORY_DESCRIPTOR* map, size_t Map
         return;
     }
 
-    uint64_t memorySize = GetMemorySize(mMap, mMapEntries, mMapDescSize);
-    freeMemory = memorySize;
-    uint64_t bitmapSize = memorySize / 4096 / 8 + 1;
+    uint64_t bitmapSize = total_pages / 8 + 1;
 
     InitBitmap(bitmapSize, largestFreeMemSeg);
 
-    LockPages(page_bitmap.buffer, (page_bitmap.size + 4095) / 4096);
+    LockPages(page_bitmap.buffer, (bitmapSize + 4095) / 4096);
 
     for (int i = 0; i < mMapEntries; i++) {
         EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((uint64_t)mMap + (i * mMapDescSize));
@@ -58,13 +68,13 @@ void PageFrameAllocator::ReadEFIMemoryMap(EFI_MEMORY_DESCRIPTOR* map, size_t Map
 void PageFrameAllocator::InitBitmap(size_t bitmapSize, void* bufferAddress) {
     page_bitmap.size = bitmapSize;
     page_bitmap.buffer = (uint8_t*)bufferAddress;
-	for (size_t i = 0; i < (page_bitmap.size + 7) / 8; i++) {
-		page_bitmap.buffer[i] = 0;
-	}
+	for (size_t i = 0; i < page_bitmap.size; i++) {
+        page_bitmap.buffer[i] = 0;
+    }
 }
 
 void PageFrameAllocator::LockPage(void* address) {
-    uint64_t index = (uint64_t)address / 4096;
+    uint64_t index = ((uint64_t)address) / 4096;
     if (page_bitmap[index] == true) return;
     if (page_bitmap.Set(index, true)) {
         freeMemory -= 4096;
@@ -85,7 +95,7 @@ void PageFrameAllocator::LockPages(void* address, uint64_t pageCount) {
 }
 
 void PageFrameAllocator::FreePage(void* address) {
-    uint64_t index = (uint64_t)address / 4096;
+    uint64_t index = ((uint64_t)address) / 4096;
     if (page_bitmap[index] == false) return;
     if (page_bitmap.Set(index, false)) {
         freeMemory += 4096;
@@ -106,7 +116,7 @@ void PageFrameAllocator::FreePages(void* address, uint64_t pageCount) {
 }
 
 void PageFrameAllocator::ReservePage(void* address) {
-    uint64_t index = (uint64_t)address / 4096;
+    uint64_t index = ((uint64_t)address) / 4096;
     if (page_bitmap[index] == true) return;
     if (page_bitmap.Set(index, true)) {
         freeMemory -= 4096;
@@ -127,7 +137,7 @@ void PageFrameAllocator::ReservePages(void* address, uint64_t pageCount) {
 }
 
 void PageFrameAllocator::UnReservePage(void* address) {
-    uint64_t index = (uint64_t)address / 4096;
+    uint64_t index = ((uint64_t)address) / 4096;
     if (page_bitmap[index] == false) return;
     if (page_bitmap.Set(index, false)) {
         freeMemory += 4096;
@@ -161,6 +171,11 @@ uint64_t PageFrameAllocator::GetReservedRAM() {
 
 void* PageFrameAllocator::RequestPage() {
     for (uint64_t index = 0; index < page_bitmap.size * 8; index++) {
+        if (index >= total_pages) {
+            basicConsole->Print("OOB access at ");
+            basicConsole->Println(to_hstring(index));
+            return NULL;
+        }
         if (page_bitmap[index] == true) continue;
         LockPage((void*)(index * 4096));
         return (void*)(index * 4096);
