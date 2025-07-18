@@ -527,10 +527,21 @@ struct MSICapability {
 } __attribute__((packed));
 
 struct DeviceKey {
+    bool PCIe;
+    uint16_t segment; // ONLY FOR PCIe
     uint8_t bus;
     uint8_t device;
     uint8_t function;
+    bool hasMSIx;
     bool hasMSI;
+
+    uint8_t classCode;
+    uint8_t subclass;
+    uint8_t progIF;
+
+    uint16_t vendorID;
+
+    uint32_t bars[6];
 };
 
 class PCI {
@@ -560,7 +571,7 @@ private:
     uint32_t ConfigReadDWord(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
 
     bool deviceAlreadyFound(uint8_t bus, uint8_t device, uint8_t function);
-    void addDevice(uint8_t bus, uint8_t device, uint8_t function, bool hasMSI);
+    void addDevice(uint8_t bus, uint8_t device, uint8_t function, bool hasMSI, uint16_t vendorID, uint8_t classCode, uint8_t subClass, uint8_t progIF);
     
     void checkFunction(uint8_t bus, uint8_t device, uint8_t function);
     void checkDevice(uint8_t bus, uint8_t device);

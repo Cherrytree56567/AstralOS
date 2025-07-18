@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <cstddef>
+#include "../CPUutils/cpuid.h"
 
 struct CPIOHeader {
     char magic[6];
