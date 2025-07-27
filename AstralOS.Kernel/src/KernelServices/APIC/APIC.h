@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include "../CPUutils/cpuid.h"
+#include "../../Utils/cpu.h"
 #include "../PIC/PIC.h"
 
 /*

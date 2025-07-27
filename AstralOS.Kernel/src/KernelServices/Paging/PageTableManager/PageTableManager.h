@@ -2,7 +2,7 @@
 #include "../../Paging/Paging.h"
 #include "../../Paging/PageFrameAllocator/PageFrameAllocator.h"
 #include "../../BasicConsole/BasicConsole.h"
-#include "../../../cstr/cstr.h"
+#include "../../../Utils/cstr/cstr.h"
 #include "PageMapIndexer/PageMapIndexer.h"
 
 /*

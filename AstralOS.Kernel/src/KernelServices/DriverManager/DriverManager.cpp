@@ -1,32 +1,32 @@
 #include "DriverManager.h"
 
-void DiskManager::RegisterDriver(BlockDeviceFactory* factory) {
+void DriverManager::RegisterDriver(BaseDriverFactory* factory) {
     factories.push_back(factory);
 }
 
-void DiskManager::DetectDevices(Array<DeviceKey>& devices, KernelServices& kernel) {
+void DriverManager::DetectDevices(Array<DeviceKey>& devices, KernelServices& kernel) {
     for (size_t i = 0; i < devices.size; ++i) {
         auto dev = devices[i];
         for (size_t j = 0; j < factories.size; ++j) {
             auto& factory = factories[j];
             if (factory->Supports(dev)) {
-                BlockDevice* device = factory->CreateDevice();
-                device->Init(dev, kernel);
-                blockDevices.push_back(device);
+                BaseDriver* device = factory->CreateDevice();
+                device->Init(kernel);
+                DeviceDrivers.push_back(device);
                 break;
             }
         }
     }
 }
 
-BlockDevice* DiskManager::GetDeviceByName(const char* name) {
-    for (size_t i = 0; i < blockDevices.size; ++i) {
-        auto& dev = blockDevices[i];
-        if (strcmp(dev->DeviceName(), name) == 0) return dev;
+BaseDriver* DriverManager::GetDevice(uint8_t _class, uint8_t subclass, uint8_t progIF) {
+    for (size_t i = 0; i < DeviceDrivers.size; ++i) {
+        auto& dev = DeviceDrivers[i];
+        if (dev->GetClass() == _class && dev->GetSubClass() == subclass && dev->GetProgIF() == progIF) return dev;
     }
     return nullptr;
 }
 
-const Array<BlockDevice*>& DiskManager::GetDevices() const {
-    return blockDevices;
+const Array<BaseDriver*>& DriverManager::GetDevices() const {
+    return DeviceDrivers;
 }

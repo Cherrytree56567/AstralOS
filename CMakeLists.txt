@@ -4,6 +4,7 @@ project(AstralOS)
 add_custom_target(init
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.Bootloader && cmake . && cmake --build . --target init
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.Kernel && cmake . && cmake --build . --target init
+    COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.KernelDrivers && cmake . && cmake --build . --target init
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.Bin && cmake . && cmake --build . --target init
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.Testing && cmake . && cmake --build . --target init
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -13,6 +14,7 @@ add_custom_target(init
 add_custom_target(build
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.Bootloader && cmake . && cmake --build . --target build
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.Kernel && cmake . && cmake --build . --target build
+    COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.KernelDrivers && cmake . && cmake --build . --target build
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.Bin && cmake . && cmake --build . --target build
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.Testing && cmake . && cmake --build . --target build
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -28,6 +30,7 @@ add_custom_target(run
 add_custom_target(_clean
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.Bootloader && cmake . && cmake --build . --target _clean
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.Kernel && cmake . && cmake --build . --target _clean
+    COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.KernelDrivers && cmake . && cmake --build . --target _clean
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.Bin && cmake . && cmake --build . --target _clean
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.Testing && cmake . && cmake --build . --target _clean
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

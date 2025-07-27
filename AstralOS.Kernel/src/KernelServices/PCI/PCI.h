@@ -1,7 +1,7 @@
 #pragma once
 #include <tuple>
-#include "../CPUutils/cpuid.h"
-#include "../Array/Array.h"
+#include "../../Utils/cpu.h"
+#include "../../Utils/Array/Array.h"
 
 /*
  * This code is from the OSDev Wiki:

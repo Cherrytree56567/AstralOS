@@ -1,4 +1,5 @@
 #include "InitialRamFS.h"
+#include "../KernelServices.h"
 
 /*
  * This code is generated from ChatGPT.
@@ -15,229 +16,190 @@ static uint32_t parse_hex(const char* str, size_t len = 8) {
     return result;
 }
 
-int memcmp(const void* s1, const void* s2, size_t n) {
-    const unsigned char* p1 = (const unsigned char*)s1;
-    const unsigned char* p2 = (const unsigned char*)s2;
+void PrintDirectory(const DirectoryEntry& dir, int depth = 0) {
+    // Indent based on depth
+    for (int i = 0; i < depth; ++i)
+        ks->basicConsole.Print("  ");
 
-    for (size_t i = 0; i < n; ++i) {
-        if (p1[i] != p2[i])
-            return p1[i] - p2[i];
-    }
-    return 0;
-}
+    ks->basicConsole.Print(" ^ ");
+    ks->basicConsole.Println(dir.name ? dir.name : "(root)");
 
-void* memcpy(void* dest, const void* src, size_t n) {
-    unsigned char* d = (unsigned char*)dest;
-    const unsigned char* s = (const unsigned char*)src;
+    // List files
+    for (size_t i = 0; i < dir.files.size; ++i) {
+        const FileEntry& file = dir.files[i];
 
-    for (size_t i = 0; i < n; ++i)
-        d[i] = s[i];
+        for (int j = 0; j < depth + 1; ++j)
+            Print("  ");
 
-    return dest;
-}
-
-char* strncpy(char* dest, const char* src, size_t maxLen) {
-    if (maxLen == 0) return dest;
-
-    size_t i = 0;
-    while (i < maxLen - 1 && src[i]) {
-        dest[i] = src[i];
-        i++;
+        ks->basicConsole.Print(" - ");
+        ks->basicConsole.Print(file.name);
+        ks->basicConsole.Print(" (");
+        ks->basicConsole.Print(to_hstring(file.size));
+        ks->basicConsole.Println(" bytes)");
     }
 
-    dest[i] = '\0';
-    return dest;
-}
-
-int strncmp(const char* s1, const char* s2, size_t n) {
-    for (size_t i = 0; i < n; ++i) {
-        if (s1[i] != s2[i]) {
-            return (unsigned char)s1[i] - (unsigned char)s2[i];
-        }
-        if (s1[i] == '\0') {
-            return 0;
-        }
+    // Recurse into subdirs
+    for (size_t i = 0; i < dir.subdirs.size; ++i) {
+        PrintDirectory(dir.subdirs[i], depth + 1);
     }
-    return 0;
 }
 
-size_t strlen(const char* str) {
-    size_t len = 0;
-    while (str[len] != '\0') {
-        ++len;
-    }
-    return len;
-}
-
-char* strchr(const char* str, int ch) {
-    while (*str) {
-        if (*str == (char)ch) {
-            return (char*)str;
-        }
-        ++str;
-    }
-    return nullptr;
-}
-
+/*
+ * Initialize decodes the CPIO and adds the 
+ * data to a struct to easily read it.
+ * 
+ * First we should get the CPIOHeader and check
+ * it's magic number.
+ * 
+ * Then we can get the size of the name and file
+ * to parse the name and data.
+ * 
+ * If the name is `TRAILER!!!` we can stop parsing
+ * because that marks the end of the CPIO archive.
+ * 
+ * We can then check the mode of the entry to see
+ * if it is a directory or a file.
+*/
 void InitialRamFS::Initialize(void* bas, uint64_t siz) {
     base = bas;
     size = siz;
+    uint64_t ptr = (uint64_t)base;
+    while (true) {
+        CPIOHeader* header = (CPIOHeader*)ptr;
+
+        if (memcmp(header->magic, "070701", 6) != 0) {
+            ks->basicConsole.Println("Invalid CPIO magic number!");
+            break;
+        }
+
+        ks->basicConsole.Print("Fo");
+
+        uint32_t nameSize = parse_hex(header->namesize, 8);
+        uint32_t fileSize = parse_hex(header->filesize, 8);
+
+        const char* filename = (const char*)(ptr + sizeof(CPIOHeader));
+
+        if (strcmp(filename, "TRAILER!!!") == 0) {
+            break;
+        }
+
+        if (strcmp(filename, ".") == 0) {
+            uintptr_t name_ptr = ptr + sizeof(CPIOHeader); // right after header
+            uintptr_t filename_end = name_ptr + nameSize;
+
+            // Align filename_end to next 4-byte boundary
+            uintptr_t file_ptr = (filename_end + 3) & ~3;
+
+            // Align file end to next 4-byte boundary
+            uintptr_t next_ptr = (file_ptr + fileSize + 3) & ~3;
+
+            ptr = next_ptr;
+            continue;
+        }
+
+        uint32_t mode = parse_hex(header->mode, 8);
+        bool is_dir = (mode & 0xF000) == 0x4000;
+
+        size_t count = 0;
+        char* parts[10];
+        char* path = (char*)filename;
+
+        while (*path) {
+            while (*path == '/') path++;
+            if (!*path) break;
+
+            parts[count++] = path;
+            while (*path && *path != '/') path++;
+
+            if (*path == '/') {
+                *(char*)path = '\0';
+                path++;
+            }
+        }
+            
+        char* _name = parts[count - 1];
+
+        DirectoryEntry* current = &root;
+
+        ks->basicConsole.Print("Processing: ");
+
+        for (size_t i = 0; i < (count-1); ++i) {
+            if (!current) {
+                ks->basicConsole.Println("ERROR: current is null!");
+                break;
+            }
+ks->basicConsole.Print("Processisng: ");
+            const char* seg = parts[i];
+            if (i == count - 1) {
+                if (is_dir) {
+                    DirectoryEntry newDir;
+                    newDir.name = seg;
+                    current->subdirs.push_back(newDir);
+                    ks->basicConsole.Print("Created directory: ");
+                    ks->basicConsole.Println(seg);
+                } else {
+                    FileEntry fileEntry;
+                    fileEntry.name = seg;
+                    uintptr_t name_ptr = ptr + sizeof(CPIOHeader);
+                    uintptr_t file_ptr = (name_ptr + nameSize + 3) & ~3;
+                    fileEntry.data = (void*)file_ptr; // Make sure you decode the hex
+                    fileEntry.size = fileSize;
+                    current->files.push_back(fileEntry);
+                    ks->basicConsole.Print("Created file: ");
+                    ks->basicConsole.Println(seg);
+                    ks->basicConsole.Print("File size: ");
+                    ks->basicConsole.Println(to_hstring(fileSize));
+                }
+                break;
+            }
+
+            bool found = false;
+            for (size_t j = 0; j < current->subdirs.size; ++j) {
+                ks->basicConsole.Print("Checking subdir: ");
+                ks->basicConsole.Println(current->subdirs[j].name);
+                if (strcmp(current->subdirs[j].name, seg) == 0) {
+                    current = &current->subdirs[j];
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                DirectoryEntry newDir;
+                newDir.name = seg;
+                ks->basicConsole.Print("Creating new directory: ");
+                ks->basicConsole.Println(seg);
+                ks->basicConsole.Print("Current directory: ");
+                ks->basicConsole.Println(current->name ? current->name : "(root)");
+                ks->basicConsole.Print("Current subdirs count: ");
+                ks->basicConsole.Println(to_hstring(current->subdirs.size));
+                current->subdirs.push_back(newDir);
+                current = &current->subdirs[current->subdirs.size - 1];
+            }
+        }
+        uintptr_t name_ptr = ptr + sizeof(CPIOHeader); // right after header
+        uintptr_t filename_end = name_ptr + nameSize;
+
+        // Align filename_end to next 4-byte boundary
+        uintptr_t file_ptr = (filename_end + 3) & ~3;
+
+        // Align file end to next 4-byte boundary
+        uintptr_t next_ptr = (file_ptr + fileSize + 3) & ~3;
+
+        ptr = next_ptr;
+    }
+    PrintDirectory(root);
 }
 
 bool InitialRamFS::file_exists(char* name) {
-    uint8_t* ptr = (uint8_t*)base;
-
-    while (true) {
-        CPIOHeader* header = (CPIOHeader*)ptr;
-        if (memcmp(header->magic, "070701", 6) != 0) break;
-
-        uint32_t namesize = parse_hex(header->namesize);
-        char* filename = (char*)(ptr + sizeof(CPIOHeader));
-        if (strcmp(filename, "TRAILER!!!") == 0) break;
-
-        if (strcmp(filename, name) == 0) return true;
-
-        uint32_t filesize = parse_hex(header->filesize);
-        uintptr_t next = (uintptr_t)filename + namesize;
-        next = (next + 3) & ~3;
-        next += filesize;
-        next = (next + 3) & ~3;
-        ptr = (uint8_t*)next;
-    }
-    return false;
 }
 
 bool InitialRamFS::dir_exists(char* name) {
-    size_t name_len = strlen(name);
-    if (name[name_len - 1] != '/')
-        name_len++;
-
-    uint8_t* ptr = (uint8_t*)base;
-
-    while (true) {
-        CPIOHeader* header = (CPIOHeader*)ptr;
-        if (memcmp(header->magic, "070701", 6) != 0) break;
-
-        uint32_t namesize = parse_hex(header->namesize);
-        char* filename = (char*)(ptr + sizeof(CPIOHeader));
-        if (strcmp(filename, "TRAILER!!!") == 0) break;
-
-        if (strncmp(filename, name, name_len - 1) == 0 && filename[name_len - 1] == '/') return true;
-
-        uint32_t filesize = parse_hex(header->filesize);
-        uintptr_t next = (uintptr_t)filename + namesize;
-        next = (next + 3) & ~3;
-        next += filesize;
-        next = (next + 3) & ~3;
-        ptr = (uint8_t*)next;
-    }
-    return false;
 }
 
 void* InitialRamFS::read(char* dir, char* name, size_t* outSize) {
-    char fullpath[256];
-    int i = 0;
-
-    while (dir[i] && i < 255) {
-        fullpath[i] = dir[i];
-        i++;
-    }
-
-    if (i > 0 && fullpath[i - 1] != '/' && i < 255) {
-        fullpath[i++] = '/';
-    }
-
-    int j = 0;
-    while (name[j] && i < 255) {
-        fullpath[i++] = name[j++];
-    }
-
-    fullpath[i] = '\0';
-
-    uint8_t* ptr = (uint8_t*)base;
-
-    while (true) {
-        CPIOHeader* header = (CPIOHeader*)ptr;
-        if (memcmp(header->magic, "070701", 6) != 0) break;
-
-        uint32_t namesize = parse_hex(header->namesize);
-        uint32_t filesize = parse_hex(header->filesize);
-        char* filename = (char*)(ptr + sizeof(CPIOHeader));
-        if (strcmp(filename, "TRAILER!!!") == 0) break;
-
-        if (strcmp(filename, fullpath) == 0) {
-            uintptr_t data_ptr = (uintptr_t)filename + namesize;
-            data_ptr = (data_ptr + 3) & ~3;
-            if (outSize) *outSize = filesize;
-            return (void*)data_ptr;
-        }
-
-        uintptr_t next = (uintptr_t)filename + namesize;
-        next = (next + 3) & ~3;
-        next += filesize;
-        next = (next + 3) & ~3;
-        ptr = (uint8_t*)next;
-    }
-
-    if (outSize) *outSize = 0;
-    return nullptr;
 }
 
-char* InitialRamFS::list(char* dir) {
-    static char buffer[2048];
-    char* out = buffer;
-
-    char fullpath[256];
-    strncpy(fullpath, dir, sizeof(fullpath) - 2);
-    size_t dir_len = strlen(fullpath);
-    if (dir_len > 0 && fullpath[dir_len - 1] != '/') {
-        fullpath[dir_len++] = '/';
-        fullpath[dir_len] = '\0';
-    }
-
-    uint8_t* ptr = (uint8_t*)base;
-
-    while (true) {
-        CPIOHeader* header = (CPIOHeader*)ptr;
-        if (memcmp(header->magic, "070701", 6) != 0) break;
-
-        uint32_t namesize = parse_hex(header->namesize);
-        uint32_t filesize = parse_hex(header->filesize);
-        char* filename = (char*)(ptr + sizeof(CPIOHeader));
-
-        if (strcmp(filename, "TRAILER!!!") == 0) break;
-
-        bool match = false;
-        const char* name_after = nullptr;
-
-        if (dir_len == 0) {
-            if (!strchr(filename, '/')) {
-                match = true;
-                name_after = filename;
-            }
-        } else if (strncmp(filename, fullpath, dir_len) == 0) {
-            name_after = filename + dir_len;
-            if (!strchr(name_after, '/')) {
-                match = true;
-            }
-        }
-
-        if (match && name_after) {
-            size_t len = strlen(name_after);
-            if ((out - buffer) + len + 2 < sizeof(buffer)) {
-                memcpy(out, name_after, len);
-                out[len] = '\n';
-                out[len + 1] = '\0';
-                out += len + 1;
-            }
-        }
-
-        uintptr_t name_ptr = (uintptr_t)(ptr + sizeof(CPIOHeader));
-        uintptr_t file_ptr = (name_ptr + namesize + 3) & ~3;
-        uintptr_t next = (file_ptr + filesize + 3) & ~3;
-        ptr = (uint8_t*)next;
-    }
-
-    *out = '\0';
-    return buffer;
+Array<const char*> InitialRamFS::list(char* dir) {
+    
 }
