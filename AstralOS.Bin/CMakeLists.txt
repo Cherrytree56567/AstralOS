@@ -26,6 +26,7 @@ add_custom_target(init
 )
 
 add_custom_target(build
+    COMMAND cd initrd && cp -r ../../AstralOS.KernelDrivers/bin/* .
     COMMAND cd initrd && find . | cpio -o --format=newc > ../bin/initramfs.efi
     COMMAND cd bin && qemu-img create -f qcow2 ${QCOW2_FILE} ${QCOW2_SIZE}
     COMMAND cd bin && sudo modprobe nbd && sudo qemu-nbd --connect=/dev/nbd0 ${QCOW2_FILE} && sleep 2

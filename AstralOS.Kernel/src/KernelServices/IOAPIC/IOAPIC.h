@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <stdint.h>
 #include "../BasicConsole/BasicConsole.h"
-#include "../../cstr/cstr.h"
+#include "../../Utils/cstr/cstr.h"
 
 /*
  * This code is from the OSDev Wiki

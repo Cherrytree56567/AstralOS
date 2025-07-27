@@ -1,4 +1,4 @@
-#include "cpuid.h"
+#include "cpu.h"
 
 /*
  * All of this code is from ChadGPT.
@@ -36,12 +36,4 @@ uint32_t inl(uint16_t port) {
         : /* no clobbers */
     );
     return val;
-}
-
-int strcmp(const char* s1, const char* s2) {
-    while (*s1 && (*s1 == *s2)) {
-        ++s1;
-        ++s2;
-    }
-    return (unsigned char)(*s1) - (unsigned char)(*s2);
 }

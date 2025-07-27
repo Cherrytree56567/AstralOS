@@ -116,6 +116,8 @@ cd D:/AstralOS/AstralOS.Bootloader &amp;&amp; cmake . &amp;&amp; cmake --build .
 if %errorlevel% neq 0 goto :cmEnd
 cd D:/AstralOS/AstralOS.Kernel &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
 if %errorlevel% neq 0 goto :cmEnd
+cd D:/AstralOS/AstralOS.KernelDrivers &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
+if %errorlevel% neq 0 goto :cmEnd
 cd D:/AstralOS/AstralOS.Bin &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
 if %errorlevel% neq 0 goto :cmEnd
 cd D:/AstralOS/AstralOS.Testing &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
@@ -139,6 +141,8 @@ if %errorlevel% neq 0 goto :cmEnd
 cd D:/AstralOS/AstralOS.Bootloader &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
 if %errorlevel% neq 0 goto :cmEnd
 cd D:/AstralOS/AstralOS.Kernel &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
+if %errorlevel% neq 0 goto :cmEnd
+cd D:/AstralOS/AstralOS.KernelDrivers &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
 if %errorlevel% neq 0 goto :cmEnd
 cd D:/AstralOS/AstralOS.Bin &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
 if %errorlevel% neq 0 goto :cmEnd
@@ -164,6 +168,8 @@ cd D:/AstralOS/AstralOS.Bootloader &amp;&amp; cmake . &amp;&amp; cmake --build .
 if %errorlevel% neq 0 goto :cmEnd
 cd D:/AstralOS/AstralOS.Kernel &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
 if %errorlevel% neq 0 goto :cmEnd
+cd D:/AstralOS/AstralOS.KernelDrivers &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
+if %errorlevel% neq 0 goto :cmEnd
 cd D:/AstralOS/AstralOS.Bin &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
 if %errorlevel% neq 0 goto :cmEnd
 cd D:/AstralOS/AstralOS.Testing &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
@@ -187,6 +193,8 @@ if %errorlevel% neq 0 goto :cmEnd
 cd D:/AstralOS/AstralOS.Bootloader &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
 if %errorlevel% neq 0 goto :cmEnd
 cd D:/AstralOS/AstralOS.Kernel &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
+if %errorlevel% neq 0 goto :cmEnd
+cd D:/AstralOS/AstralOS.KernelDrivers &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
 if %errorlevel% neq 0 goto :cmEnd
 cd D:/AstralOS/AstralOS.Bin &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
 if %errorlevel% neq 0 goto :cmEnd

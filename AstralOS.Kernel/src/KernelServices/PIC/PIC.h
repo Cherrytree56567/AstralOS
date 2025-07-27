@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include "../CPUutils/cpuid.h"
+#include "../../Utils/cpu.h"
 
 #define ICW1_ICW4	0x01		/* Indicates that ICW4 will be present */
 #define ICW1_SINGLE	0x02		/* Single (cascade) mode */

@@ -63,22 +63,15 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
     kernelServices.initram.Initialize(pBootInfo->initrdBase, pBootInfo->initrdSize);
 
-    char* files = kernelServices.initram.list((char*)"");
-    if (!files) {
+    Array<const char*> files = kernelServices.initram.list((char*)"");
+    if (files.size == 0) {
         kernelServices.basicConsole.Println("No files in root dir");
     }
 
     kernelServices.basicConsole.Println("Files in root: ");
 
-    char* current = files;
-    while (*current) {
-        kernelServices.basicConsole.Print(" - ");
-        kernelServices.basicConsole.Println(current);
-        size_t len = 0;
-        while (current[len] != '\0') {
-            ++len;
-        }
-        current += len + 1;
+    for (size_t i = 0; i < files.size; ++i) {
+        kernelServices.basicConsole.Println(files[i]);
     }
 
     size_t size;

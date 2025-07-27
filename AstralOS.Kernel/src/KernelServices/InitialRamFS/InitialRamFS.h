@@ -1,7 +1,9 @@
 #pragma once
 #include <cstdint>
 #include <cstddef>
-#include "../CPUutils/cpuid.h"
+#include "../../Utils/cpu.h"
+#include "../../Utils/utils.h"
+#include "../../Utils/Array/Array.h"
 
 struct CPIOHeader {
     char magic[6];
@@ -26,6 +28,12 @@ struct FileEntry {
     uint32_t size;
 };
 
+struct DirectoryEntry {
+    const char* name;
+    Array<FileEntry> files;
+    Array<DirectoryEntry> subdirs;
+};
+
 class InitialRamFS {
 public:
     InitialRamFS() {}
@@ -37,8 +45,9 @@ public:
 
     void* read(char* dir, char* name, size_t* outSize);
 
-    char* list(char* dir);
+    Array<const char*> list(char* dir);
 private:
     void* base;
     uint64_t size;
+    DirectoryEntry root;
 };

@@ -1,7 +1,7 @@
 #pragma once
-#include "../Paging/MemoryAlloc/Heap.h"
-#include "../../cstr/cstr.h"
 #include <cstdint>
+#include "../../KernelServices/Paging/MemoryAlloc/Heap.h"
+#include "../cstr/cstr.h"
 
 void Print(const char* str);
 
@@ -55,5 +55,9 @@ struct Array {
 
     T& operator[](size_t index) {
         return data[index];
+    }
+
+    const T& operator[](size_t i) const { 
+        return data[i]; 
     }
 };
