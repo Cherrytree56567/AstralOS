@@ -7,6 +7,14 @@
  * how the kernel works.
  * Read the comments.
 */
+extern "C" void irq1_handler() {
+    uint8_t scancode = inb(0x60);
+    ks->basicConsole.Println("Key press!");
+    ks->apic.WriteAPIC(APICRegs::EOI, 0);
+}
+
+extern "C" void irq_stub();
+
 extern "C" int _start(BootInfo* pBootInfo) {
     /*
      * Disable Interrupts
@@ -61,9 +69,9 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     kernelServices.basicConsole.Println(to_hstring(current_addr));
     kernelServices.basicConsole.Println(to_hstring((uint64_t)kernelServices.pBootInfo.initrdBase));
 
-    kernelServices.initram.Initialize(pBootInfo->initrdBase, pBootInfo->initrdSize);
+    //kernelServices.initram.Initialize(pBootInfo->initrdBase, pBootInfo->initrdSize);
 
-    Array<const char*> files = kernelServices.initram.list((char*)"");
+    Array<const char*> files = kernelServices.initram.list((char*)"s.");
     if (files.size == 0) {
         kernelServices.basicConsole.Println("No files in root dir");
     }
@@ -73,7 +81,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     for (size_t i = 0; i < files.size; ++i) {
         kernelServices.basicConsole.Println(files[i]);
     }
-
+/*
     size_t size;
     char* content = (char*)kernelServices.initram.read("", "a.txt", &size);
 
@@ -83,6 +91,8 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
         kernelServices.basicConsole.Println("Contents of a.txt:");
         kernelServices.basicConsole.Println(content);
     }
+*/
+kernelServices.basicConsole.Print("hi");
 
     /*
      * Initialize our Heap.
@@ -150,6 +160,23 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     } else {
         kernelServices.basicConsole.Println("No PCI/PCIe devices found.");
     }
+
+    /*
+     * Test I/O APIC
+    */
+
+    RedirectionEntry entry = {};
+    
+    entry.vector = 0x21;         // vector = your IDT index
+    entry.delvMode = 0;          // fixed
+    entry.destMode = 0;          // physical
+    entry.mask = 0;              // ENABLED
+    entry.triggerMode = 0;       // edge-triggered for IRQ1
+    entry.pinPolarity = 0;       // high active
+    entry.destination = 0;       // LAPIC ID of current CPU
+    
+    kernelServices.ioapic.writeRedirEntry(1, &entry); // IRQ1 = GSI 1
+    kernelServices.idt.SetDescriptor(0x21, (void*)irq_stub, 0x8E); // Set IDT entry for IRQ1
 
     while (true) {
         
