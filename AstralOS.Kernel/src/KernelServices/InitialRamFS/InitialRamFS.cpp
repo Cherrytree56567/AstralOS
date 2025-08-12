@@ -16,31 +16,49 @@ static uint32_t parse_hex(const char* str, size_t len = 8) {
     return result;
 }
 
-void PrintDirectory(const DirectoryEntry& dir, int depth = 0) {
-    // Indent based on depth
-    for (int i = 0; i < depth; ++i)
-        ks->basicConsole.Print("  ");
+size_t split_path(const char* origPath, char* parts[], size_t maxParts) {
+    static char buffer[256];
+    strncpy(buffer, origPath, sizeof(buffer) - 1);
+    buffer[sizeof(buffer) - 1] = '\0';
 
-    ks->basicConsole.Print(" ^ ");
-    ks->basicConsole.Println(dir.name ? dir.name : "(root)");
+    char* path = buffer;
+    size_t count = 0;
 
-    // List files
-    for (size_t i = 0; i < dir.files.size; ++i) {
-        const FileEntry& file = dir.files[i];
+    while (*path && count < maxParts) {
+        while (*path == '/') path++;
+        if (!*path) break;
 
-        for (int j = 0; j < depth + 1; ++j)
-            Print("  ");
+        parts[count++] = path;
 
-        ks->basicConsole.Print(" - ");
-        ks->basicConsole.Print(file.name);
-        ks->basicConsole.Print(" (");
-        ks->basicConsole.Print(to_hstring(file.size));
-        ks->basicConsole.Println(" bytes)");
+        while (*path && *path != '/') path++;
+
+        if (*path == '/') {
+            *path = '\0';
+            path++;
+        }
     }
 
-    // Recurse into subdirs
+    return count - 1;
+}
+
+void PrintDirectory(const DirectoryEntry& dir, int depth = 0) {
+    for (int i = 0; i < depth; ++i) {
+        ks->basicConsole.Print("  ");
+    }
+
+    ks->basicConsole.Print("[DIR] ");
+    ks->basicConsole.Println(dir.name);
+
+    for (size_t i = 0; i < dir.files.size; ++i) {
+        for (int j = 0; j < depth + 1; ++j) {
+            ks->basicConsole.Print("  ");
+        }
+        ks->basicConsole.Print("- ");
+        ks->basicConsole.Println(dir.files[i + 1].name);
+    }
+
     for (size_t i = 0; i < dir.subdirs.size; ++i) {
-        PrintDirectory(dir.subdirs[i], depth + 1);
+        PrintDirectory(dir.subdirs[i + 1], depth + 1);
     }
 }
 
@@ -64,6 +82,8 @@ void InitialRamFS::Initialize(void* bas, uint64_t siz) {
     base = bas;
     size = siz;
     uint64_t ptr = (uint64_t)base;
+    root.files.clear();
+    root.subdirs.clear();
     while (true) {
         CPIOHeader* header = (CPIOHeader*)ptr;
 
@@ -71,8 +91,6 @@ void InitialRamFS::Initialize(void* bas, uint64_t siz) {
             ks->basicConsole.Println("Invalid CPIO magic number!");
             break;
         }
-
-        ks->basicConsole.Print("Fo");
 
         uint32_t nameSize = parse_hex(header->namesize, 8);
         uint32_t fileSize = parse_hex(header->filesize, 8);
@@ -84,13 +102,8 @@ void InitialRamFS::Initialize(void* bas, uint64_t siz) {
         }
 
         if (strcmp(filename, ".") == 0) {
-            uintptr_t name_ptr = ptr + sizeof(CPIOHeader); // right after header
-            uintptr_t filename_end = name_ptr + nameSize;
-
-            // Align filename_end to next 4-byte boundary
-            uintptr_t file_ptr = (filename_end + 3) & ~3;
-
-            // Align file end to next 4-byte boundary
+            uintptr_t name_ptr = ptr + sizeof(CPIOHeader);
+            uintptr_t file_ptr = (name_ptr + nameSize + 3) & ~3;
             uintptr_t next_ptr = (file_ptr + fileSize + 3) & ~3;
 
             ptr = next_ptr;
@@ -100,95 +113,51 @@ void InitialRamFS::Initialize(void* bas, uint64_t siz) {
         uint32_t mode = parse_hex(header->mode, 8);
         bool is_dir = (mode & 0xF000) == 0x4000;
 
-        size_t count = 0;
         char* parts[10];
-        char* path = (char*)filename;
+        size_t count = split_path((char*)filename, parts, 10);
 
-        while (*path) {
-            while (*path == '/') path++;
-            if (!*path) break;
-
-            parts[count++] = path;
-            while (*path && *path != '/') path++;
-
-            if (*path == '/') {
-                *(char*)path = '\0';
-                path++;
-            }
-        }
-            
-        char* _name = parts[count - 1];
-
-        DirectoryEntry* current = &root;
-
-        ks->basicConsole.Print("Processing: ");
-
-        for (size_t i = 0; i < (count-1); ++i) {
-            if (!current) {
-                ks->basicConsole.Println("ERROR: current is null!");
+        DirectoryEntry* currentDir = &root;
+        
+        for (size_t i = 0; i < (count + 1); ++i) {
+            if (currentDir == nullptr) {
+                ks->basicConsole.Println("Current directory is null!");
                 break;
             }
-ks->basicConsole.Print("Processisng: ");
-            const char* seg = parts[i];
-            if (i == count - 1) {
+
+            if (i == count) {
                 if (is_dir) {
                     DirectoryEntry newDir;
-                    newDir.name = seg;
-                    current->subdirs.push_back(newDir);
-                    ks->basicConsole.Print("Created directory: ");
-                    ks->basicConsole.Println(seg);
+                    newDir.files.clear();
+                    newDir.subdirs.clear();
+                    newDir.name = parts[i];
+                    currentDir->subdirs.push_back(newDir);
+                    continue;
                 } else {
-                    FileEntry fileEntry;
-                    fileEntry.name = seg;
-                    uintptr_t name_ptr = ptr + sizeof(CPIOHeader);
-                    uintptr_t file_ptr = (name_ptr + nameSize + 3) & ~3;
-                    fileEntry.data = (void*)file_ptr; // Make sure you decode the hex
-                    fileEntry.size = fileSize;
-                    current->files.push_back(fileEntry);
-                    ks->basicConsole.Print("Created file: ");
-                    ks->basicConsole.Println(seg);
-                    ks->basicConsole.Print("File size: ");
-                    ks->basicConsole.Println(to_hstring(fileSize));
+                    FileEntry newFile;
+                    newFile.name = parts[i];
+                    newFile.data = (void*)(ptr + sizeof(CPIOHeader) + nameSize);
+                    newFile.size = fileSize;
+                    currentDir->files.push_back(newFile);
+                    continue;
                 }
-                break;
             }
 
-            bool found = false;
-            for (size_t j = 0; j < current->subdirs.size; ++j) {
-                ks->basicConsole.Print("Checking subdir: ");
-                ks->basicConsole.Println(current->subdirs[j].name);
-                if (strcmp(current->subdirs[j].name, seg) == 0) {
-                    current = &current->subdirs[j];
-                    found = true;
+            for (size_t j = 0; j < currentDir->subdirs.size; ++j) {
+                if (strcmp(currentDir->subdirs[j + 1].name, parts[i]) == 0) {
+                    currentDir = &currentDir->subdirs[j + 1];
                     break;
                 }
             }
-
-            if (!found) {
-                DirectoryEntry newDir;
-                newDir.name = seg;
-                ks->basicConsole.Print("Creating new directory: ");
-                ks->basicConsole.Println(seg);
-                ks->basicConsole.Print("Current directory: ");
-                ks->basicConsole.Println(current->name ? current->name : "(root)");
-                ks->basicConsole.Print("Current subdirs count: ");
-                ks->basicConsole.Println(to_hstring(current->subdirs.size));
-                current->subdirs.push_back(newDir);
-                current = &current->subdirs[current->subdirs.size - 1];
-            }
         }
-        uintptr_t name_ptr = ptr + sizeof(CPIOHeader); // right after header
-        uintptr_t filename_end = name_ptr + nameSize;
-
-        // Align filename_end to next 4-byte boundary
-        uintptr_t file_ptr = (filename_end + 3) & ~3;
-
-        // Align file end to next 4-byte boundary
+        uintptr_t name_ptr = ptr + sizeof(CPIOHeader);
+        uintptr_t file_ptr = (name_ptr + nameSize + 3) & ~3;
         uintptr_t next_ptr = (file_ptr + fileSize + 3) & ~3;
 
         ptr = next_ptr;
     }
-    PrintDirectory(root);
+    for (size_t i = 0; i < root.subdirs.size; i++) {
+        PrintDirectory(root.subdirs[i + 1]);
+    }
 }
 
 bool InitialRamFS::file_exists(char* name) {
@@ -201,5 +170,46 @@ void* InitialRamFS::read(char* dir, char* name, size_t* outSize) {
 }
 
 Array<const char*> InitialRamFS::list(char* dir) {
-    
+    Array<const char*> result;
+    DirectoryEntry currentDir = root;
+
+    char* parts[10];
+    size_t count = split_path((char*)dir, parts, 10);
+
+    for (size_t i = 0; i < root.subdirs.size; i++) {
+        PrintDirectory(root.subdirs[i + 1]);
+    }
+
+    for (size_t i = 0; i < count; ++i) {
+        if (currentDir.subdirs.size == 0 && currentDir.files.size == 0) {
+            ks->basicConsole.Println("Current directory is null!");
+            break;
+        }
+
+        if (strcmp(parts[i], ".") == 0) {
+            continue;
+        }
+
+        for (size_t j = 0; j < currentDir.subdirs.size; ++j) {
+            ks->basicConsole.Println(currentDir.subdirs[j + 1].name);
+            if (strcmp(currentDir.subdirs[j + 1].name, parts[i]) == 0) {
+                currentDir = currentDir.subdirs[j + 1];
+                ks->basicConsole.Print("ADir: ");
+                ks->basicConsole.Println(currentDir.name);
+                break;
+            }
+        }
+    }
+
+    for (size_t j = 0; j < currentDir.subdirs.size; ++j) {
+        result.push_back(currentDir.subdirs[j + 1].name);
+        ks->basicConsole.Print("Dir: ");
+        ks->basicConsole.Println(currentDir.subdirs[j + 1].name);
+    }
+    for (size_t j = 0; j < currentDir.files.size; ++j) {
+        result.push_back(currentDir.files[j + 1].name);
+        ks->basicConsole.Print("File: ");
+        ks->basicConsole.Println(currentDir.files[j + 1].name);
+    }
+    return result;
 }

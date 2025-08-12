@@ -1,9 +1,9 @@
 #pragma once
 #include <cstdint>
-#include "../Array/Array.h"
+#include "../../Utils/Array/Array.h"
 #include "../PCI/PCI.h"
 #include "../KernelServices.h"
-#include "../CPUutils/cpuid.h"
+#include "../../Utils/cpu.h"
 
 class BaseDriver {
 public:

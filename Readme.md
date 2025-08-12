@@ -24,6 +24,7 @@ cmake --build . --target build
 ## Testing
 If you would like to test the OS. Get the newest release and setup VirtualBox with `Other Linux x64`
 <br>
+TIP: Make sure you enable UEFI in VBOX.<br>
 Unfortunatly, because of Higher Half Mapping, the kernel has gotten a bit slow. It will take a while to initialize.<br>
 The kernel needs at least 512 MB of RAM. It is tested on 1 Core on VBox.
 

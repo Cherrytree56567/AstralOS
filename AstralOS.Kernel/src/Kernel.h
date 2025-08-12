@@ -1,6 +1,6 @@
 #pragma once
 #include "KernelServices/KernelServices.h"
-#include "cstr/cstr.h"
+#include "Utils/cstr/cstr.h"
 
 extern "C" {
     extern uint8_t _kernel_start;

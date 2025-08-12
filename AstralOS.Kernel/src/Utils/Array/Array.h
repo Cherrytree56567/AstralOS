@@ -28,7 +28,8 @@ struct Array {
             grow();
         }
         if (data) {
-            data[size++] = value;
+            ++size;
+            data[size] = value;
         } else {
             Print("OUT OF MEM!");
         }
