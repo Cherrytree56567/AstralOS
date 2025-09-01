@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "../KernelServices/Paging/MemoryAlloc/Heap.h"
 
 int strcmp(const char* s1, const char* s2) {
     while (*s1 && (*s1 == *s2)) {
@@ -70,4 +71,36 @@ char* strchr(const char* str, int ch) {
         ++str;
     }
     return nullptr;
+}
+
+char* strdup(const char* src) {
+    if (!src) return nullptr;
+
+    size_t len = 0;
+    while (src[len] != '\0') len++;
+
+    char* dst = (char*)malloc(len + 1);
+    if (!dst) return nullptr;
+
+    for (size_t i = 0; i <= len; i++) {
+        dst[i] = src[i];
+    }
+
+    return dst;
+}
+
+void* operator new(size_t size) { 
+    return malloc(size); 
+}
+
+void operator delete(void* ptr) noexcept { 
+    free(ptr); 
+}
+
+void* operator new[](size_t size) { 
+    return malloc(size); 
+}
+
+void operator delete[](void* ptr) noexcept { 
+    free(ptr); 
 }

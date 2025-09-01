@@ -22,18 +22,6 @@ struct CPIOHeader {
     char check[8];
 } __attribute__((packed));
 
-struct FileEntry {
-    const char* name;
-    void* data;
-    uint32_t size;
-};
-
-struct DirectoryEntry {
-    const char* name;
-    Array<FileEntry> files;
-    Array<DirectoryEntry> subdirs;
-};
-
 class InitialRamFS {
 public:
     InitialRamFS() {}
@@ -45,9 +33,8 @@ public:
 
     void* read(char* dir, char* name, size_t* outSize);
 
-    Array<const char*> list(char* dir);
-private:
+    Array<char[512]> list(char* dir);
+private:    
     void* base;
     uint64_t size;
-    DirectoryEntry root;
 };

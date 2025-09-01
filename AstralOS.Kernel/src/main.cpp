@@ -1,5 +1,7 @@
 #include "KernelUtils.h"
 #include <initializer_list>
+#include <cstddef>
+#include "Utils/utils.h"
 
 /*
  * Want to Learn OSDev
@@ -68,19 +70,30 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
     kernelServices.basicConsole.Println(to_hstring(current_addr));
     kernelServices.basicConsole.Println(to_hstring((uint64_t)kernelServices.pBootInfo.initrdBase));
+/*
+    kernelServices.initram.Initialize(pBootInfo->initrdBase, pBootInfo->initrdSize);
 
-    //kernelServices.initram.Initialize(pBootInfo->initrdBase, pBootInfo->initrdSize);
+    if (kernelServices.initram.file_exists((char*)"a.txt")) {
+        kernelServices.basicConsole.Println("a.txt exists!");
+    } else {
+        kernelServices.basicConsole.Println("a.txt doesn't exist!");
+    }
+    if (kernelServices.initram.file_exists((char*)"b.txt")) {
+        kernelServices.basicConsole.Println("b.txt exists!");
+    } else {
+        kernelServices.basicConsole.Println("b.txt doesn't exist!");
+    }
 
-    Array<const char*> files = kernelServices.initram.list((char*)"s.");
-    if (files.size == 0) {
+    Array<char[512]> files = kernelServices.initram.list((char*)"");
+    if (files.size() == 0) {
         kernelServices.basicConsole.Println("No files in root dir");
     }
 
     kernelServices.basicConsole.Println("Files in root: ");
 
-    for (size_t i = 0; i < files.size; ++i) {
-        kernelServices.basicConsole.Println(files[i]);
-    }
+    for (size_t i = 0; i < files.size(); ++i) {
+        kernelServices.basicConsole.Println((const char*)files[i]);
+    }*/
 /*
     size_t size;
     char* content = (char*)kernelServices.initram.read("", "a.txt", &size);
@@ -177,6 +190,30 @@ kernelServices.basicConsole.Print("hi");
     
     kernelServices.ioapic.writeRedirEntry(1, &entry); // IRQ1 = GSI 1
     kernelServices.idt.SetDescriptor(0x21, (void*)irq_stub, 0x8E); // Set IDT entry for IRQ1
+
+    /*
+     * Test Array
+    */
+    Array<uint64_t> test;
+    Array<char*> test2;
+
+    test.push_back(99);
+    test.push_back(98);
+    test2.push_back((char*)"hi");
+    test.push_back(90);
+    test.push_back(79);
+
+    kernelServices.basicConsole.Println(to_string(test[0]));
+    kernelServices.basicConsole.Println(to_string(test[1]));
+    kernelServices.basicConsole.Println(to_string(test[2]));
+    kernelServices.basicConsole.Println(test2[0]);
+
+    kernelServices.basicConsole.Println("Array Size Test: ");
+    
+    for (size_t i = 0; i < test.size(); i++) {
+        kernelServices.basicConsole.Println(to_string(test[i]));
+    }
+    
 
     while (true) {
         

@@ -972,7 +972,7 @@ uint8_t PCIe::getHeaderType(uint16_t segment, uint8_t bus, uint8_t device, uint8
 }
 
 bool PCIe::deviceAlreadyFound(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function) {
-    for (int i = 0; i < Devices.size; i++) {
+    for (int i = 0; i < Devices.size(); i++) {
         if (Devices[i].segment == segment &&
             Devices[i].bus == bus &&
             Devices[i].device == device &&
