@@ -165,8 +165,8 @@ void* InitialRamFS::read(char* dir, char* name, size_t* outSize) {
     return nullptr;
 }
 
-Array<char[512]> InitialRamFS::list(char* dir) {
-    Array<char[512]> output;
+Array<char*> InitialRamFS::list(char* dir) {
+    Array<char*> output;
     uint64_t ptr = (uint64_t)base;
 
     while (true) {
@@ -180,25 +180,26 @@ Array<char[512]> InitialRamFS::list(char* dir) {
         uint32_t nameSize = parse_hex(header->namesize, 8);
         uint32_t fileSize = parse_hex(header->filesize, 8);
 
-        ks->basicConsole.Println("BEF .");
-
-        char filenameBuf[512];
-        if (nameSize >= sizeof(filenameBuf)) {
-            ks->basicConsole.Println("Filename too long!");
+        char* filenameBuf = (char*)(ptr + 110);
+        if (!filenameBuf) {
+            ks->basicConsole.Println("Out of memory!");
             break;
         }
-        memcpy(filenameBuf, (const void*)(ptr + sizeof(CPIOHeader)), nameSize);
-        filenameBuf[nameSize] = '\0';
+        filenameBuf[nameSize - 1] = '\0';
 
         if (strcmp(filenameBuf, "TRAILER!!!") == 0) {
             break;
         }
 
         if (strcmp(filenameBuf, ".") == 0) {
+            uintptr_t name_ptr = ptr + sizeof(CPIOHeader);
+            uintptr_t file_ptr = (name_ptr + nameSize + 3) & ~3;
+            uintptr_t next_ptr = (file_ptr + fileSize + 3) & ~3;
+
+            ptr = next_ptr;
             continue;
         }
 
-        ks->basicConsole.Println("AFTER .");
 
         char* parts[10];
         size_t partSize = split_path(filenameBuf, parts, 10);
@@ -238,6 +239,7 @@ Array<char[512]> InitialRamFS::list(char* dir) {
             ks->basicConsole.Print("Adding: ");
             ks->basicConsole.Println(filenameBuf);
             output.push_back(filenameBuf);
+            ks->basicConsole.Print("Addissng: ");
         }
 
         uintptr_t name_ptr = ptr + sizeof(CPIOHeader);

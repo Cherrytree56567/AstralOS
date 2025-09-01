@@ -70,7 +70,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
     kernelServices.basicConsole.Println(to_hstring(current_addr));
     kernelServices.basicConsole.Println(to_hstring((uint64_t)kernelServices.pBootInfo.initrdBase));
-/*
+
     kernelServices.initram.Initialize(pBootInfo->initrdBase, pBootInfo->initrdSize);
 
     if (kernelServices.initram.file_exists((char*)"a.txt")) {
@@ -84,7 +84,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
         kernelServices.basicConsole.Println("b.txt doesn't exist!");
     }
 
-    Array<char[512]> files = kernelServices.initram.list((char*)"");
+    Array<char*> files = kernelServices.initram.list((char*)"");
     if (files.size() == 0) {
         kernelServices.basicConsole.Println("No files in root dir");
     }
@@ -93,7 +93,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
     for (size_t i = 0; i < files.size(); ++i) {
         kernelServices.basicConsole.Println((const char*)files[i]);
-    }*/
+    }
 /*
     size_t size;
     char* content = (char*)kernelServices.initram.read("", "a.txt", &size);
