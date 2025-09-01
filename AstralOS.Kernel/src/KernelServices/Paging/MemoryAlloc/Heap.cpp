@@ -115,22 +115,28 @@ void* HeapAllocator::malloc(size_t size) {
     }
     ks->pageTableManager.MapMemory((void*)heapEnd, physPage);
 
-    heapEnd += PAGE_SIZE;
-
-    BlockHeader* newBlock = (BlockHeader*)(heapEnd - PAGE_SIZE);
+    BlockHeader* newBlock = (BlockHeader*)(heapEnd);
     newBlock->size = PAGE_SIZE - sizeof(BlockHeader);
-    newBlock->free = true;
+    newBlock->free = false;
     newBlock->next = nullptr;
+    newBlock->prev = nullptr;
 
-    BlockHeader* tail = hdr;
-    while (tail->next) {
-        tail = tail->next;
+    if (!hdr) {
+        hdr = newBlock;
+    } else {
+        BlockHeader* tail = hdr;
+        while (tail->next) tail = tail->next;
+        tail->next = newBlock;
+        newBlock->prev = tail;
     }
 
-    tail->next = newBlock;
-    newBlock->prev = tail;
+    heapEnd += PAGE_SIZE;
+
+    if (newBlock->size >= size) {
+        return (void*)((uint8_t*)newBlock + sizeof(BlockHeader));
+    }
     
-    return malloc(size);
+    return nullptr;
 }
 
 /*

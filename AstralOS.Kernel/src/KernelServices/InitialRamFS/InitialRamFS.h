@@ -33,7 +33,7 @@ public:
 
     void* read(char* dir, char* name, size_t* outSize);
 
-    Array<char[512]> list(char* dir);
+    Array<char*> list(char* dir);
 private:    
     void* base;
     uint64_t size;
