@@ -1,64 +1,98 @@
 #pragma once
 #include <cstdint>
+#include <new>
 #include "../../KernelServices/Paging/MemoryAlloc/Heap.h"
 #include "../cstr/cstr.h"
+#include "../utils.h"
 
 void Print(const char* str);
 
+struct Node {
+    uintptr_t data;
+    uintptr_t next;
+};
+
+/*
+ * Not AI anymore.
+ * 
+ * This array is an example of
+ * a linked list. It makes use
+ * of 2 uintptr_t' to keep the
+ * malloc'ed data and the next
+ * malloc'ed Node struct.
+ * 
+ * As for the operator[] funcs
+ * they store a pointer to the
+ * current Node and loops over
+ * the next pointer in the node
+ * and then returns it.
+*/
 template<typename T>
 struct Array {
-    T* data = nullptr;
-    size_t size = 0;
-    size_t capacity = 0;
+    Array() = default;
 
-    Array() {
-        size = 0;
-        capacity = 0;
-    }
-
-    ~Array() {
-        if (data) free(data);
-        data = nullptr;
-        size = 0;
-        capacity = 0;
-    }
+    ~Array() { clear(); }
 
     void push_back(const T& value) {
-        if (size >= capacity) {
-            grow();
-        }
-        if (data) {
-            ++size;
-            data[size] = value;
-        } else {
-            Print("OUT OF MEM!");
-        }
-    }
-
-    void grow() {
-        size_t newCapacity = (capacity == 0) ? 16 : capacity * 2;
-        T* newData = (T*)malloc(sizeof(T) * newCapacity);
-        if (!newData) {
-            Print("ALLOCATION FAILURE");
+        struct Node *node = (struct Node*)malloc(sizeof(struct Node));
+        if (!node) {
             return;
         }
-        for (size_t i = 0; i < size; ++i) {
-            newData[i] = data[i];
+
+        void *data_ptr = malloc(sizeof(T));
+        if (!data_ptr) {
+            free(node);
+            return;
         }
-        if (data) free(data);
-        data = newData;
-        capacity = newCapacity;
+        memcpy(data_ptr, &value, sizeof(T));
+
+        node->data = (uintptr_t)data_ptr;
+        node->next = 0;
+
+        if (head == nullptr) {
+            head = node;
+        } else {
+            Node* current = head;
+            while (current->next != 0) {
+                current = (Node*)current->next;
+            }
+            current->next = (uintptr_t)node;
+        }
+        _size++;
+    }
+
+    size_t size() const { return _size; }
+
+    T& operator[](size_t index) {
+        Node* current = head;
+        for (size_t i = 0; i < index; i++) {
+            current = (Node*)current->next;
+        }
+        return *(T*)current->data;
+    }
+
+    const T& operator[](size_t index) const {
+        Node* current = head;
+        for (size_t i = 0; i < index; ++i) {
+            current = (Node*)current->next;
+        }
+        return *(T*)current->data;
     }
 
     void clear() {
-        size = 0;
+        Print("clearing!");
+        Node* current = head;
+        while (current) {
+            Node* next = (Node*)current->next;
+            free((void*)current->data);
+            free((void*)current);
+            current = next;
+        }
+        head = nullptr;
+        _size = 0;
     }
 
-    T& operator[](size_t index) {
-        return data[index];
-    }
-
-    const T& operator[](size_t i) const { 
-        return data[i]; 
-    }
+private:
+    Node* head = nullptr;
+    size_t _size = 0;
 };
