@@ -68,20 +68,30 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     */
     memsetC(kernelServices.pBootInfo.pFramebuffer.BaseAddress, 0, kernelServices.pBootInfo.pFramebuffer.BufferSize);
 
+    kernelServices.basicConsole.Print("Current Addr: ");
     kernelServices.basicConsole.Println(to_hstring(current_addr));
-    kernelServices.basicConsole.Println(to_hstring((uint64_t)kernelServices.pBootInfo.initrdBase));
 
+    /*
+     * Initialize our Heap.
+    */
+    kernelServices.heapAllocator.Initialize();
+
+    /*
+     * Initialize our Init RAM FS
+     * after initializing our heap
+     * because it requires heap.
+    */
     kernelServices.initram.Initialize(pBootInfo->initrdBase, pBootInfo->initrdSize);
 
     if (kernelServices.initram.file_exists((char*)"a.txt")) {
-        kernelServices.basicConsole.Println("a.txt exists!");
+        kernelServices.basicConsole.Print("a.txt exists!");
     } else {
-        kernelServices.basicConsole.Println("a.txt doesn't exist!");
+        kernelServices.basicConsole.Print("a.txt doesn't exist!");
     }
     if (kernelServices.initram.file_exists((char*)"b.txt")) {
-        kernelServices.basicConsole.Println("b.txt exists!");
+        kernelServices.basicConsole.Println(", b.txt exists!");
     } else {
-        kernelServices.basicConsole.Println("b.txt doesn't exist!");
+        kernelServices.basicConsole.Println(", b.txt doesn't exist!");
     }
 
     Array<char*> files = kernelServices.initram.list((char*)"");
@@ -92,25 +102,18 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     kernelServices.basicConsole.Println("Files in root: ");
 
     for (size_t i = 0; i < files.size(); ++i) {
+        kernelServices.basicConsole.Print(" - ");
         kernelServices.basicConsole.Println((const char*)files[i]);
     }
-/*
-    size_t size;
-    char* content = (char*)kernelServices.initram.read("", "a.txt", &size);
+
+    char* content = (char*)kernelServices.initram.read("", "a.txt");
 
     if (!content) {
         kernelServices.basicConsole.Println("Could not find a.txt");
     } else {
-        kernelServices.basicConsole.Println("Contents of a.txt:");
+        kernelServices.basicConsole.Print("Contents of a.txt: ");
         kernelServices.basicConsole.Println(content);
     }
-*/
-kernelServices.basicConsole.Print("hi");
-
-    /*
-     * Initialize our Heap.
-    */
-    kernelServices.heapAllocator.Initialize();
 
     /*
      * Create our GDT.
@@ -128,6 +131,7 @@ kernelServices.basicConsole.Print("hi");
      * Initialize the I/O APIC
     */
     InitializeIDT(&kernelServices, pBootInfo);
+
     /*
      * Test ACPI
     */
@@ -194,6 +198,7 @@ kernelServices.basicConsole.Print("hi");
     /*
      * Test Array
     */
+    kernelServices.basicConsole.Println("Array Size Test: ");
     Array<uint64_t> test;
     Array<char*> test2;
 
@@ -207,13 +212,6 @@ kernelServices.basicConsole.Print("hi");
     kernelServices.basicConsole.Println(to_string(test[1]));
     kernelServices.basicConsole.Println(to_string(test[2]));
     kernelServices.basicConsole.Println(test2[0]);
-
-    kernelServices.basicConsole.Println("Array Size Test: ");
-    
-    for (size_t i = 0; i < test.size(); i++) {
-        kernelServices.basicConsole.Println(to_string(test[i]));
-    }
-    
 
     while (true) {
         

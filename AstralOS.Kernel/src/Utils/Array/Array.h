@@ -34,24 +34,20 @@ struct Array {
     ~Array() { clear(); }
 
     void push_back(const T& value) {
-        Print("Start: ");
         struct Node *node = (struct Node*)malloc(sizeof(struct Node));
         if (!node) {
             return;
         }
-        Print("Sizesss: ");
 
         void *data_ptr = malloc(sizeof(T));
         if (!data_ptr) {
             free(node);
             return;
         }
-        Print("Size: ");
         memcpy(data_ptr, &value, sizeof(T));
 
         node->data = (uintptr_t)data_ptr;
         node->next = 0;
-        Print("Sizsse: ");
 
         if (head == nullptr) {
             head = node;
@@ -84,7 +80,6 @@ struct Array {
     }
 
     void clear() {
-        Print("clearing!");
         Node* current = head;
         while (current) {
             Node* next = (Node*)current->next;
