@@ -31,7 +31,7 @@ public:
     bool file_exists(char* name);
     bool dir_exists(char* name);
 
-    void* read(char* dir, char* name, size_t* outSize);
+    void* read(char* dir, char* name);
 
     Array<char*> list(char* dir);
 private:    

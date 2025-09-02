@@ -161,10 +161,6 @@ bool InitialRamFS::dir_exists(char* name) {
     return false;
 }
 
-void* InitialRamFS::read(char* dir, char* name, size_t* outSize) {
-    return nullptr;
-}
-
 Array<char*> InitialRamFS::list(char* dir) {
     Array<char*> output;
     uint64_t ptr = (uint64_t)base;
@@ -207,12 +203,6 @@ Array<char*> InitialRamFS::list(char* dir) {
         size_t DirpartSize = split_path(dir, Dirparts, 10);
 
         if (partSize > (DirpartSize + 1)) {
-            ks->basicConsole.Print("Skipping: ");
-            ks->basicConsole.Println(filenameBuf);
-            ks->basicConsole.Print("DirPart: ");
-            ks->basicConsole.Println(to_hstring(DirpartSize));
-            ks->basicConsole.Print("Part: ");
-            ks->basicConsole.Println(to_hstring(partSize));
             uintptr_t name_ptr = ptr + sizeof(CPIOHeader);
             uintptr_t file_ptr = (name_ptr + nameSize + 3) & ~3;
             uintptr_t next_ptr = (file_ptr + fileSize + 3) & ~3;
@@ -223,23 +213,14 @@ Array<char*> InitialRamFS::list(char* dir) {
 
         bool isFound = true;
 
-        ks->basicConsole.Print("FileNAME: ");
-        ks->basicConsole.Println(filenameBuf);
-
         for (size_t i = 0; i < DirpartSize; i++) {
-            ks->basicConsole.Print("-");
             if (strcmp(parts[i], Dirparts[i]) != 0) {
                 isFound = false;
             }
         }
-        
-        ks->basicConsole.Println("END");
 
         if (isFound) {
-            ks->basicConsole.Print("Adding: ");
-            ks->basicConsole.Println(filenameBuf);
             output.push_back(filenameBuf);
-            ks->basicConsole.Print("Addissng: ");
         }
 
         uintptr_t name_ptr = ptr + sizeof(CPIOHeader);
@@ -249,4 +230,76 @@ Array<char*> InitialRamFS::list(char* dir) {
         ptr = next_ptr;
     }
     return output;
+}
+
+void* InitialRamFS::read(char* dir, char* name) {
+    uint64_t ptr = (uint64_t)base;
+
+    while (true) {
+        CPIOHeader* header = (CPIOHeader*)ptr;
+
+        if (memcmp(header->magic, "070701", 6) != 0) {
+            ks->basicConsole.Println("Invalid CPIO magic number!");
+            break;
+        }
+
+        uint32_t nameSize = parse_hex(header->namesize, 8);
+        uint32_t fileSize = parse_hex(header->filesize, 8);
+
+        uintptr_t name_ptr = ptr + sizeof(CPIOHeader);
+        uintptr_t file_ptr = (name_ptr + nameSize + 3) & ~3;
+        uintptr_t next_ptr = (file_ptr + fileSize + 3) & ~3;
+
+        char* filenameBuf = (char*)(ptr + 110);
+        if (!filenameBuf) {
+            ks->basicConsole.Println("Out of memory!");
+            break;
+        }
+        filenameBuf[nameSize - 1] = '\0';
+
+        if (strcmp(filenameBuf, "TRAILER!!!") == 0) {
+            break;
+        }
+
+        if (strcmp(filenameBuf, ".") == 0) {
+            ptr = next_ptr;
+            continue;
+        }
+
+
+        char* parts[10];
+        size_t partSize = split_path(filenameBuf, parts, 10);
+        char* Dirparts[10];
+        size_t DirpartSize = split_path(dir, Dirparts, 10);
+
+        if (partSize > (DirpartSize + 1)) {
+            ptr = next_ptr;
+            continue;
+        }
+
+        bool isFound = true;
+
+        for (size_t i = 0; i < DirpartSize; i++) {
+            if (i == DirpartSize) {
+                break;
+            }
+            if (strcmp(parts[i], Dirparts[i]) != 0) {
+                isFound = false;
+            }
+        }
+
+        if (isFound) {
+            if (strcmp(parts[partSize], name) != 0){
+                void* buffer = malloc(fileSize);
+                if (!buffer) {
+                    ks->basicConsole.Println("malloc failed!");
+                    return nullptr;
+                }
+                memcpy(buffer, (void*)file_ptr, fileSize);
+                return buffer;
+            }
+        }
+
+        ptr = next_ptr;
+    }
 }

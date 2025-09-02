@@ -33,9 +33,7 @@ void HeapAllocator::Initialize() {
     if (!heapStartPtr) {
         ks->basicConsole.Println("Failed to Request Page for Heap Allocator.");
         return;
-    }
-    ks->basicConsole.Println(to_hstring((uint64_t)heapStartPtr));
-    
+    }    
 
     ks->pageTableManager.MapMemory((void*)0xFFFF880000000000, heapStartPtr);
 
