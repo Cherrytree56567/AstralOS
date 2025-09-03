@@ -11,6 +11,15 @@ size_t strlen(const char* str);
 char* strchr(const char* str, int ch);
 char* strdup(const char* src);
 
+/*
+ * From Android Bionic Source Code:
+ * https://android.googlesource.com/platform/bionic/+/ics-mr0/libc/string/strtok.c
+*/
+char* strtok_r(char *s, const char *delim, char **last);
+char* strtok(char *s, const char *delim);
+char* strcat(char *s, const char *append);
+char* strcpy(char *to, const char *from);
+
 void* operator new(size_t size);
 void operator delete(void* ptr) noexcept;
 void* operator new[](size_t size);

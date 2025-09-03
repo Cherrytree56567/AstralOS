@@ -20,28 +20,20 @@ static uint32_t parse_hex(const char* str, size_t len = 8) {
  * This function is generated from ChatGPT.
 */
 size_t split_path(const char* origPath, char* parts[], size_t maxParts) {
-    static char buffer[256];
-    strncpy(buffer, origPath, sizeof(buffer) - 1);
-    buffer[sizeof(buffer) - 1] = '\0';
-
-    char* path = buffer;
     size_t count = 0;
+    char* pathCopy = strdup(origPath); // Copy the original path to avoid modifying it
+    char* token;
+    char* delim = "/";  // Delimiter for splitting the path
 
-    while (*path && count < maxParts) {
-        while (*path == '/') path++;
-        if (!*path) break;
-
-        parts[count++] = path;
-
-        while (*path && *path != '/') path++;
-
-        if (*path == '/') {
-            *path = '\0';
-            path++;
-        }
+    // Split by "/"
+    token = strtok(pathCopy, delim);
+    while (token != NULL && count < maxParts) {
+        parts[count++] = strdup(token); // Store the token (path part)
+        token = strtok(NULL, delim);    // Continue splitting
     }
 
-    return count;
+    free(pathCopy); // Free the copy of the original path
+    return count;   // Return the number of parts
 }
 
 /*
@@ -183,33 +175,23 @@ Array<char*> InitialRamFS::list(char* dir) {
         }
         filenameBuf[nameSize - 1] = '\0';
 
+        uintptr_t name_ptr = ptr + sizeof(CPIOHeader);
+        uintptr_t file_ptr = (name_ptr + nameSize + 3) & ~3;
+        uintptr_t next_ptr = (file_ptr + fileSize + 3) & ~3;
+
         if (strcmp(filenameBuf, "TRAILER!!!") == 0) {
             break;
         }
 
         if (strcmp(filenameBuf, ".") == 0) {
-            uintptr_t name_ptr = ptr + sizeof(CPIOHeader);
-            uintptr_t file_ptr = (name_ptr + nameSize + 3) & ~3;
-            uintptr_t next_ptr = (file_ptr + fileSize + 3) & ~3;
-
             ptr = next_ptr;
             continue;
         }
-
 
         char* parts[10];
         size_t partSize = split_path(filenameBuf, parts, 10);
         char* Dirparts[10];
         size_t DirpartSize = split_path(dir, Dirparts, 10);
-
-        if (partSize > (DirpartSize + 1)) {
-            uintptr_t name_ptr = ptr + sizeof(CPIOHeader);
-            uintptr_t file_ptr = (name_ptr + nameSize + 3) & ~3;
-            uintptr_t next_ptr = (file_ptr + fileSize + 3) & ~3;
-
-            ptr = next_ptr;
-            continue;
-        }
 
         bool isFound = true;
 
@@ -219,13 +201,9 @@ Array<char*> InitialRamFS::list(char* dir) {
             }
         }
 
-        if (isFound) {
-            output.push_back(filenameBuf);
+        if (isFound && partSize == DirpartSize + 1) {
+            output.push_back(parts[partSize - 1]);
         }
-
-        uintptr_t name_ptr = ptr + sizeof(CPIOHeader);
-        uintptr_t file_ptr = (name_ptr + nameSize + 3) & ~3;
-        uintptr_t next_ptr = (file_ptr + fileSize + 3) & ~3;
 
         ptr = next_ptr;
     }
@@ -266,13 +244,18 @@ void* InitialRamFS::read(char* dir, char* name) {
             continue;
         }
 
-
         char* parts[10];
         size_t partSize = split_path(filenameBuf, parts, 10);
         char* Dirparts[10];
         size_t DirpartSize = split_path(dir, Dirparts, 10);
 
         if (partSize > (DirpartSize + 1)) {
+            for (int i = 0; i < partSize; i++) {
+                free(parts[i]);
+            }
+            for (int i = 0; i < DirpartSize; i++) {
+                free(Dirparts[i]);
+            }
             ptr = next_ptr;
             continue;
         }
@@ -295,7 +278,7 @@ void* InitialRamFS::read(char* dir, char* name) {
                     ks->basicConsole.Println("malloc failed!");
                     return nullptr;
                 }
-                memcpy(buffer, (void*)file_ptr, fileSize);
+                memcpy(buffer, (void*)file_ptr, fileSize);\
                 return buffer;
             }
         }

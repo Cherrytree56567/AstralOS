@@ -39,5 +39,7 @@ The kernel needs at least 512 MB of RAM. It is tested on 1 Core on VBox.
  - PCIe (UNTESTED)
 
 ## Thanks
-OSDev.org
-Poncho for the Poncho OS Paging Setup
+[OSDev Wiki](https://wiki.osdev.org/Expanded_Main_Page)<br>
+[Poncho for the Poncho OS Paging Setup](https://github.com/Absurdponcho/PonchoOS)<br>
+[Android Bionic LibC](https://android.googlesource.com/platform/bionic/+/ics-mr0/libc/string)<br>
+[UEFI:NTFS](https://github.com/pbatard/uefi-ntfs)

@@ -17,6 +17,37 @@ extern "C" void irq1_handler() {
 
 extern "C" void irq_stub();
 
+/*
+ * Yep GPT Based
+*/
+void list_recursive(char* dir, int depth = 0) {
+    Array<char*> files = ks->initram.list(dir);
+
+    for (size_t i = 0; i < files.size(); ++i) {
+        for (int d = 0; d < depth; d++) {
+            ks->basicConsole.Print("   ");
+        }
+
+        ks->basicConsole.Print("- ");
+        ks->basicConsole.Println(files[i]);
+
+        char fullPath[512];
+        fullPath[0] = '\0';
+
+        if (strlen(dir) > 0) {
+            strcpy(fullPath, dir);
+            strcat(fullPath, "/");
+            strcat(fullPath, files[i]);
+        } else {
+            strcpy(fullPath, files[i]);
+        }
+
+        if (ks->initram.dir_exists(fullPath)) {
+            list_recursive(fullPath, depth + 1);
+        }
+    }
+}
+
 extern "C" int _start(BootInfo* pBootInfo) {
     /*
      * Disable Interrupts
@@ -94,26 +125,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
         kernelServices.basicConsole.Println(", b.txt doesn't exist!");
     }
 
-    Array<char*> files = kernelServices.initram.list((char*)"");
-    if (files.size() == 0) {
-        kernelServices.basicConsole.Println("No files in root dir");
-    }
-
-    kernelServices.basicConsole.Println("Files in root: ");
-
-    for (size_t i = 0; i < files.size(); ++i) {
-        kernelServices.basicConsole.Print(" - ");
-        kernelServices.basicConsole.Println((const char*)files[i]);
-    }
-
-    char* content = (char*)kernelServices.initram.read("", "a.txt");
-
-    if (!content) {
-        kernelServices.basicConsole.Println("Could not find a.txt");
-    } else {
-        kernelServices.basicConsole.Print("Contents of a.txt: ");
-        kernelServices.basicConsole.Println(content);
-    }
+    list_recursive((char*)"");
 
     /*
      * Create our GDT.
