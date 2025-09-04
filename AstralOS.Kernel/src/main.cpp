@@ -243,7 +243,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
         strcpy(fullPatha, fullPath);
         strcat(fullPatha, "/driver.elf");
         if (kernelServices.initram.file_exists(fullPatha)) {
-            kernelServices.basicConsole.Println((const char*)kernelServices.initram.read(fullPath, (char*)"driver.elf"));
+            void* elf = kernelServices.initram.read(fullPath, (char*)"driver.elf");
         }
     }
 
