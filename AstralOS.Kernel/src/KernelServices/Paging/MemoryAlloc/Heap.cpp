@@ -75,11 +75,20 @@ void HeapAllocator::Initialize() {
  * then we can request for more pages, 
  * extend the heapEnd, add more blocks and
  * try again.
+ * 
+ * -- Fixes --
+ * aHeapEnd is a var that aligns HeapEnd to
+ * allow for aligned page mapping.
+ * 
+ * removed `newBlock->free = true;` because
+ * we need to set it to non-free anyway.
+ * 
+ * Added checks to see if the malloc is abv
+ * 1 page (4096, 0x1000) so that we request
+ * that many pages and map that much memory
 */
 void* HeapAllocator::malloc(size_t size) {
-    if (size == 0) {
-        return nullptr;
-    }
+    if (size == 0) return nullptr;
 
     size = (size + 7) & ~7;
 
@@ -87,35 +96,38 @@ void* HeapAllocator::malloc(size_t size) {
 
     while (current) {
         if (current->free && current->size >= size) {
-            if (current->size >= size + sizeof(BlockHeader) + 8) {
+            if (current->size > size + sizeof(BlockHeader) + 8) {
                 BlockHeader* newBlock = (BlockHeader*)((uint8_t*)current + sizeof(BlockHeader) + size);
                 newBlock->size = current->size - size - sizeof(BlockHeader);
                 newBlock->free = true;
                 newBlock->next = current->next;
                 newBlock->prev = current;
-                if (newBlock->next)
-                    newBlock->next->prev = newBlock;
-
+                if (newBlock->next) newBlock->next->prev = newBlock;
                 current->next = newBlock;
                 current->size = size;
             }
-
             current->free = false;
             return (void*)((uint8_t*)current + sizeof(BlockHeader));
         }
         current = current->next;
     }
-    
-    // Dont forget to map.
-    void* physPage = ks->pageFrameAllocator.RequestPage();
-    if (!physPage) {
-        return nullptr;
-    }
-    ks->pageTableManager.MapMemory((void*)heapEnd, physPage);
 
-    BlockHeader* newBlock = (BlockHeader*)(heapEnd);
-    newBlock->size = PAGE_SIZE - sizeof(BlockHeader);
-    newBlock->free = false;
+    size_t totalSize = size + sizeof(BlockHeader);
+    size_t pagesNeeded = (totalSize + PAGE_SIZE - 1) / PAGE_SIZE;
+
+    uint64_t aHeapEnd = (heapEnd + (PAGE_SIZE - 1)) & ~(PAGE_SIZE - 1);
+
+    for (size_t i = 0; i < pagesNeeded; i++) {
+        void* physPage = ks->pageFrameAllocator.RequestPage();
+        if (!physPage) {
+            return nullptr;
+        }
+        ks->pageTableManager.MapMemory((void*)(aHeapEnd + i * PAGE_SIZE), physPage);
+    }
+
+    BlockHeader* newBlock = (BlockHeader*)(aHeapEnd);
+    newBlock->size = pagesNeeded * PAGE_SIZE - sizeof(BlockHeader);
+    newBlock->free = true;
     newBlock->next = nullptr;
     newBlock->prev = nullptr;
 
@@ -128,13 +140,20 @@ void* HeapAllocator::malloc(size_t size) {
         newBlock->prev = tail;
     }
 
-    heapEnd += PAGE_SIZE;
+    heapEnd += pagesNeeded * PAGE_SIZE;
 
-    if (newBlock->size >= size) {
-        return (void*)((uint8_t*)newBlock + sizeof(BlockHeader));
+    if (newBlock->size >= size + sizeof(BlockHeader) + 8) {
+        BlockHeader* splitBlock = (BlockHeader*)((uint8_t*)newBlock + sizeof(BlockHeader) + size);
+        splitBlock->size = newBlock->size - size - sizeof(BlockHeader);
+        splitBlock->free = true;
+        splitBlock->next = newBlock->next;
+        splitBlock->prev = newBlock;
+        if (splitBlock->next) splitBlock->next->prev = splitBlock;
+        newBlock->next = splitBlock;
+        newBlock->size = size;
     }
-    
-    return nullptr;
+    newBlock->free = false;
+    return (void*)((uint8_t*)newBlock + sizeof(BlockHeader));
 }
 
 /*
