@@ -220,10 +220,32 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     test.push_back(90);
     test.push_back(79);
 
-    kernelServices.basicConsole.Println(to_string(test[0]));
-    kernelServices.basicConsole.Println(to_string(test[1]));
-    kernelServices.basicConsole.Println(to_string(test[2]));
+    kernelServices.basicConsole.Print(to_string(test[0]));
+    kernelServices.basicConsole.Print(", ");
+    kernelServices.basicConsole.Print(to_string(test[1]));
+    kernelServices.basicConsole.Print(", ");
+    kernelServices.basicConsole.Print(to_string(test[2]));
+    kernelServices.basicConsole.Print(", ");
     kernelServices.basicConsole.Println(test2[0]);
+
+    Array<char*> files = kernelServices.initram.list((char*)"Drivers");
+    if (files.size() == 0) {
+        kernelServices.basicConsole.Println("No drivers avaliable :(");
+    }
+
+    kernelServices.basicConsole.Println("Drivers: ");
+
+    for (size_t i = 0; i < files.size(); ++i) {
+        char fullPath[720];
+        char fullPatha[800];
+        strcpy(fullPath, "Drivers/");
+        strcat(fullPath, files[i]);
+        strcpy(fullPatha, fullPath);
+        strcat(fullPatha, "/driver.elf");
+        if (kernelServices.initram.file_exists(fullPatha)) {
+            kernelServices.basicConsole.Println((const char*)kernelServices.initram.read(fullPath, (char*)"driver.elf"));
+        }
+    }
 
     while (true) {
         
