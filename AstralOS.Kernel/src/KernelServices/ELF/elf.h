@@ -175,7 +175,7 @@ typedef struct {
 
 /*
  * Stuff from the OSDev Wiki, we don't want these.
-*/
+
 bool elf_check_file(Elf32_Ehdr *hdr);
 bool elf_check_supported(Elf32_Ehdr *hdr);
 void *elf_load_rel(Elf32_Ehdr *hdr);
@@ -192,6 +192,7 @@ int elf_load_stage2(Elf32_Ehdr *hdr);
 int elf_do_reloc(Elf32_Ehdr *hdr, Elf32_Rel *rel, Elf32_Shdr *reltab);
 
 void *load_segment_to_memory(void *mem, Elf64_Phdr *phdr, int elf_fd);
+*/
 
 /*
  * Our own code
