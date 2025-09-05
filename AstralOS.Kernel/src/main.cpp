@@ -2,6 +2,7 @@
 #include <initializer_list>
 #include <cstddef>
 #include "Utils/utils.h"
+#include "KernelServices/ELF/elf.h"
 
 /*
  * Want to Learn OSDev
@@ -244,6 +245,12 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
         strcat(fullPatha, "/driver.elf");
         if (kernelServices.initram.file_exists(fullPatha)) {
             void* elf = kernelServices.initram.read(fullPath, (char*)"driver.elf");
+            Elf64_Ehdr* hdr = GetELFHeader(elf);
+            if (ValidateEhdr(hdr)) {
+                ks->basicConsole.Println("ELF Driver is Valid!");
+            } else {
+                ks->basicConsole.Println("ELF Driver is Invalid!");
+            }
         }
     }
 
