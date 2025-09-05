@@ -1,5 +1,5 @@
 [2J[01;01H[=3h[2J[01;01H[2J[01;01H[=3h[2J[01;01H[2J[01;01H[=3h[2J[01;01HFound ACPI 2.0 RSDP at: 0x1ED7E014
 Volume label is ''
-Offset: 0x1000Addr: 0x1000Offset: 0xD000Addr: 0xD000Offset: 0x28000Addr: 0x28000Offset: 0x2E000Addr: 0x2E000initramfs loaded at 0x1D56E018 (6144 bytes)
+Offset: 0x1000Addr: 0x1000Offset: 0xD000Addr: 0xD000Offset: 0x2A000Addr: 0x2A000Offset: 0x30000Addr: 0x30000initramfs loaded at 0x1D56E018 (6144 bytes)
 GOP located
 
