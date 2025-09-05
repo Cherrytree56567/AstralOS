@@ -2,6 +2,7 @@
 #include "../KernelServices.h"
 #include <sys/types.h>
 
+/*
 bool elf_check_file(Elf32_Ehdr *hdr) {
 	if(!hdr) return false;
 	if(hdr->e_ident[EI_MAG0] != ELFMAG0) {
@@ -243,7 +244,7 @@ void *load_segment_to_memory(void *mem, Elf64_Phdr *phdr, int elf_fd) {
     size_t mem_size = phdr->p_memsz;
     off_t mem_offset = phdr->p_offset;
     size_t file_size = phdr->p_filesz;
-    void *vaddr = (void *)(phdr->p_vaddr);
+    void *vaddr = (void *)(phdr->p_vaddr);/* TODO: FIX THIS
     // mmap the memory region with the correct protections
     int prot = 0;
     if (phdr->p_flags & PF_R) prot |= PROT_READ;
@@ -265,4 +266,6 @@ void *load_segment_to_memory(void *mem, Elf64_Phdr *phdr, int elf_fd) {
             memset(page_break, 0, mem_size - (page_break - (uint64_t)vaddr));
         }
     }
+		* /
 }
+*/
