@@ -3,6 +3,7 @@
 
 Elf64_Ehdr* GetELFHeader(void* data) {
     Elf64_Ehdr *hdr = (Elf64_Ehdr*)data;
+    return hdr;
 }
 
 bool ValidateEhdr(Elf64_Ehdr* hdr) {
