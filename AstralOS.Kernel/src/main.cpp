@@ -18,6 +18,10 @@ extern "C" void irq1_handler() {
 
 extern "C" void irq_stub();
 
+void Printks(const char* str) {
+    ks->basicConsole.Println(str);
+}
+
 /*
  * Yep GPT Based
 */
@@ -229,30 +233,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     kernelServices.basicConsole.Print(", ");
     kernelServices.basicConsole.Println(test2[0]);
 
-    Array<char*> files = kernelServices.initram.list((char*)"Drivers");
-    if (files.size() == 0) {
-        kernelServices.basicConsole.Println("No drivers avaliable :(");
-    }
-
-    kernelServices.basicConsole.Println("Drivers: ");
-
-    for (size_t i = 0; i < files.size(); ++i) {
-        char fullPath[720];
-        char fullPatha[800];
-        strcpy(fullPath, "Drivers/");
-        strcat(fullPath, files[i]);
-        strcpy(fullPatha, fullPath);
-        strcat(fullPatha, "/driver.elf");
-        if (kernelServices.initram.file_exists(fullPatha)) {
-            void* elf = kernelServices.initram.read(fullPath, (char*)"driver.elf");
-            Elf64_Ehdr* hdr = GetELFHeader(elf);
-            if (ValidateEhdr(hdr)) {
-                ks->basicConsole.Println("ELF Driver is Valid!");
-            } else {
-                ks->basicConsole.Println("ELF Driver is Invalid!");
-            }
-        }
-    }
+    kernelServices.driverMan.Initialize();
 
     while (true) {
         

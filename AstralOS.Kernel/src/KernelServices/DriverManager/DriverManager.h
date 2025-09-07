@@ -2,15 +2,16 @@
 #include <cstdint>
 #include "../../Utils/Array/Array.h"
 #include "../PCI/PCI.h"
-#include "../KernelServices.h"
 #include "../../Utils/cpu.h"
+#include "DriverServices.h"
+#include "../ELF/elf.h"
 
 class BaseDriver {
 public:
     virtual ~BaseDriver() {}
     virtual const char* name() const = 0;
     virtual const char* DriverName() const = 0;
-    virtual void Init(KernelServices& kernServ) = 0;
+    virtual void Init(DriverServices& ds) = 0;
     virtual uint8_t GetClass() = 0;
     virtual uint8_t GetSubClass() = 0;
     virtual uint8_t GetProgIF() = 0;
@@ -25,7 +26,7 @@ public:
 
 class BlockDevice : public BaseDriver {
 public:
-    virtual void Init(KernelServices& kernServ) = 0;
+    virtual void Init(DriverServices& ds) = 0;
     virtual bool ReadSector(uint64_t lba, void* buffer) = 0;
     virtual bool WriteSector(uint64_t lba, const void* buffer) = 0;
 
@@ -49,12 +50,16 @@ public:
 
 class DriverManager {
 public:
+    void Initialize();
     void RegisterDriver(BaseDriverFactory* factory);
-    void DetectDevices(Array<DeviceKey>& devices, KernelServices& kernel);
+    void DetectDevices(Array<DeviceKey>& devices);
     BaseDriver* GetDevice(uint8_t _class, uint8_t subclass, uint8_t progIF);
     const Array<BaseDriver*>& GetDevices() const;
+    void CreateDriverServices();
+    DriverServices GetDS();
 
 private:
     Array<BaseDriverFactory*> factories;
     Array<BaseDriver*> DeviceDrivers;
+    DriverServices ds;
 };

@@ -272,14 +272,8 @@ void* InitialRamFS::read(char* dir, char* name) {
         }
 
         if (isFound) {
-            ks->basicConsole.Print("Partsize: ");
-            ks->basicConsole.Print(parts[partSize - 1]);
-            ks->basicConsole.Print(", Name: ");
-            ks->basicConsole.Println(name);
             if (strcmp(parts[partSize - 1], name) == 0){
                 if (file_exists(filenameBuf)) {
-                    ks->basicConsole.Print("FileSize: ");
-                    ks->basicConsole.Println(to_hstring(fileSize));
                     if (fileSize == 0x0) {
                         ks->basicConsole.Println("Size = 0");
                         return nullptr;

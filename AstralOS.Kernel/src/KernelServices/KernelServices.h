@@ -12,6 +12,7 @@
 #include "PCI/PCI.h"
 #include "PCIe/PCIe.h"
 #include "InitialRamFS/InitialRamFS.h"
+#include "DriverManager/DriverManager.h"
 
 struct BootInfo {
 	FrameBuffer pFramebuffer;
@@ -42,6 +43,7 @@ public:
 	PCIe pcie;
 	InitialRamFS initram;
 	BootInfo pBootInfo;
+	DriverManager driverMan;
 };
 
 extern KernelServices* ks;
