@@ -45,10 +45,35 @@ enum Elf_Ident {
 	EI_PAD		= 9  // Padding
 };
 
+/*
+ * This is my enum
+*/
+enum ProgramTable {
+	PT_NULL,
+	PT_LOAD,
+	PT_DYNAMIC,
+	PT_INTERP,
+	PT_NOTE,
+	PT_SHLIB,
+	PT_PHDR,
+	PT_TLS
+};
+
+/*
+ * Not sure if Enums start at 0,
+ * so im just assigning values
+*/
+enum ElfClass {
+	NONE = 0,
+	ELF32 = 1,
+	ELF64 = 2
+}
+
 enum Elf_Type {
 	ET_NONE		= 0, // Unkown Type
 	ET_REL		= 1, // Relocatable File
-	ET_EXEC		= 2  // Executable File
+	ET_EXEC		= 2, // Executable File
+	ET_DYN		= 3, // Dynamic File
 };
 
 enum ShT_Types {
@@ -199,3 +224,4 @@ void *load_segment_to_memory(void *mem, Elf64_Phdr *phdr, int elf_fd);
 */
 Elf64_Ehdr* GetELFHeader(void* data);
 bool ValidateEhdr(Elf64_Ehdr* hdr);
+Elf64_Phdr* GetLoadablePhdr(Elf64_Ehdr* hdr);
