@@ -25,5 +25,13 @@ bool ValidateEhdr(Elf64_Ehdr* hdr) {
 }
 
 Elf64_Phdr* GetLoadablePhdr(Elf64_Ehdr* hdr) {
+    Elf64_Phdr* phdrs = (Elf64_Phdr*)((uint8_t*)hdr + hdr->e_phoff);
 
+    for (uint16_t i = 0; i < hdr->e_phnum; i++) {
+        Elf64_Phdr* phdr = &phdrs[i];
+        
+        if (phdr->p_type == PT_LOAD) {
+            return phdr; // TODO: THERE ARE MULTIPLE
+        }
+    }
 }
