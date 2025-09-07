@@ -20,7 +20,7 @@ struct DriverServices {
     void (*MapMemory)(void* virtualMemory, void* physicalMemory);
     void* (*malloc)(size_t size);
     void (*free)(void* ptr);
-    char* (*strdup)(const char* str);
+    void (*strdup)(const char* str);
 
     /*
      * IRQs
@@ -42,7 +42,7 @@ struct DriverInfo {
     const int verMin; // Version Minor
     const int exCode; // Exit Code
 
-    //            Name     Ver Maj    Ver Min   Exit Code
-    DriverInfo(char* nam, int verMa, int verMi, int Ecode) 
+    //            Name     Ver Min    Ver Maj   Exit Code
+    DriverInfo(char* nam, int verMi, int verMa, int Ecode) 
              : name(name), verMaj(verMa), verMin(verMi), exCode(Ecode) {}
 };

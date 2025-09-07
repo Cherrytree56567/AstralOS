@@ -24,14 +24,51 @@ bool ValidateEhdr(Elf64_Ehdr* hdr) {
     return true;
 }
 
-Elf64_Phdr* GetLoadablePhdr(Elf64_Ehdr* hdr) {
+uint64_t LoadElf(Elf64_Ehdr* hdr) {
     Elf64_Phdr* phdrs = (Elf64_Phdr*)((uint8_t*)hdr + hdr->e_phoff);
 
-    for (uint16_t i = 0; i < hdr->e_phnum; i++) {
-        Elf64_Phdr* phdr = &phdrs[i];
-        
-        if (phdr->p_type == PT_LOAD) {
-            return phdr; // TODO: THERE ARE MULTIPLE
+    size_t total_size = 0;
+    size_t max_align = 0;
+
+    for (int i = 0; i < hdr->e_phnum; i++) {
+        Elf64_Phdr* ph = &phdrs[i];
+
+        if (ph->p_type != PT_LOAD) {
+            continue;
+        }
+
+        size_t end = ph->p_vaddr + ph->p_memsz;
+
+        if (end > total_size) {
+            total_size = end;
+        }
+
+        if (ph->p_align > max_align) {
+            max_align = ph->p_align;
         }
     }
+
+    size_t total = total_size + max_align;
+    uint8_t* raw = (uint8_t*)malloc(total);
+    uint8_t* base = (uint8_t*)(((uintptr_t)raw + (max_align - 1)) & ~(max_align - 1));
+    if (!base) {
+        return 0x0;
+    }
+
+    for (int i = 0; i < hdr->e_phnum; i++) {
+        Elf64_Phdr* ph = &phdrs[i];
+        if (ph->p_type != PT_LOAD) {
+            continue;
+        }
+
+        uint8_t* dest = base + ph->p_vaddr;
+        uint8_t* src  = (uint8_t*)hdr + ph->p_offset;
+
+        memcpy(dest, src, ph->p_filesz);
+        if (ph->p_memsz > ph->p_filesz) {
+            memset(dest + ph->p_filesz, 0, ph->p_memsz - ph->p_filesz); 
+        }
+    }
+
+    return (uint64_t)(base + hdr->e_entry);
 }

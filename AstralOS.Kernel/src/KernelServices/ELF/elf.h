@@ -67,7 +67,7 @@ enum ElfClass {
 	NONE = 0,
 	ELF32 = 1,
 	ELF64 = 2
-}
+};
 
 enum Elf_Type {
 	ET_NONE		= 0, // Unkown Type
@@ -224,4 +224,4 @@ void *load_segment_to_memory(void *mem, Elf64_Phdr *phdr, int elf_fd);
 */
 Elf64_Ehdr* GetELFHeader(void* data);
 bool ValidateEhdr(Elf64_Ehdr* hdr);
-Elf64_Phdr* GetLoadablePhdr(Elf64_Ehdr* hdr);
+uint64_t LoadElf(Elf64_Ehdr* hdr);

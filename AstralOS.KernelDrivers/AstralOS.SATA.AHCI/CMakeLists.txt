@@ -7,7 +7,7 @@ set(OBJ_DIR "${CMAKE_SOURCE_DIR}/obj")
 
 set(CC "g++")
 set(LD "ld")
-set(CFLAGS "-ffreestanding" "-fshort-wchar" "-fno-exceptions" "-fno-rtti")
+set(CFLAGS "-ffreestanding" "-fshort-wchar" "-fno-exceptions" "-fno-rtti" "-fPIC")
 
 set(AS "nasm")
 set(ASFLAGS "-felf64")
@@ -63,7 +63,7 @@ set(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/linker.ld")
 
 add_custom_target(build
     DEPENDS ${OBJ_FILES}
-    COMMAND ${LD} -static -Bsymbolic -nostdlib -T ${LINKER_SCRIPT} -o ${OBJ_DIR}/driver.elf ${OBJ_FILES}
+    COMMAND ${LD} -shared -Bsymbolic -nostdlib -T ${LINKER_SCRIPT} -o ${OBJ_DIR}/driver.elf ${OBJ_FILES}
     COMMAND cp ${OBJ_DIR}/driver.elf ${BIN_DIR}/Drivers/com.astralos.sata_ahci/driver.elf
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Building Driver: ${LD} ${LDFLAGS} -o ${OBJ_DIR}/driver.elf ${OBJ_FILES}"

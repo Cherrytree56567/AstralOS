@@ -1,6 +1,10 @@
 #include "DriverServices.h"
 
 extern "C"
-int DriverMain(DriverServices DServices) {
+DriverInfo DriverMain(DriverServices DServices) {
+    DServices.Println("Driver Loaded!");
 
+    DriverInfo di((char*)"", 1, 0, 0);
+    di.name = DServices.strdup("SATA ACHI Driver");
+    return di;
 }
