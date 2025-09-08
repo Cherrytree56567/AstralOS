@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <cstddef>
 
+class BaseDriverFactory;
 struct DriverServices {
     /*
      * Debugging
