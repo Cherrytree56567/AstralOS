@@ -48,16 +48,47 @@ struct Array {
 
         node->data = (uintptr_t)data_ptr;
         node->next = 0;
+        Print("T");
 
         if (head == nullptr) {
+            Print("I");
+            head = node;
+            Print("T");
+        } else {
+            Print("I");
+            Node* current = head;
+            Print("G");
+            while (current->next != 0) {
+                Print("J");
+                current = (Node*)current->next;
+            }
+            Print("L");
+            current->next = (uintptr_t)node;
+            Print("T");
+        }
+        _size++;
+    }
+
+    /*
+     * Push back without copying
+    */
+    void push_backncp(T value) {
+        struct Node* node = (struct Node*)malloc(sizeof(struct Node));
+        if (!node) return;
+
+        node->data = (uintptr_t)value;
+        node->next = 0;
+
+        if (!head) {
             head = node;
         } else {
             Node* current = head;
-            while (current->next != 0) {
+            while (current->next) {
                 current = (Node*)current->next;
             }
             current->next = (uintptr_t)node;
         }
+
         _size++;
     }
 

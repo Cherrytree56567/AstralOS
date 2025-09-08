@@ -2,5 +2,5 @@
 #include "../../KernelServices/KernelServices.h"
 
 void Print(const char* str) {
-    ks->basicConsole.Println(str);
+    ks->basicConsole.Print(str);
 }

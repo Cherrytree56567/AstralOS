@@ -40,7 +40,7 @@ void DriverManager::Initialize() {
             void* elf = ks->initram.read(fullPath, (char*)"driver.elf");
             Elf64_Ehdr* hdr = GetELFHeader(elf);
             if (ValidateEhdr(hdr)) {
-                ks->basicConsole.Println("ELF Driver is Valid!");
+                //ks->basicConsole.Println("ELF Driver is Valid!");
             } else {
                 ks->basicConsole.Println("ELF Driver is Invalid!");
                 free(elf);
@@ -65,7 +65,7 @@ void DriverManager::Initialize() {
 }
 
 void DriverManager::RegisterDriver(BaseDriverFactory* factory) {
-    ks->basicConsole.Println("Registering Driver!");
+    ks->basicConsole.Println(((String)"Registering Driver: " + to_hstring((uint64_t)factory)).c_str());
     factories.push_back(factory);
     ks->basicConsole.Println("Registered Driver!");
 }
