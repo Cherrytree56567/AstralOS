@@ -100,6 +100,8 @@ const Array<BaseDriver*>& DriverManager::GetDevices() const {
  * We can use lambda functions to 
  * create or pass funcs to the
  * DriverServices struct.
+ * 
+ * TODO: Add perms for drivers and stuff
 */
 void DriverManager::CreateDriverServices() {
     /*
@@ -176,6 +178,13 @@ void DriverManager::CreateDriverServices() {
 
     ds.EnableMSIx = [](uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t vector) { 
         return ks->pcie.EnableMSIx(segment, bus, device, function, vector);
+    };
+
+    /*
+     * Driver Manager
+    */
+    ds.RegisterDriver = [](BaseDriverFactory* factory) { 
+        return ks->driverMan.RegisterDriver(factory);
     };
 }
 

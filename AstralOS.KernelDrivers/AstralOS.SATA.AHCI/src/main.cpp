@@ -1,4 +1,5 @@
 #include "DriverServices.h"
+#include "DriverManager.h"
 
 extern "C"
 DriverInfo DriverMain(DriverServices DServices) {

@@ -2,7 +2,7 @@
 
 A Simple AMD 64 UEFI EXT4 Operating System made in C and C++.
 
-![ACPI](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/ACPI.png?raw=true)
+![ACPI](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/Drivers.png?raw=true)
 
 ## Building
 If you are using WSL, make sure you use the build with NBD. There is an msi in the root dir with NBD.
