@@ -1,3 +1,4 @@
+#define KERNEL
 #include "KernelUtils.h"
 #include <initializer_list>
 #include <cstddef>
@@ -184,17 +185,6 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     kernelServices.heapAllocator.free(ptr3);
     kernelServices.basicConsole.Println("Freed remaining blocks");
 
-    kernelServices.pcie.InitializePCIe(kernelServices.acpi.GetMCFG());
-    if (kernelServices.pcie.PCIeExists()) {
-        kernelServices.basicConsole.Println("PCIe Exists");
-        kernelServices.pcie.Initialize();
-    } else if (kernelServices.pci.PCIExists()) {
-        kernelServices.basicConsole.Println("PCI Exists.");
-        kernelServices.pci.Initialize();
-    } else {
-        kernelServices.basicConsole.Println("No PCI/PCIe devices found.");
-    }
-
     /*
      * Test I/O APIC
     */
@@ -233,7 +223,31 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     kernelServices.basicConsole.Print(", ");
     kernelServices.basicConsole.Println(test2[0]);
 
+    /*
+     * Do PCI/PCIe Stuff
+    */
+    Array<DeviceKey> devices;
+
+    kernelServices.pcie.InitializePCIe(kernelServices.acpi.GetMCFG());
+    if (kernelServices.pcie.PCIeExists()) {
+        kernelServices.basicConsole.Println("PCIe Exists");
+        kernelServices.pcie.Initialize();
+
+        devices = kernelServices.pcie.GetDevices();
+    } else if (kernelServices.pci.PCIExists()) {
+        kernelServices.basicConsole.Println("PCI Exists.");
+        kernelServices.pci.Initialize();
+
+        devices = kernelServices.pci.GetDevices();
+    } else {
+        kernelServices.basicConsole.Println("No PCI/PCIe devices found.");
+    }
+
+    /*
+     * Driver Stuff
+    */
     kernelServices.driverMan.Initialize();
+    kernelServices.driverMan.DetectDevices(devices);
 
     while (true) {
         
