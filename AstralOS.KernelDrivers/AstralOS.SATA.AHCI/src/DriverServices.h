@@ -43,10 +43,10 @@ struct DriverServices {
 };
 
 struct DriverInfo {
-    const char* name; // Driver Name (for debugging and stuff)
-    const int verMaj; // Version Major
-    const int verMin; // Version Minor
-    const int exCode; // Exit Code
+    char* name; // Driver Name (for debugging and stuff)
+    int verMaj; // Version Major
+    int verMin; // Version Minor
+    int exCode; // Exit Code
 
     //            Name     Ver Maj    Ver Min   Exit Code
     DriverInfo(char* nam, int verMa, int verMi, int Ecode) 

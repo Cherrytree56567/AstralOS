@@ -65,7 +65,9 @@ void DriverManager::Initialize() {
 }
 
 void DriverManager::RegisterDriver(BaseDriverFactory* factory) {
+    ks->basicConsole.Println("Registering Driver!");
     factories.push_back(factory);
+    ks->basicConsole.Println("Registered Driver!");
 }
 
 /*

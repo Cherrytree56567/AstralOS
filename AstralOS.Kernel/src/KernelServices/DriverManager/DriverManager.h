@@ -6,7 +6,8 @@
 #include "../../Utils/cpu.h"
 #include "../ELF/elf.h"
 #include "../../Utils/String/String.h"
-#else
+#endif
+#ifdef DRIVER
 #include "PCI.h"
 #endif
 #include "DriverServices.h"
@@ -46,7 +47,7 @@ public:
     virtual const char* DriverName() const override = 0;
 };
 
-class BlockDeviceFactory : BaseDriverFactory {
+class BlockDeviceFactory : public BaseDriverFactory {
 public:
     virtual ~BlockDeviceFactory() {}
     virtual bool Supports(const DeviceKey& devKey) override = 0;
