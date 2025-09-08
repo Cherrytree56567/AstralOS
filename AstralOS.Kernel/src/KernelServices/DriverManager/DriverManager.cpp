@@ -1,3 +1,4 @@
+#define KERNEL
 #include "DriverManager.h"
 #include "../KernelServices.h"
 
@@ -16,6 +17,7 @@
  * Ik this all looks complicated, but I will add
  * a str combiner func which combines str's.
 */
+
 void DriverManager::Initialize() {
     CreateDriverServices();
 
@@ -49,14 +51,14 @@ void DriverManager::Initialize() {
             if (entry) {
                 DriverInfo (*driver_entry)(DriverServices) = (DriverInfo(*)(DriverServices))entry;
                 DriverInfo di = driver_entry(GetDS());
-                ks->basicConsole.Print("Driver Name: ");
-                ks->basicConsole.Print(di.name);
-                ks->basicConsole.Print(", Version: ");
-                ks->basicConsole.Print(to_string((int64_t)di.verMaj));
-                ks->basicConsole.Print(".");
-                ks->basicConsole.Print(to_string((int64_t)di.verMin));
-                ks->basicConsole.Print(", Exit Code: ");
-                ks->basicConsole.Println(to_string((int64_t)di.exCode));
+                ks->basicConsole.Println(((String)"Driver Name: " 
+                                        + di.name
+                                        + ", Version: "
+                                        + to_string((int64_t)di.verMaj)
+                                        + "."
+                                        + to_string((int64_t)di.verMin)
+                                        + ", Exit Code: "
+                                        + to_string((int64_t)di.exCode)).c_str());
             }
         }
     }
@@ -184,7 +186,7 @@ void DriverManager::CreateDriverServices() {
      * Driver Manager
     */
     ds.RegisterDriver = [](BaseDriverFactory* factory) { 
-        return ks->driverMan.RegisterDriver(factory);
+        ks->driverMan.RegisterDriver(factory);
     };
 }
 

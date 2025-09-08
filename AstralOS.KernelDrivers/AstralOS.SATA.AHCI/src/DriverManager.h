@@ -1,10 +1,15 @@
 #pragma once
 #include <cstdint>
+#ifdef KERNEL
 #include "../../Utils/Array/Array.h"
 #include "../PCI/PCI.h"
 #include "../../Utils/cpu.h"
-#include "DriverServices.h"
 #include "../ELF/elf.h"
+#include "../../Utils/String/String.h"
+#else
+#include "PCI.h"
+#endif
+#include "DriverServices.h"
 
 class BaseDriver {
 public:
@@ -52,6 +57,7 @@ class DriverManager {
 public:
     void Initialize();
     void RegisterDriver(BaseDriverFactory* factory);
+#ifdef KERNEL
     void DetectDevices(Array<DeviceKey>& devices);
     BaseDriver* GetDevice(uint8_t _class, uint8_t subclass, uint8_t progIF);
     const Array<BaseDriver*>& GetDevices() const;
@@ -62,4 +68,5 @@ private:
     Array<BaseDriverFactory*> factories;
     Array<BaseDriver*> DeviceDrivers;
     DriverServices ds;
+#endif
 };
