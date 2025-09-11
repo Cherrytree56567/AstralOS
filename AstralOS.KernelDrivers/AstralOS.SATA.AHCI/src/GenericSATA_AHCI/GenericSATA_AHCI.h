@@ -1,4 +1,5 @@
 #pragma once
+#define DRIVER
 #include "../DriverServices.h"
 #include "../DriverManager.h"
 

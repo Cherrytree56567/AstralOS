@@ -1,11 +1,18 @@
 #include "IDT.h"
 #include "../KernelServices.h"
 
-extern "C" void exception_handler(uint64_t vector, uint64_t errCode) {
-    ks->basicConsole.Print("EXCEPTION at Vector: ");
-    ks->basicConsole.Print(to_hstring(vector));
-    ks->basicConsole.Print(", Error Code: ");
-    ks->basicConsole.Println(to_hstring(vector));
+extern "C" void exception_handler(uint64_t vector, uint64_t errCode, InterruptFrame* frame) {
+    ks->basicConsole.ClearLines(8);
+    ks->basicConsole.CursorPosition = {0, 0};
+    ks->basicConsole.Println("=== EXCEPTION ===");
+    ks->basicConsole.Println(((String)"Vector: " + to_hstring(vector)).c_str());
+    ks->basicConsole.Println(((String)"Error Code: " + to_hstring(errCode)).c_str());
+    ks->basicConsole.Println(((String)"RIP: " + to_hstring(frame->rip)).c_str());
+    ks->basicConsole.Println(((String)"RSP: " + to_hstring(frame->rsp)).c_str());
+    ks->basicConsole.Println(((String)"CS: " + to_hstring(frame->cs)).c_str());
+    ks->basicConsole.Println(((String)"SS: " + to_hstring(frame->ss)).c_str());
+    ks->basicConsole.Println(((String)"RFLAGS: " + to_hstring(frame->rflags)).c_str());
+    ks->basicConsole.Println("=================");
     while (true) __asm__ volatile ("cli; hlt");
 }
 

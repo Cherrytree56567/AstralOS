@@ -9,7 +9,7 @@ void Print(const char* str);
 
 struct Node {
     uintptr_t data;
-    uintptr_t next;
+    Node* next;
 };
 
 /*
@@ -29,7 +29,9 @@ struct Node {
 */
 template<typename T>
 struct Array {
-    Array() = default;
+    Array() {
+        head = nullptr;
+    }
 
     ~Array() { clear(); }
 
@@ -48,47 +50,16 @@ struct Array {
 
         node->data = (uintptr_t)data_ptr;
         node->next = 0;
-        Print("T");
 
-        if (head == nullptr) {
-            Print("I");
+        if (_size == 0 || head == nullptr) {
             head = node;
-            Print("T");
         } else {
-            Print("I");
             Node* current = head;
-            Print("G");
             while (current->next != 0) {
-                Print("J");
-                current = (Node*)current->next;
+                current = current->next;
             }
-            Print("L");
-            current->next = (uintptr_t)node;
-            Print("T");
+            current->next = node;
         }
-        _size++;
-    }
-
-    /*
-     * Push back without copying
-    */
-    void push_backncp(T value) {
-        struct Node* node = (struct Node*)malloc(sizeof(struct Node));
-        if (!node) return;
-
-        node->data = (uintptr_t)value;
-        node->next = 0;
-
-        if (!head) {
-            head = node;
-        } else {
-            Node* current = head;
-            while (current->next) {
-                current = (Node*)current->next;
-            }
-            current->next = (uintptr_t)node;
-        }
-
         _size++;
     }
 
@@ -97,15 +68,31 @@ struct Array {
     T& operator[](size_t index) {
         Node* current = head;
         for (size_t i = 0; i < index; i++) {
-            current = (Node*)current->next;
+            current = current->next;
         }
         return *(T*)current->data;
     }
 
     const T& operator[](size_t index) const {
         Node* current = head;
+        for (size_t i = 0; i < index; i++) {
+            current = current->next;
+        }
+        return *(T*)current->data;
+    }
+
+    const T& get(size_t index) const {
+        if (index >= _size) {
+            Print("Index OOB!");
+            while (1); // or handle properly
+        }
+        Node* current = head;
         for (size_t i = 0; i < index; ++i) {
-            current = (Node*)current->next;
+            if (!current->next) {
+                Print("Corrupt next ptr!");
+                while (1);
+            }
+            current = current->next;
         }
         return *(T*)current->data;
     }
@@ -113,13 +100,25 @@ struct Array {
     void clear() {
         Node* current = head;
         while (current) {
-            Node* next = (Node*)current->next;
+            Node* next = current->next;
             free((void*)current->data);
-            free((void*)current);
+            free(current);
             current = next;
         }
         head = nullptr;
         _size = 0;
+    }
+
+    Array& operator=(const Array& other) {
+        if (this != &other) {
+            clear();
+            Node* current = other.head;
+            while (current) {
+                push_back(*(T*)current->data);
+                current = current->next;
+            }
+        }
+        return *this;
     }
 
 private:

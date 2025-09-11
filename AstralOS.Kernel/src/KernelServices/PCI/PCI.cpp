@@ -1030,8 +1030,10 @@ void PCI::checkFunction(uint8_t bus, uint8_t device, uint8_t function) {
     ks->basicConsole.Println(GetDeviceCode(classCode, subclass, progIF));
 
     if (classCode == 0x06 && subclass == 0x04) {
+        ks->basicConsole.Println("Checking Bus: ");
         uint8_t secondaryBus = ConfigReadWord(bus, device, function, 0x19) & 0xFF;
         checkBus(secondaryBus);
+        ks->basicConsole.Println("Checked Bus");
     }
 }
 

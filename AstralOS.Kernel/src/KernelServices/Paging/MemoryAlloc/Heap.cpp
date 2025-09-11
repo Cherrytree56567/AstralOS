@@ -107,7 +107,9 @@ void* HeapAllocator::malloc(size_t size) {
                 current->size = size;
             }
             current->free = false;
-            return (void*)((uint8_t*)current + sizeof(BlockHeader));
+            void* ptr = (void*)((uint8_t*)current + sizeof(BlockHeader));
+            memset(ptr, 0, size);
+            return ptr;
         }
         current = current->next;
     }
@@ -120,6 +122,7 @@ void* HeapAllocator::malloc(size_t size) {
     for (size_t i = 0; i < pagesNeeded; i++) {
         void* physPage = ks->pageFrameAllocator.RequestPage();
         if (!physPage) {
+            ks->basicConsole.Println("Request Page Failed.");
             return nullptr;
         }
         ks->pageTableManager.MapMemory((void*)(aHeapEnd + i * PAGE_SIZE), physPage);
@@ -153,7 +156,10 @@ void* HeapAllocator::malloc(size_t size) {
         newBlock->size = size;
     }
     newBlock->free = false;
-    return (void*)((uint8_t*)newBlock + sizeof(BlockHeader));
+
+    void* ptr = (void*)((uint8_t*)newBlock + sizeof(BlockHeader));
+    memset(ptr, 0, size);
+    return ptr;
 }
 
 /*

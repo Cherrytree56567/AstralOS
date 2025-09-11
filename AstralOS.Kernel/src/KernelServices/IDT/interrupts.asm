@@ -10,23 +10,26 @@ isr_stub_%+%1:
     push rdi
     push rsi
     mov rdi, %1
-    mov rsi, [rsp + 16]
+    mov rsi, [rsp + 32]
+    lea rdx, [rsp + 40]
     call exception_handler
     pop rsi
     pop rdi
-    add rsp, 8
     iretq
 %endmacro
 
 %macro isr_no_err_stub 1
 isr_stub_%+%1:
+    push 0
     push rdi
     push rsi
     mov rdi, %1
-    mov rsi, 0
+    mov rsi, [rsp + 32]
+    lea rdx, [rsp + 40]
     call exception_handler
     pop rsi
     pop rdi
+    add rsp, 0
     iretq
 %endmacro
 

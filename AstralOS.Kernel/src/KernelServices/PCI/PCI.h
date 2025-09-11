@@ -560,15 +560,15 @@ public:
 
     bool EnableMSI(uint8_t bus, uint8_t device, uint8_t function, uint8_t vector);
 
-    Array<DeviceKey> GetDevices();
-private:
-    Array<DeviceKey> Devices;
-
     uint16_t ConfigReadWord(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
     void ConfigWriteWord(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint16_t value);
     void ConfigWriteDWord(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint32_t value);
     uint8_t ConfigReadByte(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
     uint32_t ConfigReadDWord(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
+
+    Array<DeviceKey> GetDevices();
+private:
+    Array<DeviceKey> Devices;
 
     bool deviceAlreadyFound(uint8_t bus, uint8_t device, uint8_t function);
     void addDevice(uint8_t bus, uint8_t device, uint8_t function, bool hasMSI, uint16_t vendorID, uint8_t classCode, uint8_t subClass, uint8_t progIF);
