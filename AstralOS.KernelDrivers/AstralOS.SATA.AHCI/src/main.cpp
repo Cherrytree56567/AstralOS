@@ -1,12 +1,9 @@
+#define DRIVER
 #include <new>
 #include "GenericSATA_AHCI/GenericSATA_AHCI.h"
-#include "global.h"
-
-DriverServices ds;
 
 extern "C"
 DriverInfo DriverMain(DriverServices DServices) {
-    ds = DServices;
     DServices.Println("Driver Loaded!");
 
     DriverInfo di((char*)"", 1, 0, 0);
@@ -20,8 +17,11 @@ DriverInfo DriverMain(DriverServices DServices) {
     }
 
     BlockDeviceFactory* factory = new(mem) GenericSATA_AHCI();
+    factory->ds = &DServices;
 
     DServices.RegisterDriver(factory);
+
+    DServices.Println("Reg D");
 
     return di;
 }

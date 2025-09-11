@@ -35,6 +35,11 @@ struct DriverServices {
     bool (*PCIeExists)();
     bool (*EnableMSI)(uint8_t bus, uint8_t device, uint8_t function, uint8_t vector);
     bool (*EnableMSIx)(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t vector);
+    uint16_t (*ConfigReadWord)(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
+    void (*ConfigWriteWord)(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint16_t value);
+    void (*ConfigWriteDWord)(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint32_t value);
+    uint8_t (*ConfigReadByte)(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
+    uint32_t (*ConfigReadDWord)(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
 
     /*
      * Driver Stuff

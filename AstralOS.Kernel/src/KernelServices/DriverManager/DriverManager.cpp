@@ -51,21 +51,21 @@ void DriverManager::Initialize() {
             if (entry) {
                 DriverInfo (*driver_entry)(DriverServices) = (DriverInfo(*)(DriverServices))entry;
                 DriverInfo di = driver_entry(GetDS());
-                ks->basicConsole.Println(((String)"Driver Name: " 
+                /*ks->basicConsole.Println(((String)"Driver Name: " 
                                         + di.name
                                         + ", Version: "
                                         + to_string((int64_t)di.verMaj)
                                         + "."
                                         + to_string((int64_t)di.verMin)
                                         + ", Exit Code: "
-                                        + to_string((int64_t)di.exCode)).c_str());
+                                        + to_string((int64_t)di.exCode)).c_str());*/
             }
         }
     }
 }
 
 void DriverManager::RegisterDriver(BaseDriverFactory* factory) {
-    ks->basicConsole.Println(((String)"Registering Driver: " + to_hstring((uint64_t)factory)).c_str());
+    //ks->basicConsole.Println(((String)"Registering Driver: " + to_hstring((uint64_t)factory)).c_str());
     factories.push_back(factory);
     ks->basicConsole.Println("Registered Driver!");
 }
@@ -74,11 +74,13 @@ void DriverManager::RegisterDriver(BaseDriverFactory* factory) {
  * We can use this func to detect devices
 */
 void DriverManager::DetectDevices(Array<DeviceKey>& devices) {
-    for (size_t i = 0; i < devices.size(); ++i) {
-        auto dev = devices[i];
+    for (size_t i = 0; i < (devices.size() - 1); i++) {
+        DeviceKey dev = devices.get(0);
         for (size_t j = 0; j < factories.size(); ++j) {
             auto& factory = factories[j];
-            if (factory->Supports(dev)) {
+            if ((factory)->Supports(dev)) {
+                ks->basicConsole.Println(" Driver!");
+                break;
                 BaseDriver* device = factory->CreateDevice();
                 device->Init(ds);
                 DeviceDrivers.push_back(device);
@@ -182,6 +184,26 @@ void DriverManager::CreateDriverServices() {
 
     ds.EnableMSIx = [](uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t vector) { 
         return ks->pcie.EnableMSIx(segment, bus, device, function, vector);
+    };
+
+    ds.ConfigReadWord = [](uint8_t bus, uint8_t device, uint8_t function, uint8_t vector) { 
+        return ks->pci.ConfigReadWord(bus, device, function, vector);
+    };
+
+    ds.ConfigWriteWord = [](uint8_t bus, uint8_t device, uint8_t function, uint8_t vector, uint16_t value) { 
+        ks->pci.ConfigWriteWord(bus, device, function, vector, value);
+    };
+
+    ds.ConfigWriteDWord = [](uint8_t bus, uint8_t device, uint8_t function, uint8_t vector, uint32_t value) { 
+        ks->pci.ConfigWriteDWord(bus, device, function, vector, value);
+    };
+
+    ds.ConfigReadByte = [](uint8_t bus, uint8_t device, uint8_t function, uint8_t vector) { 
+        return ks->pci.ConfigReadByte(bus, device, function, vector);
+    };
+
+    ds.ConfigReadDWord = [](uint8_t bus, uint8_t device, uint8_t function, uint8_t vector) { 
+        return ks->pci.ConfigReadDWord(bus, device, function, vector);
     };
 
     /*

@@ -119,7 +119,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
      * because it requires heap.
     */
     kernelServices.initram.Initialize(pBootInfo->initrdBase, pBootInfo->initrdSize);
-
+/*
     if (kernelServices.initram.file_exists((char*)"a.txt")) {
         kernelServices.basicConsole.Print("a.txt exists!");
     } else {
@@ -131,7 +131,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
         kernelServices.basicConsole.Println(", b.txt doesn't exist!");
     }
 
-    list_recursive((char*)"");
+    list_recursive((char*)"");*/
 
     /*
      * Create our GDT.

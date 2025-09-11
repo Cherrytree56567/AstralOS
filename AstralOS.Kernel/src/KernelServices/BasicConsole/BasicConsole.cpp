@@ -67,3 +67,14 @@ void BasicConsole::Println(const char* str, unsigned int colour) {
     CursorPosition.X = 10;           // Reset X position for new line
     CursorPosition.Y += 16;         // Move cursor down by 16 pixels
 }
+
+void BasicConsole::ClearLines(unsigned int lineCount) {
+    unsigned int fontHeight = 16; // or whatever your font height is
+    unsigned int clearHeight = fontHeight * lineCount;
+
+    for (unsigned int y = 0; y < clearHeight; y++) {
+        for (unsigned int x = 0; x < pFramebuffer.Width; x++) {
+            ((uint32_t*)pFramebuffer.BaseAddress)[y * pFramebuffer.PixelsPerScanLine + x] = 0x000000;
+        }
+    }
+}

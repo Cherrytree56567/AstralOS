@@ -1,5 +1,6 @@
 #pragma once
 #include <stddef.h>
+#include <cstdint>
 #include "font.h"
 
 /*
@@ -27,6 +28,7 @@ public:
 	Point CursorPosition;
 public:
 	void putChar(unsigned int colour, char chr, unsigned int xOff, unsigned int yOff);
+	void ClearLines(unsigned int lineCount);
 
 	FrameBuffer pFramebuffer;
 };

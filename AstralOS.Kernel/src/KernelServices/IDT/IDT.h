@@ -2,6 +2,7 @@
 #include <cstdint>
 #include "../GDT/GDT.h"
 #include "../BasicConsole/BasicConsole.h"
+#include "../../Utils/String/String.h"
 
 #define IDT_MAX_DESCRIPTORS 	256
 
@@ -60,7 +61,15 @@ struct IDTR64 {
 	uint64_t base;
 } __attribute__((packed));
 
-extern "C" void exception_handler(uint64_t vector, uint64_t errCode);
+struct InterruptFrame {
+    uint64_t rip;
+    uint64_t cs;
+    uint64_t rflags;
+    uint64_t rsp;
+    uint64_t ss;
+};
+
+extern "C" void exception_handler(uint64_t vector, uint64_t errCode, InterruptFrame* frame);
 extern "C" void hardware_handler(uint64_t vector);
 extern "C" void apic_handler(uint64_t vector);
 
