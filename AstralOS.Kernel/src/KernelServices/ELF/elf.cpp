@@ -161,8 +161,13 @@ uint64_t LoadElf(Elf64_Ehdr* hdr) {
             dynamic++;
         }
 
-        
+
     }
 
     return (uint64_t)(base + hdr->e_entry);
+}
+
+void apply_relocations(uint8_t* base, uint64_t rela_vaddr, uint64_t relasz, uint64_t relaent, uint64_t symtab_vaddr, uint64_t strtab_vaddr, 
+    uint64_t syment, void* (*symbol_resolver)(const char*)) {
+
 }

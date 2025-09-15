@@ -283,3 +283,5 @@ void *load_segment_to_memory(void *mem, Elf64_Phdr *phdr, int elf_fd);
 Elf64_Ehdr* GetELFHeader(void* data);
 bool ValidateEhdr(Elf64_Ehdr* hdr);
 uint64_t LoadElf(Elf64_Ehdr* hdr);
+void apply_relocations(uint8_t* base, uint64_t rela_vaddr, uint64_t relasz, uint64_t relaent, uint64_t symtab_vaddr, uint64_t strtab_vaddr, 
+    uint64_t syment, void* (*symbol_resolver)(const char*));
