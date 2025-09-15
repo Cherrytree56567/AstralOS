@@ -77,10 +77,91 @@ uint64_t LoadElf(Elf64_Ehdr* hdr) {
     }
 
     if (dynamic) {
+        /*
+         * WHY SOOO MANY VARIABLES???
+        */
+        uint64_t strtab, symtab, strsz, syment, rela, relasz, relaent, rel, relsz, relent, jmprel, pltrelsz, pltgot, init_array, init_arraysz = 0;
+        int64_t pltrel = 0;
         while (dynamic->d_tag != DT_NULL) {
-            switch(dyn->d_tag) {
+            if (dynamic->d_tag == DT_NULL) {
+                return;
             }
+            switch(dynamic->d_tag) {
+                case DT_NULL:
+                    break;
+
+                case DT_PLTRELSZ:
+                    pltrelsz = dynamic->d_un.d_val;
+                    break;
+
+                case DT_PLTGOT:
+                    pltgot = dynamic->d_un.d_ptr;
+                    break;
+
+                case DT_STRTAB:
+                    strtab = dynamic->d_un.d_ptr;
+                    break;
+
+                case DT_SYMTAB:
+                    symtab = dynamic->d_un.d_ptr;
+                    break;
+
+                case DT_RELA:
+                    rela = dynamic->d_un.d_ptr;
+                    break;
+
+                case DT_RELASZ:
+                    relasz = dynamic->d_un.d_val;
+                    break;
+
+                case DT_RELAENT:
+                    relaent = dynamic->d_un.d_val;
+                    break;
+
+                case DT_STRSZ:
+                    strsz = dynamic->d_un.d_val;
+                    break;
+
+                case DT_SYMENT:
+                    syment = dynamic->d_un.d_val;
+                    break;
+
+                case DT_REL:
+                    rel = dynamic->d_un.d_ptr;
+                    break;
+
+                case DT_RELSZ:
+                    relsz = dynamic->d_un.d_val;
+                    break;
+
+                case DT_RELENT:
+                    relent = dynamic->d_un.d_val;
+                    break;
+
+                case DT_PLTREL:
+                    pltrel = dynamic->d_un.d_val;
+                    break;
+
+                case DT_JMPREL:
+                    jmprel = dynamic->d_un.d_ptr;
+                    break;
+
+                case DT_INIT_ARRAY:
+                    init_array = dynamic->d_un.d_ptr;
+                    break;
+
+                case DT_INIT_ARRAYSZ:
+                    init_arraysz = dynamic->d_un.d_val;
+                    break;
+
+                default:
+                    ks->basicConsole.Print(((String)"ELF: Unhandled DT entry: " + to_string(dynamic->d_tag)).c_str());
+                    break;
+            }
+            dynamic++;
         }
+
+        
     }
 
     return (uint64_t)(base + hdr->e_entry);
