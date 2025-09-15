@@ -30,7 +30,7 @@ struct Node {
 template<typename T>
 struct Array {
     Array() {
-        head = nullptr;
+        head = 0x0;
     }
 
     ~Array() { clear(); }

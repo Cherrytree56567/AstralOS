@@ -1,7 +1,6 @@
 #pragma once
-#define DRIVER
+#include "../PCI.h"
 #include "../DriverServices.h"
-#include "../DriverManager.h"
 
 class GenericSATA_AHCI : public BlockDeviceFactory {
 public:
