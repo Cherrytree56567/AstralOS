@@ -55,10 +55,16 @@ uint64_t LoadElf(Elf64_Ehdr* hdr) {
         return 0x0;
     }
 
+    Elf64_Dyn* dynamic = nullptr;
     for (int i = 0; i < hdr->e_phnum; i++) {
         Elf64_Phdr* ph = &phdrs[i];
         if (ph->p_type != PT_LOAD) {
             continue;
+        }
+
+        if (ph->p_type == PT_DYNAMIC) {
+            dynamic = (Elf64_Dyn*)((uint8_t*)hdr + ph->p_offset);
+            break;
         }
 
         uint8_t* dest = base + ph->p_vaddr;
@@ -67,6 +73,13 @@ uint64_t LoadElf(Elf64_Ehdr* hdr) {
         memcpy(dest, src, ph->p_filesz);
         if (ph->p_memsz > ph->p_filesz) {
             memset(dest + ph->p_filesz, 0, ph->p_memsz - ph->p_filesz); 
+        }
+    }
+
+    if (dynamic) {
+        while (dynamic->d_tag != DT_NULL) {
+            switch(dyn->d_tag) {
+            }
         }
     }
 

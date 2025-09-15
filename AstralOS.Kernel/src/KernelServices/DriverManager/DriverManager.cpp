@@ -21,6 +21,8 @@
 void DriverManager::Initialize() {
     CreateDriverServices();
 
+    factories.clear();
+
     Array<char*> files = ks->initram.list((char*)"Drivers");
     if (files.size() == 0) {
         ks->basicConsole.Println("No drivers avaliable :(");
@@ -65,7 +67,7 @@ void DriverManager::Initialize() {
 }
 
 void DriverManager::RegisterDriver(BaseDriverFactory* factory) {
-    //ks->basicConsole.Println(((String)"Registering Driver: " + to_hstring((uint64_t)factory)).c_str());
+    ks->basicConsole.Println(((String)"Registering Driver: " + to_hstring((uint64_t)factory)).c_str());
     factories.push_back(factory);
     ks->basicConsole.Println("Registered Driver!");
 }
@@ -74,17 +76,27 @@ void DriverManager::RegisterDriver(BaseDriverFactory* factory) {
  * We can use this func to detect devices
 */
 void DriverManager::DetectDevices(Array<DeviceKey>& devices) {
-    for (size_t i = 0; i < (devices.size() - 1); i++) {
-        DeviceKey dev = devices.get(0);
-        for (size_t j = 0; j < factories.size(); ++j) {
+    for (size_t i = 0; i < (devices.size()); i++) {
+        DeviceKey dev = devices.get(i);
+        for (size_t j = 0; j < factories.size(); j++) {
+            ks->basicConsole.Println(to_string(factories.size()));
             auto& factory = factories[j];
-            if ((factory)->Supports(dev)) {
+            uint64_t* vptr = *(uint64_t**)factory;
+            ks->basicConsole.Println(((String)" DBG: vptr = " + to_hstring((uint64_t)vptr)).c_str());
+            if (vptr) {
+                ks->basicConsole.Println(((String)" DBG: vptr[0] = " + to_hstring((uint64_t)vptr[0])).c_str());
+                ks->basicConsole.Println(((String)" DBG: vptr[1] = " + to_hstring((uint64_t)vptr[1])).c_str());
+                ks->basicConsole.Println(((String)" DBG: vptr[2] = " + to_hstring((uint64_t)vptr[2])).c_str());
+            }
+            if ((factory)->Supports(dev)) { // Crashes here
                 ks->basicConsole.Println(" Driver!");
                 break;
                 BaseDriver* device = factory->CreateDevice();
                 device->Init(ds);
                 DeviceDrivers.push_back(device);
                 break;
+            } else {
+                ks->basicConsole.Println("No Driver???");
             }
         }
     }

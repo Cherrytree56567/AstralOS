@@ -2,7 +2,53 @@
 #include <cstdint>
 #include <cstddef>
 
-class BaseDriverFactory;
+struct DriverServices;
+
+class BaseDriver {
+public:
+    virtual ~BaseDriver() {}
+    virtual const char* name() const = 0;
+    virtual const char* DriverName() const = 0;
+    virtual void Init(DriverServices& ds) = 0;
+    virtual uint8_t GetClass() = 0;
+    virtual uint8_t GetSubClass() = 0;
+    virtual uint8_t GetProgIF() = 0;
+};
+
+class BaseDriverFactory {
+public:
+    virtual ~BaseDriverFactory() {}
+    virtual bool Supports(const DeviceKey& devKey) = 0;
+    virtual BaseDriver* CreateDevice() = 0;
+
+public:
+    DriverServices* ds;
+};
+
+class BlockDevice : public BaseDriver {
+public:
+    virtual void Init(DriverServices& ds) = 0;
+    virtual bool ReadSector(uint64_t lba, void* buffer) = 0;
+    virtual bool WriteSector(uint64_t lba, const void* buffer) = 0;
+
+    virtual uint64_t SectorCount() const = 0;
+    virtual uint32_t SectorSize() const = 0;
+    virtual void* GetInternalBuffer() = 0;
+
+    virtual uint8_t GetClass() override = 0;
+    virtual uint8_t GetSubClass() override = 0;
+    virtual uint8_t GetProgIF() override = 0;
+    virtual const char* name() const override = 0;
+    virtual const char* DriverName() const override = 0;
+};
+
+class BlockDeviceFactory : public BaseDriverFactory {
+public:
+    virtual ~BlockDeviceFactory() {}
+    virtual bool Supports(const DeviceKey& devKey) override = 0;
+    virtual BlockDevice* CreateDevice() override = 0;
+};
+
 struct DriverServices {
     /*
      * Debugging

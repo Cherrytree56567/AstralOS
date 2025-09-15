@@ -1,9 +1,9 @@
 #include "GenericSATA_AHCI.h"
-#include "../global.h"
 
 bool GenericSATA_AHCI::Supports(const DeviceKey& devKey) {
-    ds->Print("Checking if Supports: ");
     return false;
+    ds->Print("Checking if Supports: ");
+    
     if (devKey.classCode == 0x01) {
         uint8_t capPtr = ds->ConfigReadByte(devKey.bus, devKey.device, devKey.function, 0x34);
 

@@ -76,6 +76,53 @@ enum Elf_Type {
 	ET_DYN		= 3, // Dynamic File
 };
 
+/*
+ * Found in Github Gist
+ * https://gist.github.com/x0nu11byt3/bcb35c3de461e5fb66173071a2379779
+*/
+enum DT_Type {
+	DT_NULL = 0,
+	DT_NEEDED = 1,
+	DT_PLTRELSZ = 2,
+	DT_PLTGOT = 3,
+	DT_HASH = 4,
+	DT_STRTAB = 5,
+	DT_SYMTAB = 6,
+	DT_RELA = 7,
+	DT_RELASZ = 8,
+	DT_RELAENT = 9,
+	DT_STRSZ = 10,
+	DT_SYMENT = 11,
+	DT_INIT = 12,
+	DT_FINI = 13,
+	DT_SONAME = 14,
+	DT_RPATH = 15,
+	DT_SYMBOLIC = 16,
+	DT_REL = 17,
+	DT_RELSZ = 18,
+	DT_RELENT = 19,
+	DT_PLTREL = 20,
+	DT_DEBUG = 21,
+	DT_TEXTREL = 22,
+	DT_JMPREL = 23,
+	DT_BIND_NOW = 24,
+	DT_INIT_ARRAY = 25,
+	DT_FINI_ARRAY = 26,
+	DT_INIT_ARRAYSZ = 27,
+	DT_FINI_ARRAYSZ = 28,
+	DT_RUNPATH = 29,
+	DT_FLAGS = 30,
+	DT_ENCODING = 32,
+	DT_PREINIT_ARRAY = 32,
+	DT_PREINIT_ARRAYSZ = 33,
+	DT_SYMTAB_SHNDX = 34,
+	DT_NUM = 35,
+	DT_LOOS = 0x6000000d,
+	DT_HIOS = 0x6ffff000,
+	DT_LOPROC = 0x70000000,
+	DT_HIPROC = 0x7fffffff
+};
+
 enum ShT_Types {
 	SHT_NULL	= 0,   // Null section
 	SHT_PROGBITS	= 1,   // Program information
@@ -197,6 +244,17 @@ typedef struct {
     uint16_t      e_shnum;
     uint16_t      e_shstrndx;
 } Elf64_Ehdr;
+
+/*
+ * Found in https://llvm.org/doxygen/structllvm_1_1ELF_1_1Elf64__Dyn.html
+*/
+typedef struct {
+    int64_t d_tag;
+    union {
+        uint64_t d_val;
+        uint64_t d_ptr;
+    } d_un;
+} Elf64_Dyn;
 
 /*
  * Stuff from the OSDev Wiki, we don't want these.
