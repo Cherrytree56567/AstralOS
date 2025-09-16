@@ -58,13 +58,14 @@ uint64_t LoadElf(Elf64_Ehdr* hdr) {
     Elf64_Dyn* dynamic = nullptr;
     for (int i = 0; i < hdr->e_phnum; i++) {
         Elf64_Phdr* ph = &phdrs[i];
-        if (ph->p_type != PT_LOAD) {
-            continue;
-        }
 
         if (ph->p_type == PT_DYNAMIC) {
             dynamic = (Elf64_Dyn*)((uint8_t*)hdr + ph->p_offset);
             break;
+        }
+
+        if (ph->p_type != PT_LOAD) {
+            continue;
         }
 
         uint8_t* dest = base + ph->p_vaddr;
@@ -84,7 +85,7 @@ uint64_t LoadElf(Elf64_Ehdr* hdr) {
         int64_t pltrel = 0;
         while (dynamic->d_tag != DT_NULL) {
             if (dynamic->d_tag == DT_NULL) {
-                return;
+                break;
             }
             switch(dynamic->d_tag) {
                 case DT_NULL:
@@ -155,19 +156,51 @@ uint64_t LoadElf(Elf64_Ehdr* hdr) {
                     break;
 
                 default:
-                    ks->basicConsole.Print(((String)"ELF: Unhandled DT entry: " + to_string(dynamic->d_tag)).c_str());
                     break;
             }
             dynamic++;
         }
 
-
+        apply_relocations(base, rela, relasz, relaent, symtab, strtab, syment, nullptr);
     }
 
     return (uint64_t)(base + hdr->e_entry);
 }
 
+/*
+ * Relocations are hard, but there is a ton of info
+ * online. One of the resources I found was from
+ * oracle: https://docs.oracle.com/cd/E19683-01/816-1386/chapter6-54839/index.html
+ * 
+ * The way it works is that it gets the rela table,
+ * which btw is a table for x86_64 dynamic librarys
+ * It then adds the base to the rela_vaddr to get
+ * the rela_table.
+*/
 void apply_relocations(uint8_t* base, uint64_t rela_vaddr, uint64_t relasz, uint64_t relaent, uint64_t symtab_vaddr, uint64_t strtab_vaddr, 
     uint64_t syment, void* (*symbol_resolver)(const char*)) {
+    ks->pageTableManager.MapMemory((void*)(base + rela_vaddr), (void*)(base + rela_vaddr));
+    Elf64_Rela* rela_table = (Elf64_Rela*)(base + rela_vaddr);
+    size_t rela_size = relasz;
+    size_t rela_ent = relaent;
 
+    size_t rela_count = rela_size / rela_ent;
+
+    ks->basicConsole.Print("Rela Table: ");
+    ks->basicConsole.Println(to_hstring((uint64_t)(base + rela_vaddr)));
+
+    for (size_t i = 0; i < rela_count; i++) {
+        Elf64_Rela* rela = &rela_table[i];
+
+        uint32_t symIndex = ((rela->r_info) >> 32);
+        uint32_t type = ((uint32_t)(rela->r_info));
+
+        ks->pageTableManager.MapMemory((void*)symtab_vaddr, (void*)symtab_vaddr);
+        Elf64_Sym* symtab = (Elf64_Sym*)symtab_vaddr;
+        Elf64_Sym* sym = &symtab[symIndex];
+
+        const char* symName = (const char*)(strtab_vaddr + sym->st_name);
+
+        ks->basicConsole.Println(symName);
+    }
 }

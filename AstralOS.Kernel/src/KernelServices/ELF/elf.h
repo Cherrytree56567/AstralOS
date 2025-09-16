@@ -196,6 +196,15 @@ typedef struct {
 } Elf32_Sym;
 
 typedef struct {
+	uint32_t		st_name;
+	uint8_t			st_info;
+	uint8_t			st_other;
+	uint16_t		st_shndx;
+	uint64_t		st_value;
+	uint64_t		st_size;
+} Elf64_Sym;
+
+typedef struct {
 	uint32_t		r_offset;
 	uint32_t		r_info;
 } Elf32_Rel;
@@ -205,6 +214,17 @@ typedef struct {
 	uint32_t		r_info;
 	int32_t			r_addend;
 } Elf32_Rela;
+
+typedef struct {
+	uint64_t		r_offset;
+	uint64_t		r_info;
+} Elf64_Rel;
+
+typedef struct {
+	uint64_t		r_offset;
+	uint64_t		r_info;
+	int64_t			r_addend;
+} Elf64_Rela;
 
 typedef struct {
 	uint32_t		p_type;
