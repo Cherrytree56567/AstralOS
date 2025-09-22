@@ -156,6 +156,25 @@ enum RtT_Types {
 	R_386_PC32		= 2  // Symbol + Offset - Section Offset
 };
 
+enum x86_64_Relocation {
+	R_X86_64_NONE		= 0,
+	R_X86_64_64			= 1,
+	R_X86_64_PC32		= 2,
+	R_X86_64_GOT32		= 3,
+	R_X86_64_PLT32		= 4,
+	R_X86_64_COPY		= 5,
+	R_X86_64_GLOB_DAT	= 6,
+	R_X86_64_JUMP_SLOT	= 7,
+	R_X86_64_RELATIVE	= 8,
+	R_X86_64_GOTPCREL	= 9,
+	R_X86_64_32			= 10,
+	R_X86_64_32S		= 11,
+	R_X86_64_16			= 12,
+	R_X86_64_PC16		= 13,
+	R_X86_64_8			= 14,
+	R_X86_64_PC8		= 15
+};
+
 typedef struct {
 	uint8_t	 e_ident[ELF_NIDENT];
 	uint16_t e_type;

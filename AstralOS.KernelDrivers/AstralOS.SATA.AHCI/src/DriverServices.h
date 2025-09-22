@@ -20,9 +20,6 @@ public:
     virtual ~BaseDriverFactory() {}
     virtual bool Supports(const DeviceKey& devKey) = 0;
     virtual BaseDriver* CreateDevice() = 0;
-
-public:
-    DriverServices* ds;
 };
 
 class BlockDevice : public BaseDriver {

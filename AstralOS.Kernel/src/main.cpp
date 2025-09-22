@@ -74,6 +74,8 @@ extern "C" int _start(BootInfo* pBootInfo) {
 
     kernelServices.pBootInfo = *pBootInfo;
 
+    ks->basicConsole.Print("Boot Info Framebuffer Addr: ");
+
     InitializePaging(&kernelServices, pBootInfo);
 
     asm volatile (
