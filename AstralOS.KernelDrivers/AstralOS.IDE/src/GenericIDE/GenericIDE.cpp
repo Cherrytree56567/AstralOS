@@ -63,7 +63,105 @@ void GenericIDEDevice::Init(DriverServices& ds, DeviceKey& devKey) {
 
     _ds = &ds;
     devKey = devKey;
-    _ds->Println("GenericIDE Driver Initialised!");
+
+    channels[ATA_PRIMARY  ].base  = (devKey.bars[0] & 0xFFFFFFFC) + 0x1F0 * (!devKey.bars[0]);
+    channels[ATA_PRIMARY  ].ctrl  = (devKey.bars[1] & 0xFFFFFFFC) + 0x3F6 * (!devKey.bars[1]);
+    channels[ATA_SECONDARY].base  = (devKey.bars[2] & 0xFFFFFFFC) + 0x170 * (!devKey.bars[2]);
+    channels[ATA_SECONDARY].ctrl  = (devKey.bars[3] & 0xFFFFFFFC) + 0x376 * (!devKey.bars[3]);
+    channels[ATA_PRIMARY  ].bmide = (devKey.bars[4] & 0xFFFFFFFC) + 0;
+    channels[ATA_SECONDARY].bmide = (devKey.bars[4] & 0xFFFFFFFC) + 8;
+
+    ide_write(ATA_PRIMARY  , ATA_REG_CONTROL, 2);
+    ide_write(ATA_SECONDARY, ATA_REG_CONTROL, 2);
+
+    int count = 0;
+
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            unsigned char err = 0, type = IDE_ATA, status;
+            ide_devices[count].Reserved = 0;
+
+            ide_write(i, ATA_REG_HDDEVSEL, 0xA0 | (j << 4));
+            //sleep(1); // Wait 1ms for drive select to work.
+
+            ide_write(i, ATA_REG_COMMAND, ATA_CMD_IDENTIFY);
+            //sleep(1);
+
+            if (ide_read(i, ATA_REG_STATUS) == 0) {
+                continue;
+            }
+
+            while(1) {
+                status = ide_read(i, ATA_REG_STATUS);
+                if ((status & ATA_SR_ERR)) {
+                    err = 1; 
+                    break;
+                }
+
+                if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRQ)) {
+                    break;
+                }
+            }
+
+
+            if (err != 0) {
+                unsigned char cl = ide_read(i, ATA_REG_LBA1);
+                unsigned char ch = ide_read(i, ATA_REG_LBA2);
+
+                if (cl == 0x14 && ch == 0xEB) {
+                    type = IDE_ATAPI;
+                } else if (cl == 0x69 && ch == 0x96) {
+                    type = IDE_ATAPI;
+                } else {
+                    continue;
+                }
+ 
+                ide_write(i, ATA_REG_COMMAND, ATA_CMD_IDENTIFY_PACKET);
+                //sleep(1);
+            }
+
+            ide_read_buffer(i, ATA_REG_DATA, (void*) ide_buf, 128);
+
+            ide_devices[count].Reserved     = 1;
+            ide_devices[count].Type         = type;
+            ide_devices[count].Channel      = i;
+            ide_devices[count].Drive        = j;
+            ide_devices[count].Signature    = *((unsigned short *)(ide_buf + ATA_IDENT_DEVICETYPE));
+            ide_devices[count].Capabilities = *((unsigned short *)(ide_buf + ATA_IDENT_CAPABILITIES));
+            ide_devices[count].CommandSets  = *((unsigned int *)(ide_buf + ATA_IDENT_COMMANDSETS));
+
+            if (ide_devices[count].CommandSets & (1 << 26)) {
+                ide_devices[count].Size   = *((unsigned int *)(ide_buf + ATA_IDENT_MAX_LBA_EXT));
+            } else {
+                ide_devices[count].Size   = *((unsigned int *)(ide_buf + ATA_IDENT_MAX_LBA));
+            }
+
+            for (int k = 0; k < 40; k += 2) {
+                ide_devices[count].Model[k] = ide_buf[ATA_IDENT_MODEL + k + 1];
+                ide_devices[count].Model[k + 1] = ide_buf[ATA_IDENT_MODEL + k];
+            }
+            ide_devices[count].Model[40] = 0;
+
+            count++;
+        }
+    }
+
+    for (int i = 0; i < 4; i++) {
+        if (ide_devices[i].Reserved == 1) {
+            _ds->Print("Found ");
+            if (ide_devices[i].Type == IDE_ATA) {
+                _ds->Print("ATA");
+            } else if (ide_devices[i].Type == IDE_ATAPI) {
+                _ds->Print("ATAPI");
+            }
+            _ds->Print(" Drive ");
+            _ds->Print(to_hstridng(ide_devices[i].Size / 1024 / 1024 / 2));
+            _ds->Print("GB - ");
+            _ds->Println((const char*)ide_devices[i].Model);
+      }
+    }
+
+    _ds->Println("Generic IDE Driver Initialised!");
 
     Initialised = true;
 }
@@ -164,7 +262,7 @@ unsigned char GenericIDEDevice::ide_polling(unsigned char channel, unsigned int 
  * Who even wrote that mess before???
  * ToT
  * 
- * tbh, mine is looks a bit bad now.
+ * tbh, mine looks a bit bad now.
 */
 unsigned char GenericIDEDevice::ide_print_error(unsigned int drive, unsigned char err) {
     if (err == 0) {
