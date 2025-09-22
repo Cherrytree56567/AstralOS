@@ -49,8 +49,12 @@ uint64_t LoadElf(Elf64_Ehdr* hdr) {
     }
 
     size_t total = total_size + max_align;
+    ks->basicConsole.Print("Allocating ");
+    ks->basicConsole.Println(to_hstring(total));
     uint8_t* raw = (uint8_t*)malloc(total);
     uint8_t* base = (uint8_t*)(((uintptr_t)raw + (max_align - 1)) & ~(max_align - 1));
+    ks->basicConsole.Print("Base ");
+    ks->basicConsole.Println(to_hstring((uint64_t)base));
     if (!base) {
         return 0x0;
     }
@@ -179,7 +183,6 @@ uint64_t LoadElf(Elf64_Ehdr* hdr) {
 */
 void apply_relocations(uint8_t* base, uint64_t rela_vaddr, uint64_t relasz, uint64_t relaent, uint64_t symtab_vaddr, uint64_t strtab_vaddr, 
     uint64_t syment, void* (*symbol_resolver)(const char*)) {
-    ks->pageTableManager.MapMemory((void*)(base + rela_vaddr), (void*)(base + rela_vaddr));
     Elf64_Rela* rela_table = (Elf64_Rela*)(base + rela_vaddr);
     size_t rela_size = relasz;
     size_t rela_ent = relaent;
@@ -195,12 +198,25 @@ void apply_relocations(uint8_t* base, uint64_t rela_vaddr, uint64_t relasz, uint
         uint32_t symIndex = ((rela->r_info) >> 32);
         uint32_t type = ((uint32_t)(rela->r_info));
 
-        ks->pageTableManager.MapMemory((void*)symtab_vaddr, (void*)symtab_vaddr);
-        Elf64_Sym* symtab = (Elf64_Sym*)symtab_vaddr;
+        Elf64_Sym* symtab = (Elf64_Sym*)(base + symtab_vaddr);
         Elf64_Sym* sym = &symtab[symIndex];
 
-        const char* symName = (const char*)(strtab_vaddr + sym->st_name);
+        uint64_t sym_vaddr = sym->st_value;
 
-        ks->basicConsole.Println(symName);
+        uint64_t* reloc_addr = (uint64_t*)(base + rela->r_offset);
+        switch (type) {
+            case R_X86_64_64:
+                *reloc_addr = sym_vaddr + rela->r_addend;
+                break;
+            case R_X86_64_RELATIVE:
+                *reloc_addr = (uint64_t)(base + rela->r_addend);
+                break;
+            case R_X86_64_PC32:
+                *reloc_addr = sym_vaddr + rela->r_addend - (uint64_t)reloc_addr;
+                break;
+            default:
+                ks->basicConsole.Print("Unknown relocation type!");
+                break;
+        }
     }
 }

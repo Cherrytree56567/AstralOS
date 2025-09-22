@@ -1,6 +1,6 @@
 #define DRIVER
 #include <new>
-#include "GenericSATA_AHCI/GenericSATA_AHCI.h"
+#include "GenericIDE/GenericIDE.h"
 #include "global.h"
 
 DriverServices* g_ds = nullptr;
@@ -25,24 +25,22 @@ const char* to_hstring(uint64_t value) {
 extern "C"
 DriverInfo DriverMain(DriverServices& DServices) {
     g_ds = &DServices;
-    DServices.Println("Driver Loaded!");
+    DServices.Println("IDE Driver Loaded!");
 
     DriverInfo di((char*)"", 1, 0, 0);
-    di.name = DServices.strdup("SATA ACHI Driver");
+    di.name = DServices.strdup("IDE Driver");
 
-    void* mem = DServices.malloc(sizeof(GenericSATA_AHCI));
+    void* mem = DServices.malloc(sizeof(GenericIDE));
     if (!mem) {
-        DServices.Println("Failed to Malloc for Generic SATA AHCI");
+        DServices.Println("Failed to Malloc for Generic IDE");
         DServices.Println(to_hstring((uint64_t)mem));
         di.exCode = 1;
         return di;
     }
 
-    GenericSATA_AHCI* factory = new(mem) GenericSATA_AHCI();
+    GenericIDE* factory = new(mem) GenericIDE();
 
     DServices.RegisterDriver(factory);
-
-    DServices.Println("Reg D");
 
     return di;
 }

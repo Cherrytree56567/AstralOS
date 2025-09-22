@@ -2,14 +2,14 @@
 #include "../PCI.h"
 #include "../DriverServices.h"
 
-class GenericSATA_AHCI : public BlockDeviceFactory {
+class GenericIDE : public BlockDeviceFactory {
 public:
-    virtual ~GenericSATA_AHCI() override {}
+    virtual ~GenericIDE() override {}
     virtual bool Supports(const DeviceKey& devKey) override;
     virtual BlockDevice* CreateDevice() override;
 };
 
-class GenericSATA_AHCIDevice : public BlockDevice {
+class GenericIDEDevice : public BlockDevice {
 public:
     virtual void Init(DriverServices& ds) = 0;
     virtual bool ReadSector(uint64_t lba, void* buffer) = 0;

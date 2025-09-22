@@ -15,7 +15,7 @@ public:
     BaseDriver* GetDevice(uint8_t _class, uint8_t subclass, uint8_t progIF);
     const Array<BaseDriver*>& GetDevices() const;
     void CreateDriverServices();
-    DriverServices GetDS();
+    DriverServices& GetDS();
 
 private:
     Array<BaseDriverFactory*> factories;

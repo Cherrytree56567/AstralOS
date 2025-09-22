@@ -940,7 +940,7 @@ char* PCI::GetDeviceCode(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF) {
             return "Unassigned Class";
             break;
         default:
-            return "Unknown Class Code";
+            return (char*)((String)"Unknown Class Code: " + to_hstring(ClassCode) + ", " + " SubClass: " + to_hstring(SubClass) + " ProgIF: " + to_hstring(ProgIF)).c_str();
             break;
     };
 }
