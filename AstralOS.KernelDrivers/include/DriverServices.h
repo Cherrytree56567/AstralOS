@@ -1,6 +1,11 @@
 #pragma once
 #include <cstdint>
 #include <cstddef>
+#ifdef DRIVER
+#include "PCI.h"
+#else 
+#include "../PCI/PCI.h"
+#endif
 
 struct DriverServices;
 
@@ -9,7 +14,7 @@ public:
     virtual ~BaseDriver() {}
     virtual const char* name() const = 0;
     virtual const char* DriverName() const = 0;
-    virtual void Init(DriverServices& ds) = 0;
+    virtual void Init(DriverServices& ds, DeviceKey& devKey) = 0;
     virtual uint8_t GetClass() = 0;
     virtual uint8_t GetSubClass() = 0;
     virtual uint8_t GetProgIF() = 0;
@@ -24,7 +29,7 @@ public:
 
 class BlockDevice : public BaseDriver {
 public:
-    virtual void Init(DriverServices& ds) = 0;
+    virtual void Init(DriverServices& ds, DeviceKey& devKey) override = 0;
     virtual bool ReadSector(uint64_t lba, void* buffer) = 0;
     virtual bool WriteSector(uint64_t lba, const void* buffer) = 0;
 
