@@ -11,7 +11,7 @@ public:
 
 class GenericSATA_AHCIDevice : public BlockDevice {
 public:
-    virtual void Init(DriverServices& ds) = 0;
+    virtual void Init(DriverServices& ds, const DeviceKey& devKey) = 0;
     virtual bool ReadSector(uint64_t lba, void* buffer) = 0;
     virtual bool WriteSector(uint64_t lba, const void* buffer) = 0;
 
@@ -24,4 +24,7 @@ public:
     virtual uint8_t GetProgIF() override = 0;
     virtual const char* name() const override = 0;
     virtual const char* DriverName() const override = 0;
+private:
+    DriverServices* ds = nullptr;
+    DeviceKey& devKey;
 };

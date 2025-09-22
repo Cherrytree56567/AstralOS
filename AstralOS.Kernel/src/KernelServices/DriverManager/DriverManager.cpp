@@ -29,17 +29,8 @@ void DriverManager::Initialize() {
     }
 
     for (size_t i = 0; i < files.size(); ++i) {
-        /*
-         * Janky af combiner
-        */
-        char fullPath[720];
-        char fullPatha[800];
-        strcpy(fullPath, "Drivers/");
-        strcat(fullPath, files[i]);
-        strcpy(fullPatha, fullPath);
-        strcat(fullPatha, "/driver.elf");
-        if (ks->initram.file_exists(fullPatha)) {
-            void* elf = ks->initram.read(fullPath, (char*)"driver.elf");
+        if (ks->initram.file_exists((char*)((String)"Drivers/" + files[i] + "/driver.elf").c_str())) {
+            void* elf = ks->initram.read((char*)((String)"Drivers/" + files[i]).c_str(), (char*)"driver.elf");
             Elf64_Ehdr* hdr = GetELFHeader(elf);
             if (ValidateEhdr(hdr)) {
                 //ks->basicConsole.Println("ELF Driver is Valid!");
@@ -81,14 +72,11 @@ void DriverManager::DetectDevices(Array<DeviceKey>& devices) {
         for (size_t j = 0; j < factories.size(); j++) {
             auto& factory = factories[j];
             if ((factory)->Supports(dev)) {
-                ks->basicConsole.Println(" Driver!");
-                break;
                 BaseDriver* device = factory->CreateDevice();
-                device->Init(ds);
+                device->Init(ds, dev);
+                ks->basicConsole.Println(((String)"Loaded Driver: " + device->name()).c_str());
                 DeviceDrivers.push_back(device);
                 break;
-            } else {
-                ks->basicConsole.Print(" No Driver");
             }
         }
     }
