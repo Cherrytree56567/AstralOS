@@ -120,14 +120,14 @@ struct MCFG {
     uint32_t Length;
     uint8_t Revision;
     uint8_t Checksum;
-    char OEMID[6];
-    char OEMTableID[8];
+    uint8_t OEMID[6];
+    uint8_t OEMTableID[8];
     uint32_t OEMRevision;
     uint32_t CreatorID;
     uint32_t CreatorRevision;
     uint64_t Reserved;
     MCFGEntry entries[];
-};
+}__attribute__((packed));
 
 /*
  * Code from the OSDev Wiki:

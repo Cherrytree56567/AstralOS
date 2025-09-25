@@ -49,12 +49,8 @@ uint64_t LoadElf(Elf64_Ehdr* hdr) {
     }
 
     size_t total = total_size + max_align;
-    ks->basicConsole.Print("Allocating ");
-    ks->basicConsole.Println(to_hstring(total));
     uint8_t* raw = (uint8_t*)malloc(total);
     uint8_t* base = (uint8_t*)(((uintptr_t)raw + (max_align - 1)) & ~(max_align - 1));
-    ks->basicConsole.Print("Base ");
-    ks->basicConsole.Println(to_hstring((uint64_t)base));
     if (!base) {
         return 0x0;
     }
@@ -188,9 +184,6 @@ void apply_relocations(uint8_t* base, uint64_t rela_vaddr, uint64_t relasz, uint
     size_t rela_ent = relaent;
 
     size_t rela_count = rela_size / rela_ent;
-
-    ks->basicConsole.Print("Rela Table: ");
-    ks->basicConsole.Println(to_hstring((uint64_t)(base + rela_vaddr)));
 
     for (size_t i = 0; i < rela_count; i++) {
         Elf64_Rela* rela = &rela_table[i];

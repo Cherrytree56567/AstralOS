@@ -74,7 +74,6 @@ void DriverManager::DetectDevices(Array<DeviceKey>& devices) {
             if ((factory)->Supports(dev)) {
                 BaseDriver* device = factory->CreateDevice();
                 device->Init(ds, dev);
-                ks->basicConsole.Println(((String)"Loaded Driver: " + device->name()).c_str());
                 DeviceDrivers.push_back(device);
                 break;
             }
@@ -136,8 +135,8 @@ void DriverManager::CreateDriverServices() {
         ks->pageFrameAllocator.FreePages(address, pageCount);
     };
 
-    ds.MapMemory = [](void* virtualMemory, void* physicalMemory) { 
-        ks->pageTableManager.MapMemory(virtualMemory, physicalMemory);
+    ds.MapMemory = [](void* virtualMemory, void* physicalMemory, bool cache) { 
+        ks->pageTableManager.MapMemory(virtualMemory, physicalMemory, cache);
     };
 
     ds.malloc = [](size_t size) { 
@@ -178,24 +177,24 @@ void DriverManager::CreateDriverServices() {
         return ks->pcie.EnableMSIx(segment, bus, device, function, vector);
     };
 
-    ds.ConfigReadWord = [](uint8_t bus, uint8_t device, uint8_t function, uint8_t vector) { 
-        return ks->pci.ConfigReadWord(bus, device, function, vector);
+    ds.ConfigReadWorde = [](uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t vector) { 
+        return ks->pcie.ConfigReadWord(segment, bus, device, function, vector);
     };
 
-    ds.ConfigWriteWord = [](uint8_t bus, uint8_t device, uint8_t function, uint8_t vector, uint16_t value) { 
-        ks->pci.ConfigWriteWord(bus, device, function, vector, value);
+    ds.ConfigWriteWorde = [](uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t vector, uint16_t value) { 
+        ks->pcie.ConfigWriteWord(segment, bus, device, function, vector, value);
     };
 
-    ds.ConfigWriteDWord = [](uint8_t bus, uint8_t device, uint8_t function, uint8_t vector, uint32_t value) { 
-        ks->pci.ConfigWriteDWord(bus, device, function, vector, value);
+    ds.ConfigWriteDWorde = [](uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t vector, uint32_t value) { 
+        ks->pcie.ConfigWriteDWord(segment, bus, device, function, vector, value);
     };
 
-    ds.ConfigReadByte = [](uint8_t bus, uint8_t device, uint8_t function, uint8_t vector) {
-        return ks->pci.ConfigReadByte(bus, device, function, vector);
+    ds.ConfigReadBytee = [](uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t vector) {
+        return ks->pcie.ConfigReadByte(segment, bus, device, function, vector);
     };
 
-    ds.ConfigReadDWord = [](uint8_t bus, uint8_t device, uint8_t function, uint8_t vector) { 
-        return ks->pci.ConfigReadDWord(bus, device, function, vector);
+    ds.ConfigReadDWorde = [](uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t vector) { 
+        return ks->pcie.ConfigReadDWord(segment, bus, device, function, vector);
     };
 
     /*
@@ -203,6 +202,13 @@ void DriverManager::CreateDriverServices() {
     */
     ds.RegisterDriver = [](BaseDriverFactory* factory) { 
         ks->driverMan.RegisterDriver(factory);
+    };
+
+    /*
+     * Timer Stuff
+    */
+    ds.sleep = [](uint64_t ms) { 
+        ks->timer.sleep(ms);
     };
 }
 

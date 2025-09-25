@@ -19,18 +19,32 @@ void PCIe::InitializePCIe(MCFG* mcfg) {
  * table by checking it signature.
 */
 bool PCIe::PCIeExists() {
+    ks->basicConsole.Println(mcfgTable->Signature);
     if (mcfgTable == NULL) {
         return false;
-    } else if (mcfgTable->Signature == "MCFG") {
+    } else if (strcmp(mcfgTable->Signature, "MCFG")) {
         return true;
     }
     return false;
 }
 
+/*
+ * I realised that this code is broken
+ * and I found proper code on Github
+ * from Poncho OS which showed me how
+ * to do it.
+ * 
+ * To use PCIe, you shouldn't just
+ * manually iterate through it and check
+ * the info from the Config, you should
+ * find it using the MCFG.
+*/
 void PCIe::checkAllSegments() {
     for (size_t i = 0; i < numSegments; i++) {
         MCFGEntry entry = mcfgTable->entries[i];
-        checkBus(entry.PCISegmentGroupNum, 0);
+        for (uint64_t bus = entry.StartPCIBusNum; bus <= entry.EndPCIBusNum; bus++) {
+            checkBus(entry.BaseAddr, entry.PCISegmentGroupNum, bus);
+        }
     }
 }
 
@@ -38,9 +52,12 @@ void PCIe::checkAllSegments() {
  * This is the Recursive Method
  * to check all PCI devices.
  */
-void PCIe::checkBus(uint16_t segment, uint8_t bus) {
+void PCIe::checkBus(uint64_t baseAddr, uint16_t segment, uint8_t bus) {
+    uint64_t busAddr = baseAddr + (bus << 20);
+    ks->pageTableManager.MapMemory((void*)busAddr, (void*)busAddr);
+
     for (uint8_t device = 0; device < 32; device++) {
-        checkDevice(segment, bus, device);
+        checkDevice(busAddr, segment, bus, device);
     }
 }
 
@@ -49,20 +66,14 @@ void PCIe::checkBus(uint16_t segment, uint8_t bus) {
  * device in a specific segment and
  * add it to our devices array.
 */
-void PCIe::checkDevice(uint16_t segment, uint8_t bus, uint8_t device) {
-    uint8_t function = 0;
-    uint16_t vendorID = getVendorID(segment, bus, device, function);
-    if (vendorID == 0xFFFF) return;
+void PCIe::checkDevice(uint64_t busAddr, uint16_t segment, uint8_t bus, uint8_t device) {
+    uint64_t deviceAddr = busAddr + (device << 15);
+    ks->pageTableManager.MapMemory((void*)deviceAddr, (void*)deviceAddr);
 
-    checkFunction(segment, bus, device, function);
-
-    uint8_t headerType = getHeaderType(segment, bus, device, function);
-    if ((headerType & 0x80) != 0) {
-        for (function = 1; function < 8; function++) {
-            if (getVendorID(segment, bus, device, function) != 0xFFFF) {
-                checkFunction(segment, bus, device, function);
-            }
-        }
+    for (uint64_t function = 0; function < 8; function++) {
+        uint16_t vendorID = getVendorID(segment, bus, device, function);
+        if (vendorID == 0xFFFF) continue;
+        checkFunction(deviceAddr, segment, bus, device, function);
     }
 }
 
@@ -78,8 +89,13 @@ void PCIe::checkDevice(uint16_t segment, uint8_t bus, uint8_t device) {
  * tbf, I just copied this from the PCI class,
  * since both are really similar.
 */
-void PCIe::checkFunction(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function) {
+void PCIe::checkFunction(uint64_t baseAddress, uint16_t segment, uint8_t bus, uint8_t device, uint8_t function) {
     if (deviceAlreadyFound(segment, bus, device, function)) return;
+
+    uint64_t functionAddr = baseAddress + (function << 12);
+    ks->pageTableManager.MapMemory((void*)functionAddr, (void*)functionAddr);
+
+    PCIDeviceHeader* hdr = (PCIDeviceHeader*)functionAddr;
 
     bool hasMSIx = false;
 
@@ -95,20 +111,20 @@ void PCIe::checkFunction(uint16_t segment, uint8_t bus, uint8_t device, uint8_t 
         }
     }
 
-    uint16_t vendorID = getVendorID(segment, bus, device, function);
-    if (vendorID == 0xFFFF) return;
+    uint16_t vendorID = hdr->VendorID;
+    if (hdr->VendorID == 0 || hdr->VendorID == 0xFFFF) return;
 
-    uint8_t classCode = ConfigReadWord(segment, bus, device, function, 0x0B);
-    uint8_t subclass = ConfigReadWord(segment, bus, device, function, 0x0A);
-    uint8_t progIF = ConfigReadWord(segment, bus, device, function, 0x09);
-
-    addDevice(segment, bus, device, function, hasMSIx, vendorID, classCode, subclass, progIF);
+    uint8_t classCode = hdr->Class;
+    uint8_t subclass = hdr->Subclass;
+    uint8_t progIF = hdr->ProgIF;
 
     ks->basicConsole.Println(GetDeviceCode(classCode, subclass, progIF));
 
+    addDevice(segment, bus, device, function, hasMSIx, vendorID, classCode, subclass, progIF);
+
     if (classCode == 0x06 && subclass == 0x04) {
-        uint8_t secondaryBus = ConfigReadWord(segment, bus, device, function, 0x19) & 0xFF;
-        checkBus(segment, secondaryBus);
+        uint8_t secondaryBus = *((uint8_t*)functionAddr + 0x19);
+        checkBus(baseAddress, secondaryBus, segment);
     }
 }
 

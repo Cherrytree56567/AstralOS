@@ -42,6 +42,8 @@ add_custom_target(build
     COMMAND cd bin && sudo umount ${MOUNT_POINT1} && sudo umount ${MOUNT_POINT2}
     COMMAND cd bin && sudo kpartx -d /dev/nbd0 && sudo qemu-nbd --disconnect /dev/nbd0
     COMMAND cd bin && rm -R ${MOUNT_POINT1} ${MOUNT_POINT2}
+    COMMAND cd bin && rm -rf AstralOS.vhd
+    COMMAND cd bin && qemu-img convert -f qcow2 -O vpc AstralOS.qcow2 AstralOS.vhd
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Building Binaries"
 )

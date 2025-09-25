@@ -13,6 +13,7 @@
 #include "PCIe/PCIe.h"
 #include "InitialRamFS/InitialRamFS.h"
 #include "DriverManager/DriverManager.h"
+#include "Timer/Timer.h"
 
 struct BootInfo {
 	FrameBuffer pFramebuffer;
@@ -44,6 +45,8 @@ public:
 	InitialRamFS initram;
 	BootInfo pBootInfo;
 	DriverManager driverMan;
+	APICTimer timer;
+	PIT pit;
 };
 
 extern KernelServices* ks;

@@ -2,6 +2,21 @@
 #include "../PCI/PCI.h"
 #include "../ACPI/ACPI.h"
 
+struct PCIDeviceHeader {
+    uint16_t VendorID;
+    uint16_t DeviceID;
+    uint16_t Command;
+    uint16_t Status;
+    uint8_t RevisionID;
+    uint8_t ProgIF;
+    uint8_t Subclass;
+    uint8_t Class;
+    uint8_t CacheLineSize;
+    uint8_t LatencyTimer;
+    uint8_t HeaderType;
+    uint8_t BIST;
+};
+
 struct MSIXMCRegs {
     uint16_t TableSize : 11;
     uint16_t Reserved : 3;
@@ -62,11 +77,17 @@ public:
     char* GetDeviceCode(uint8_t ClassCode, uint8_t SubClass, uint8_t ProgIF);
 
     void checkAllSegments();
-    void checkBus(uint16_t segment, uint8_t bus);
+    void checkBus(uint64_t baseAddr, uint16_t segment, uint8_t bus);
 
     bool EnableMSIx(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t vector);
 
     Array<DeviceKey> GetDevices();
+
+    uint16_t ConfigReadWord(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
+    void ConfigWriteWord(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint16_t value);
+    void ConfigWriteDWord(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint32_t value);
+    uint8_t ConfigReadByte(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
+    uint32_t ConfigReadDWord(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
 private:
     Array<DeviceKey> Devices;
     MCFG* mcfgTable;
@@ -74,17 +95,11 @@ private:
 
     volatile uint32_t* GetECAMBase(uint16_t segment);
 
-    uint16_t ConfigReadWord(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
-    void ConfigWriteWord(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint16_t value);
-    void ConfigWriteDWord(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint32_t value);
-    uint8_t ConfigReadByte(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
-    uint32_t ConfigReadDWord(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
-
     bool deviceAlreadyFound(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function);
     void addDevice(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, bool hasMSIx, uint16_t vendorID, uint8_t classCode, uint8_t subClass, uint8_t progIF);
     
-    void checkFunction(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function);
-    void checkDevice(uint16_t segment, uint8_t bus, uint8_t device);
+    void checkFunction(uint64_t baseAddress, uint16_t segment, uint8_t bus, uint8_t device, uint8_t function);
+    void checkDevice(uint64_t baseAddress, uint16_t segment, uint8_t bus, uint8_t device);
     uint16_t getVendorID(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function);
     uint8_t getHeaderType(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function);
 };

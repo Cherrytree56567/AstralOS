@@ -19,6 +19,24 @@ const char* to_hstridng(uint64_t value) {
     return ptr;
 }
 
+const char* to_string(int64_t value) {
+    static char buffer[21];
+    char* ptr = buffer + sizeof(buffer) - 1;
+    *ptr = '\0';
+
+    bool isNegative = (value < 0);
+    if (isNegative) value = -value;
+
+    do {
+        *--ptr = '0' + (value % 10);
+        value /= 10;
+    } while (value > 0);
+
+    if (isNegative) *--ptr = '-';
+
+    return ptr;
+}
+
 static inline void outb(uint16_t port, uint8_t val) {
     asm volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
 }
@@ -38,9 +56,29 @@ static inline void insl(uint16_t port, void* addr, uint32_t count) {
                   : "memory");
 }
 
+static inline uint16_t inw(uint16_t port) {
+    uint16_t ret;
+    asm volatile("inw %1, %0" : "=a"(ret) : "Nd"(port));
+    return ret;
+}
+
+static inline void outw(uint16_t port, uint16_t val) {
+    asm volatile("outw %0, %1" : : "a"(val), "Nd"(port));
+}
+
 bool GenericIDE::Supports(const DeviceKey& devKey) {
     if (devKey.classCode == 0x01 && devKey.subclass == 0x01) {
-        return true;
+        if (devKey.progIF == 0x0 || 
+            devKey.progIF == 0x5 || 
+            devKey.progIF == 0xA || 
+            devKey.progIF == 0xF || 
+            devKey.progIF == 0x80 || 
+            devKey.progIF == 0x85 || 
+            devKey.progIF == 0x8A || 
+            devKey.progIF == 0x8F) {
+                g_ds->Print("IDR drv..");
+                return true;
+            }
     }
     return false;
 }
@@ -56,19 +94,15 @@ BlockDevice* GenericIDE::CreateDevice() {
     return device;
 }
 
-void GenericIDEDevice::Init(DriverServices& ds, DeviceKey& devKey) {
-    if (Initialised) {
-        return;
-    }
-
+void GenericIDEDevice::Init(DriverServices& ds, DeviceKey& dKey) {
     _ds = &ds;
-    devKey = devKey;
+    devKey = dKey;
 
-    channels[ATA_PRIMARY  ].base  = (devKey.bars[0] & 0xFFFFFFFC) + 0x1F0 * (!devKey.bars[0]);
-    channels[ATA_PRIMARY  ].ctrl  = (devKey.bars[1] & 0xFFFFFFFC) + 0x3F6 * (!devKey.bars[1]);
-    channels[ATA_SECONDARY].base  = (devKey.bars[2] & 0xFFFFFFFC) + 0x170 * (!devKey.bars[2]);
-    channels[ATA_SECONDARY].ctrl  = (devKey.bars[3] & 0xFFFFFFFC) + 0x376 * (!devKey.bars[3]);
-    channels[ATA_PRIMARY  ].bmide = (devKey.bars[4] & 0xFFFFFFFC) + 0;
+    channels[ATA_PRIMARY ].base = (devKey.bars[0] & 0xFFFFFFFC) + 0x1F0 * (!devKey.bars[0]); 
+    channels[ATA_PRIMARY ].ctrl = (devKey.bars[1] & 0xFFFFFFFC) + 0x3F6 * (!devKey.bars[1]); 
+    channels[ATA_SECONDARY].base = (devKey.bars[2] & 0xFFFFFFFC) + 0x170 * (!devKey.bars[2]); 
+    channels[ATA_SECONDARY].ctrl = (devKey.bars[3] & 0xFFFFFFFC) + 0x376 * (!devKey.bars[3]); 
+    channels[ATA_PRIMARY ].bmide = (devKey.bars[4] & 0xFFFFFFFC) + 0; 
     channels[ATA_SECONDARY].bmide = (devKey.bars[4] & 0xFFFFFFFC) + 8;
 
     ide_write(ATA_PRIMARY  , ATA_REG_CONTROL, 2);
@@ -82,42 +116,37 @@ void GenericIDEDevice::Init(DriverServices& ds, DeviceKey& devKey) {
             ide_devices[count].Reserved = 0;
 
             ide_write(i, ATA_REG_HDDEVSEL, 0xA0 | (j << 4));
-            //sleep(1); // Wait 1ms for drive select to work.
+            _ds->sleep(20); // Why 1ms tho? Is it really that fast?
 
             ide_write(i, ATA_REG_COMMAND, ATA_CMD_IDENTIFY);
-            //sleep(1);
+            _ds->sleep(20);
 
-            if (ide_read(i, ATA_REG_STATUS) == 0) {
-                continue;
-            }
+            status = ide_read(i, ATA_REG_STATUS);
+            if (status == 0) continue;
 
-            while(1) {
+            bool errFlag = false;
+            for (int t = 0; t < 1000000; t++) {
                 status = ide_read(i, ATA_REG_STATUS);
-                if ((status & ATA_SR_ERR)) {
-                    err = 1; 
+                if (status & ATA_SR_ERR) {
+                    errFlag = true;
                     break;
                 }
-
                 if (!(status & ATA_SR_BSY) && (status & ATA_SR_DRQ)) {
                     break;
                 }
             }
 
-
-            if (err != 0) {
-                unsigned char cl = ide_read(i, ATA_REG_LBA1);
-                unsigned char ch = ide_read(i, ATA_REG_LBA2);
-
-                if (cl == 0x14 && ch == 0xEB) {
-                    type = IDE_ATAPI;
-                } else if (cl == 0x69 && ch == 0x96) {
+            if (errFlag) {
+                uint8_t cl = ide_read(i, ATA_REG_LBA1);
+                uint8_t chh = ide_read(i, ATA_REG_LBA2);
+                if ((cl == 0x14 && chh == 0xEB) || (cl == 0x69 && chh == 0x96)) {
                     type = IDE_ATAPI;
                 } else {
                     continue;
                 }
- 
+
                 ide_write(i, ATA_REG_COMMAND, ATA_CMD_IDENTIFY_PACKET);
-                //sleep(1);
+                _ds->sleep(1);
             }
 
             ide_read_buffer(i, ATA_REG_DATA, (void*) ide_buf, 128);
@@ -155,13 +184,11 @@ void GenericIDEDevice::Init(DriverServices& ds, DeviceKey& devKey) {
                 _ds->Print("ATAPI");
             }
             _ds->Print(" Drive ");
-            _ds->Print(to_hstridng(ide_devices[i].Size / 1024 / 1024 / 2));
+            _ds->Print(to_string(ide_devices[i].Size / 1024 / 1024 / 2));
             _ds->Print("GB - ");
             _ds->Println((const char*)ide_devices[i].Model);
       }
     }
-
-    _ds->Println("Generic IDE Driver Initialised!");
 
     Initialised = true;
 }
@@ -264,7 +291,7 @@ unsigned char GenericIDEDevice::ide_polling(unsigned char channel, unsigned int 
  * 
  * tbh, mine looks a bit bad now.
 */
-unsigned char GenericIDEDevice::ide_print_error(unsigned int drive, unsigned char err) {
+unsigned char GenericIDEDevice::ide_print_error(unsigned char err) {
     if (err == 0) {
        return err;
     }
@@ -333,36 +360,225 @@ unsigned char GenericIDEDevice::ide_print_error(unsigned int drive, unsigned cha
    return err;
 }
 
-bool GenericIDEDevice::ReadSector(uint64_t lba, void* buffer) {
+unsigned char GenericIDEDevice::ide_ata_access(unsigned char direction, unsigned int lba, unsigned char numsects, void* buffer) {
+    unsigned char lba_mode, cmd;
+    unsigned char lba_io[6];
+    uint32_t channel = ide_devices[drive].Channel;
+    uint32_t slavebit = ide_devices[drive].Drive;
+    uint16_t bus = channels[channel].base;
+    unsigned char head;
 
+    while (ide_read(channel, ATA_REG_STATUS) & ATA_SR_BSY) {
+
+    }
+
+    if (lba >= 0x10000000) {
+        lba_mode = 2;
+        lba_io[0] = (lba & 0xFF);
+        lba_io[1] = (lba >> 8) & 0xFF;
+        lba_io[2] = (lba >> 16) & 0xFF;
+        lba_io[3] = (lba >> 24) & 0xFF;
+        lba_io[4] = 0;
+        lba_io[5] = 0;
+        head = 0;
+    } else {
+        lba_mode = 1;
+        lba_io[0] = (lba & 0xFF);
+        lba_io[1] = (lba >> 8) & 0xFF;
+        lba_io[2] = (lba >> 16) & 0xFF;
+        lba_io[3] = 0;
+        lba_io[4] = 0;
+        lba_io[5] = 0;
+        head = (lba >> 24) & 0xF;
+    }
+
+    if (lba_mode == 1) {
+        ide_write(channel, ATA_REG_HDDEVSEL, 0xE0 | (slavebit << 4) | head);
+    } else {
+        ide_write(channel, ATA_REG_HDDEVSEL, 0x40 | (slavebit << 4));
+    }
+
+    ide_write(channel, ATA_REG_SECCOUNT0, numsects);
+    ide_write(channel, ATA_REG_LBA0, lba_io[0]);
+    ide_write(channel, ATA_REG_LBA1, lba_io[1]);
+    ide_write(channel, ATA_REG_LBA2, lba_io[2]);
+
+    if (direction == 0) {
+        cmd = (lba_mode == 2) ? ATA_CMD_READ_PIO_EXT : ATA_CMD_READ_PIO;
+    } else {
+        cmd = (lba_mode == 2) ? ATA_CMD_WRITE_PIO_EXT : ATA_CMD_WRITE_PIO;
+    }
+
+    ide_write(channel, ATA_REG_COMMAND, cmd);
+
+    uint16_t* buf = (uint16_t*)buffer;
+    for (unsigned char i = 0; i < numsects; i++) {
+        if (direction == 0) {
+            if (ide_polling(channel, 1)) {
+                return 1;
+            }
+            for (int w = 0; w < 256; w++) {
+                buf[w] = inw(bus);
+            }
+        } else {
+            if (ide_polling(channel, 0)) return 1;
+            for (int w = 0; w < 256; w++) {
+                outw(bus, buf[w]);
+            }
+            ide_write(channel, ATA_REG_COMMAND, (lba_mode == 2) ? ATA_CMD_CACHE_FLUSH_EXT : ATA_CMD_CACHE_FLUSH);
+            ide_polling(channel, 0);
+        }
+        buf += 256;
+    }
+    return 0;
 }
 
-bool GenericIDEDevice::WriteSector(uint64_t lba, const void* buffer) {
+void GenericIDEDevice::ide_wait_irq() {
+   while (!ide_irq_invoked)
+      ;
+   ide_irq_invoked = 0;
+}
 
+void GenericIDEDevice::ide_irq() {
+   ide_irq_invoked = 1;
+}
+
+unsigned char GenericIDEDevice::ide_atapi_read(unsigned int lba, unsigned char numsects, void* buffer) {
+    unsigned int channel = ide_devices[drive].Channel;
+    unsigned int slavebit = ide_devices[drive].Drive;
+    unsigned int bus = channels[channel].base;
+    unsigned int words = 1024;
+    unsigned char err;
+
+    ide_write(channel, ATA_REG_CONTROL, channels[channel].nIEN = ide_irq_invoked = 0x0);
+
+    atapi_packet[0] = ATAPI_CMD_READ;
+    atapi_packet[1] = 0x0;
+    atapi_packet[2] = (lba >> 24) & 0xFF;
+    atapi_packet[3] = (lba >> 16) & 0xFF;
+    atapi_packet[4] = (lba >> 8) & 0xFF;
+    atapi_packet[5] = (lba >> 0) & 0xFF;
+    atapi_packet[6] = 0x0;
+    atapi_packet[7] = 0x0;
+    atapi_packet[8] = 0x0;
+    atapi_packet[9] = numsects;
+    atapi_packet[10] = 0x0;
+    atapi_packet[11] = 0x0;
+
+    ide_write(channel, ATA_REG_HDDEVSEL, slavebit << 4);
+
+    for(int i = 0; i < 4; i++) {
+        ide_read(channel, ATA_REG_ALTSTATUS);
+    }
+
+    ide_write(channel, ATA_REG_FEATURES, 0);
+
+    ide_write(channel, ATA_REG_LBA1, (words * 2) & 0xFF);
+    ide_write(channel, ATA_REG_LBA2, (words * 2) >> 8);
+
+    ide_write(channel, ATA_REG_COMMAND, ATA_CMD_PACKET);
+
+    if (err = ide_polling(channel, 1)) {
+        return err;
+    }
+
+    asm volatile("rep outsw" : : "c"(6), "d"(bus), "S"(atapi_packet));
+
+    uint16_t* buf16 = (uint16_t*)buffer;
+    for (int i = 0; i < numsects; i++) {
+        ide_wait_irq();
+        if ((err = ide_polling(channel, 1))) {
+            return err;
+        }
+
+        asm volatile(
+            "rep insw"
+            : "=D"(buf16)
+            : "c"(words), "d"(bus), "D"(buf16)
+            : "memory"
+        );
+
+        buf16 += words;
+    }
+
+    return 0;
+}
+
+bool GenericIDEDevice::ReadSector(uint64_t lba, void* buffer) {
+    if (drive > 3 || ide_devices[drive].Reserved == 0) {
+        _ds->Println("[IDE] Drive Not Found");
+        return false;
+    }
+
+    if ((lba >= ide_devices[drive].Size) && ide_devices[drive].Type == IDE_ATA) {
+        _ds->Println("[IDE] Out of bounds");
+        return false;
+    }
+
+    unsigned char err = 0;
+    if (ide_devices[drive].Type == IDE_ATA) {
+        err = ide_ata_access(ATA_READ, lba, 1, buffer);
+    } else if (ide_devices[drive].Type == IDE_ATAPI) {
+        err = ide_atapi_read(lba, 1, buffer);
+    }
+
+    ide_print_error(err);
+    return true;
+}
+
+bool GenericIDEDevice::WriteSector(uint64_t lba, void* buffer) {
+    if (drive > 3 || ide_devices[drive].Reserved == 0) {
+        _ds->Println("[IDE] Drive Not Found");
+        return false;
+    }
+
+    if ((lba >= ide_devices[drive].Size) && ide_devices[drive].Type == IDE_ATA) {
+        _ds->Println("[IDE] Out of bounds");
+        return false;
+    }
+
+    unsigned char err = 0;
+    if (ide_devices[drive].Type == IDE_ATA) {
+        err = ide_ata_access(ATA_WRITE, lba, 1, buffer);
+    } else if (ide_devices[drive].Type == IDE_ATAPI) {
+        err = 4;
+    }
+
+    ide_print_error(err);
+}
+
+bool GenericIDEDevice::SetDrive(uint8_t dr) {
+    drive = dr;
+    return true;
 }
 
 uint64_t GenericIDEDevice::SectorCount() const {
-
+    return ide_devices[drive].Size;
 }
 
 uint32_t GenericIDEDevice::SectorSize() const {
-
+    if (ide_devices[drive].Type == IDE_ATA) {
+        return 512;
+    } else if (ide_devices[drive].Type == IDE_ATAPI) {
+        return 2048;
+    }
+    return 0;
 }
 
 void* GenericIDEDevice::GetInternalBuffer() {
-
+    return (void*)ide_buf;
 }
 
 uint8_t GenericIDEDevice::GetClass() {
-    return devKey->classCode;
+    return devKey.classCode;
 }
 
 uint8_t GenericIDEDevice::GetSubClass() {
-    return devKey->subclass;
+    return devKey.subclass;
 }
 
 uint8_t GenericIDEDevice::GetProgIF() {
-    return devKey->progIF;
+    return devKey.progIF;
 }
 
 /*
@@ -372,8 +588,8 @@ uint8_t GenericIDEDevice::GetProgIF() {
  * for now.
 */
 const char* GenericIDEDevice::name() const {
-    uint16_t vendor = _ds->ConfigReadWord(devKey->bus, devKey->device, devKey->function, 0x00);
-    uint16_t device = _ds->ConfigReadWord(devKey->bus, devKey->device, devKey->function, 0x02);
+    uint16_t vendor = _ds->ConfigReadWord(devKey.bus, devKey.device, devKey.function, 0x00);
+    uint16_t device = _ds->ConfigReadWord(devKey.bus, devKey.device, devKey.function, 0x02);
     if (vendor == 0x8086) {
         return "Intel IDE Controller";
     } else if (vendor == 0x80EE) {

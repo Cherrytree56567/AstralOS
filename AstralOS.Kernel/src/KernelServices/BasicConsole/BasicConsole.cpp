@@ -1,8 +1,33 @@
 #include "BasicConsole.h"
+#include "../../Utils/cpu.h"
 
 BasicConsole::BasicConsole(FrameBuffer fb) : pFramebuffer(fb) {
     CursorPosition.X = 10;
     CursorPosition.Y = 10;
+    outb(0x3F8 + 1, 0x00);
+    outb(0x3F8 + 3, 0x80);
+    outb(0x3F8 + 0, 0x03);
+    outb(0x3F8 + 1, 0x00);
+    outb(0x3F8 + 3, 0x03);
+    outb(0x3F8 + 2, 0xC7);
+    outb(0x3F8 + 4, 0x0B);
+}
+
+int is_transmit_empty() {
+    return inb(0x3F8 + 5) & 0x20;
+}
+
+void serial_write_char(char a) {
+    while (is_transmit_empty() == 0);
+    outb(0x3F8, a);
+}
+
+void serial_write(const char* str) {
+    while (*str) {
+        if (*str == '\n')
+            serial_write_char('\r'); // so newlines look right
+        serial_write_char(*str++);
+    }
 }
 
 void BasicConsole::putChar(unsigned int colour, char chr, unsigned int xOff, unsigned int yOff) {
@@ -29,6 +54,7 @@ void BasicConsole::putChar(unsigned int colour, char chr, unsigned int xOff, uns
 
 void BasicConsole::Print(const char* str, unsigned int colour) {
     const char* chr = str;
+    serial_write(chr);
     while (*chr != 0) {
         if (*chr == '\n') {
             CursorPosition.X = 10;           // Reset X position for new line
@@ -48,6 +74,8 @@ void BasicConsole::Print(const char* str, unsigned int colour) {
 
 void BasicConsole::Println(const char* str, unsigned int colour) {
     const char* chr = str;
+    serial_write(chr);
+    serial_write("\n");
     while (*chr != 0) {
         if (*chr == '\n') {
             CursorPosition.X = 10;           // Reset X position for new line

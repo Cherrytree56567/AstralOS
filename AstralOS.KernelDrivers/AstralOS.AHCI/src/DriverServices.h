@@ -1,0 +1,127 @@
+#pragma once
+#include <cstdint>
+#include <cstddef>
+#ifdef DRIVER
+#include "PCI.h"
+#else 
+#include "../PCI/PCI.h"
+#endif
+
+struct DriverServices;
+
+enum DriverType {
+    BaseDev,
+    BlockDev
+};
+
+class BaseDriver {
+public:
+    virtual ~BaseDriver() {}
+    virtual const char* name() const = 0;
+    virtual const char* DriverName() const = 0;
+    virtual void Init(DriverServices& ds, DeviceKey& devKey) = 0;
+    virtual uint8_t GetClass() = 0;
+    virtual uint8_t GetSubClass() = 0;
+    virtual uint8_t GetProgIF() = 0;
+    virtual DriverType GetDriverType() = 0;
+};
+
+class BaseDriverFactory {
+public:
+    virtual ~BaseDriverFactory() {}
+    virtual bool Supports(const DeviceKey& devKey) = 0;
+    virtual BaseDriver* CreateDevice() = 0;
+};
+
+class BlockDevice : public BaseDriver {
+public:
+    virtual void Init(DriverServices& ds, DeviceKey& devKey) override = 0;
+    virtual bool ReadSector(uint64_t lba, void* buffer) = 0;
+    virtual bool WriteSector(uint64_t lba, void* buffer) = 0;
+    virtual bool SetDrive(uint8_t drive) = 0;
+
+    virtual uint64_t SectorCount() const = 0;
+    virtual uint32_t SectorSize() const = 0;
+    virtual void* GetInternalBuffer() = 0;
+
+    virtual uint8_t GetClass() override = 0;
+    virtual uint8_t GetSubClass() override = 0;
+    virtual uint8_t GetProgIF() override = 0;
+    virtual const char* name() const override = 0;
+    virtual const char* DriverName() const override = 0;
+    virtual DriverType GetDriverType() override {
+        return BlockDev;
+    }
+};
+
+class BlockDeviceFactory : public BaseDriverFactory {
+public:
+    virtual ~BlockDeviceFactory() {}
+    virtual bool Supports(const DeviceKey& devKey) override = 0;
+    virtual BlockDevice* CreateDevice() override = 0;
+};
+
+struct DriverServices {
+    /*
+     * Debugging
+    */
+    void (*Print)(const char* str);
+    void (*Println)(const char* str);
+
+    /*
+     * Memory
+    */
+    void* (*RequestPage)();
+    void (*LockPage)(void* address);
+    void (*LockPages)(void* address, uint64_t pageCount);
+    void (*FreePage)(void* address);
+    void (*FreePages)(void* address, uint64_t pageCount);
+    void (*MapMemory)(void* virtualMemory, void* physicalMemory, bool cache);
+    void* (*malloc)(size_t size);
+    void (*free)(void* ptr);
+    char* (*strdup)(const char* str);
+
+    /*
+     * IRQs
+    */
+    void (*SetDescriptor)(uint8_t vector, void* isr, uint8_t flags);
+
+    /*
+     * PCI/e
+    */
+    bool (*PCIExists)();
+    bool (*PCIeExists)();
+    bool (*EnableMSI)(uint8_t bus, uint8_t device, uint8_t function, uint8_t vector);
+    bool (*EnableMSIx)(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t vector);
+    uint16_t (*ConfigReadWord)(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
+    void (*ConfigWriteWord)(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint16_t value);
+    void (*ConfigWriteDWord)(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint32_t value);
+    uint8_t (*ConfigReadByte)(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
+    uint32_t (*ConfigReadDWord)(uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
+    uint16_t (*ConfigReadWorde)(uint16_t segment, uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
+    void (*ConfigWriteWorde)(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint16_t value);
+    void (*ConfigWriteDWorde)(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset, uint32_t value);
+    uint8_t (*ConfigReadBytee)(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
+    uint32_t (*ConfigReadDWorde)(uint16_t segment, uint8_t bus, uint8_t device, uint8_t function, uint8_t offset);
+
+    /*
+     * Driver Stuff
+    */
+    void (*RegisterDriver)(BaseDriverFactory* factory);
+
+    /*
+     * Timer Stuff
+    */
+    void (*sleep)(uint64_t ms);
+};
+
+struct DriverInfo {
+    char* name; // Driver Name (for debugging and stuff)
+    int verMaj; // Version Major
+    int verMin; // Version Minor
+    int exCode; // Exit Code
+
+    //            Name     Ver Maj    Ver Min   Exit Code
+    DriverInfo(char* nam, int verMa, int verMi, int Ecode) 
+             : name(name), verMaj(verMa), verMin(verMi), exCode(Ecode) {}
+};

@@ -62,11 +62,15 @@ struct IDTR64 {
 } __attribute__((packed));
 
 struct InterruptFrame {
+    uint64_t rax, rcx, rdx, rbx, rsp_copy, rbp, rsi, rdi;
+    uint64_t r8, r9, r10, r11, r12, r13, r14, r15;
+    uint64_t rflags;
     uint64_t rip;
     uint64_t cs;
-    uint64_t rflags;
-    uint64_t rsp;
-    uint64_t ss;
+    uint64_t rflags_cpu;
+    uint64_t errcode;
+    uint64_t rsp_cpu;
+    uint64_t ss_cpu;
 };
 
 extern "C" void exception_handler(uint64_t vector, uint64_t errCode, InterruptFrame* frame);

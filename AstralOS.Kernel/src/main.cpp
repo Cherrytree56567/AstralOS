@@ -245,11 +245,46 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
         kernelServices.basicConsole.Println("No PCI/PCIe devices found.");
     }
 
+    kernelServices.timer.Calibrate();
+
+    kernelServices.basicConsole.Print("Waiting for 1s...");
+    kernelServices.timer.sleep(1000);
+    kernelServices.basicConsole.Println("Done!");
+
     /*
      * Driver Stuff
     */
     kernelServices.driverMan.Initialize();
     kernelServices.driverMan.DetectDevices(devices);
+
+    /*
+     * IDE Driver Test
+    
+    BaseDriver* driver = kernelServices.driverMan.GetDevice(0x1, 0x1, 0x0);
+    if (driver) {
+        kernelServices.basicConsole.Println(((String)"Found Driver: " + driver->name()).c_str());
+        BlockDevice* bldev = static_cast<BlockDevice*>(driver);
+        for (int i = 0; i < 3; i++) {
+            if (bldev->SetDrive(i) && bldev->SectorCount() > 0) {
+                ks->basicConsole.Println(((String)"Drive " + (String)to_hstring((uint64_t)i) + " is present").c_str());
+                break;
+            } else {
+                ks->basicConsole.Println(((String)"Drive " + (String)to_hstring((uint64_t)i) + " is not present").c_str());
+            }
+        }
+
+        uint32_t sectorSize = bldev->SectorSize();
+        char* buffer = new char[sectorSize];
+
+        uint64_t lba = 8;
+        if (bldev->ReadSector(lba, buffer))  {
+            ks->basicConsole.Print("Drive Buffer LBA0: ");
+            buffer[sectorSize - 1] = '\0';
+            ks->basicConsole.Println((char*)buffer);
+        } else {
+            ks->basicConsole.Println("Failed Reading Sector");
+        }
+    }*/
 
     while (true) {
         
