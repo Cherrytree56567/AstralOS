@@ -430,6 +430,28 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
                 return Status;
             }
 
+            Print(L"ss\n");
+
+            if (Handles) {
+                FreePool(Handles);
+                Print(L"Handles freed\n");
+            }
+
+            if (Buffer) {
+                FreePool(Buffer);
+                Print(L"Buffer freed\n");
+            }
+
+            BootInfo bi;
+			bi.pFramebuffer = framebuffer;
+            bi.rsdp = rsdsp;
+            bi.initrdBase = InitrdBuffer;
+            bi.initrdSize = InitrdSize;
+
+            Print(L"nn\n");
+
+            int (*kernel_main)(BootInfo*) = (int (*)(BootInfo*))ehdr.e_entry;
+
             // Clear the screen by filling it with black
             UINTN Width = GraphicsOutput->Mode->Info->HorizontalResolution;
             UINTN Height = GraphicsOutput->Mode->Info->VerticalResolution;
@@ -442,11 +464,12 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
             UINTN MapSize, MapKey;
             UINTN DescriptorSize;
             UINT32 DescriptorVersion;
+
+            MapSize = 0;
             // First call to get size
             Status = uefi_call_wrapper(BS->GetMemoryMap, 5, &MapSize, Map, &MapKey, &DescriptorSize, &DescriptorVersion);
 
-            // Add some buffer room BEFORE allocating
-            MapSize += 2 * DescriptorSize;
+            MapSize += DescriptorSize;
 
             // Allocate map
             Status = uefi_call_wrapper(BS->AllocatePool, 3, EfiLoaderData, MapSize, (void**)&Map);
@@ -462,25 +485,6 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
                 return Status;
             }
 
-            BootInfo bi;
-			bi.pFramebuffer = framebuffer;
-            bi.mMap = Map;
-			bi.mMapSize = MapSize;
-			bi.mMapDescSize = DescriptorSize;
-            bi.rsdp = rsdsp;
-            bi.initrdBase = InitrdBuffer;
-            bi.initrdSize = InitrdSize;
-
-            int (*kernel_main)(BootInfo*) = (int (*)(BootInfo*))ehdr.e_entry;
-
-            FreePool(Handles);
-            FreePool(Buffer);
-            FreePool(VolumeInfo);
-            if (FileBuffer != NULL) {
-                FreePool(FileBuffer);
-                FileBuffer = NULL; // Set to NULL to prevent accidental reuse
-            }
-
             status = uefi_call_wrapper(BS->ExitBootServices, 2, ImageHandle, MapKey);
             if (EFI_ERROR(status)) {
                 Print(L"Failed to exit boot services: %r\n", status);
@@ -488,6 +492,10 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
             }
 
             SafeFree(ParentDevicePath);
+
+            bi.mMap = Map;
+			bi.mMapSize = MapSize;
+			bi.mMapDescSize = DescriptorSize;
 
             int return_value = kernel_main(&bi);
 

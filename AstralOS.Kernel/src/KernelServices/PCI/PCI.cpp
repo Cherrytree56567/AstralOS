@@ -1118,7 +1118,9 @@ void PCI::checkBus(uint8_t bus) {
 }
 
 void PCI::checkAllBuses() {
-    checkBus(0);
+    for (uint8_t bus = 0; bus < 256; bus++) {
+        checkBus(bus);
+    }
 }
 
 /*

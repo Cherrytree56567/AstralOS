@@ -109,7 +109,7 @@ struct IDEChannelRegisters {
    unsigned short ctrl;  // Control Base
    unsigned short bmide; // Bus Master IDE
    unsigned char  nIEN;  // nIEN (No Interrupt);
-} channels[2];
+};
 
 struct ide_device {
    unsigned char  Reserved;    // 0 (Empty) or 1 (This Drive really exists).
@@ -121,7 +121,7 @@ struct ide_device {
    unsigned int   CommandSets; // Command Sets Supported.
    unsigned int   Size;        // Size in Sectors.
    unsigned char  Model[41];   // Model in string.
-} ide_devices[4];
+};
 
 class GenericIDE : public BlockDeviceFactory {
 public:
@@ -134,7 +134,8 @@ class GenericIDEDevice : public BlockDevice {
 public:
     virtual void Init(DriverServices& ds, DeviceKey& devKey) override;
     virtual bool ReadSector(uint64_t lba, void* buffer) override;
-    virtual bool WriteSector(uint64_t lba, const void* buffer) override;
+    virtual bool WriteSector(uint64_t lba, void* buffer) override;
+    virtual bool SetDrive(uint8_t drive) override;
 
     virtual uint64_t SectorCount() const override;
     virtual uint32_t SectorSize() const override;
@@ -150,13 +151,21 @@ private:
     void ide_write(unsigned char channel, unsigned char reg, unsigned char data);
     void ide_read_buffer(uint8_t channel, uint8_t reg, void* buffer, uint32_t quads);
     unsigned char ide_polling(unsigned char channel, unsigned int advanced_check);
-    unsigned char ide_print_error(unsigned int drive, unsigned char err);
+    unsigned char ide_print_error(unsigned char err);
+    unsigned char ide_ata_access(unsigned char direction, unsigned int lba, unsigned char numsects, void* buffer);
+    unsigned char ide_atapi_read(unsigned int lba, unsigned char numsects, void* buffer);
+
+    void ide_irq();
+    void ide_wait_irq();
 
     DriverServices* _ds = nullptr;
-    DeviceKey* devKey = nullptr;
+    DeviceKey devKey;
     bool Initialised = false;
 
     unsigned char ide_buf[2048] = {0};
-    const volatile unsigned static char ide_irq_invoked = 0;
-    const unsigned char atapi_packet[12] = {0xA8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    volatile unsigned char ide_irq_invoked;
+    unsigned char atapi_packet[12] = {0xA8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    uint8_t drive;
+    IDEChannelRegisters channels[2];
+    ide_device ide_devices[4];
 };

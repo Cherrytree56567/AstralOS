@@ -6,6 +6,7 @@ CTestTestfile.cmake
 CMakeUserPresets.json
 CMakePresets.json
 *.qcow2
+*.vhd
 
 .vs
 .vscode

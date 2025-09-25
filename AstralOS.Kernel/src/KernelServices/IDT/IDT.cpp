@@ -2,25 +2,29 @@
 #include "../KernelServices.h"
 
 extern "C" void exception_handler(uint64_t vector, uint64_t errCode, InterruptFrame* frame) {
-    ks->basicConsole.ClearLines(8);
+    ks->basicConsole.ClearLines(12);
     ks->basicConsole.CursorPosition = {0, 0};
     ks->basicConsole.Println("=== EXCEPTION ===");
     ks->basicConsole.Println(((String)"Vector: " + to_hstring(vector)).c_str());
     ks->basicConsole.Println(((String)"Error Code: " + to_hstring(errCode)).c_str());
     ks->basicConsole.Println(((String)"RIP: " + to_hstring(frame->rip)).c_str());
-    ks->basicConsole.Println(((String)"RSP: " + to_hstring(frame->rsp)).c_str());
     ks->basicConsole.Println(((String)"CS: " + to_hstring(frame->cs)).c_str());
-    ks->basicConsole.Println(((String)"SS: " + to_hstring(frame->ss)).c_str());
-    ks->basicConsole.Println(((String)"RFLAGS: " + to_hstring(frame->rflags)).c_str());
+    ks->basicConsole.Println(((String)"RFLAGS: " + to_hstring(frame->rflags_cpu)).c_str());
     ks->basicConsole.Println("=================");
     while (true) __asm__ volatile ("cli; hlt");
 }
 
 extern "C" void hardware_handler(uint64_t vector) {
+    if (vector == 0x20) {
+        ks->timer.g_ticks++;
+        ks->apic.WriteAPIC(APICRegs::EOI, 0);
+        return;
+    }
     ks->basicConsole.Print("Hardware Interrupt at Vector: ");
     ks->basicConsole.Println(to_hstring(vector));
     ks->apic.WriteAPIC(APICRegs::EOI, 0);
 }
+
 extern "C" void apic_handler(uint64_t vector) {
     ks->basicConsole.Print("APIC Interrupt at Vector: ");
     ks->basicConsole.Println(to_hstring(vector));

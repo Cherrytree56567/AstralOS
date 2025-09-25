@@ -1,0 +1,72 @@
+[2J[01;01H[=3h[2J[01;01H[0m[35m[40m[2J[01;01H[=3h[2J[01;01H[0m[35m[40m[0m[37m[40mBdsDxe: loading Boot0002 "EFI Internal Shell" from Fv(7CB8BDC9-F8EB-4F34-AAEA-3EE4AF6516A1)/FvFile(7C04A583-9E3E-4F1C-AD65-E05268D0B4D1)
+BdsDxe: starting Boot0002 "EFI Internal Shell" from Fv(7CB8BDC9-F8EB-4F34-AAEA-3EE4AF6516A1)/FvFile(7C04A583-9E3E-4F1C-AD65-E05268D0B4D1)
+[2J[01;01H[01;01HUEFI Interactive Shell v2.2
+EDK II
+UEFI v2.70 (EDK II, 0x00010000)
+[1m[33m[40mMapping table[0m[37m[40m
+[1m[33m[40m      FS0:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40mHD0a65535a1:;BLK1:
+          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(1,GPT,E1098C1E-A9A0-4965-8E44-F95626E712A1,0x800,0x2F000)
+[1m[33m[40m     BLK0:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
+          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)
+[1m[33m[40m     BLK3:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
+          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x2,0xFFFF,0x0)
+[1m[33m[40m     BLK2:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
+          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(2,GPT,ABD183E7-20C8-4056-89E1-906005811BE8,0x2F800,0x13D0000)
+[15;01HPress [1m[37m[40mESC[0m[37m[40m in 5 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 4 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.
+[16;01H[1m[33m[40mShell> [0m[37m[40m[16;08Hf[16;09H[16;09Hs[16;10H[16;10H0[16;11H[16;11H:[16;12H[16;12H
+[17;01H[1m[33m[40mFS0:\> [0m[37m[40m[17;08H [17;09H[17;09Hc[17;10H[17;10Hd[17;11H[17;11H [17;12H[17;12He[17;13H[17;13Hf[17;14H[17;14Hi[17;15H[17;15H/[17;16H[17;16Hb[17;17H[17;17Ho[17;18H[17;18Ho[17;19H[17;19Ht[17;20H[17;20H
+[18;01H[1m[33m[40mFS0:\efi\boot\> [0m[37m[40m[18;17HBOOTX64.EFI[18;28H[18;28H
+Found ACPI 2.0 RSDP at: 0x7FB7E014
+Volume label is ''
+Offset: 0x1000Addr: 0x1000Offset: 0xF000Addr: 0xF000Offset: 0x2E000Addr: 0x2E000Offset: 0x34000Addr: 0x34000initramfs loaded at 0x7E39E018 (62976 bytes)
+GOP located
+ss
+Handles freed
+Buffer freed
+nn
+Boot Info Framebuffer Addr: Current Addr: 0xFFFFFFFF0000D321
+RSDP Addr: 0xFFFFFFFF7FB7E014
+RSDP Signature: RSD PTR �BOCHS tз$
+RSDP OEM ID: BOCHS tз$
+RSDP Revision: 0x2
+ACPI XSDT Addr: 0xFFFFFFFF7FB7D0E8
+XSDT Length: 0x54
+XSDT Signature: XSDTT
+XSDT OEM ID: BOCHS BXPC    
+XSDT Entries: 0x6
+Interrupts Initialized.
+APIC is Supported.
+IOAPIC initialized, all IRQs masked.
+APIC is Enabled.
+MADT Address: 0xFFFFFFFF7FB78000
+MADT Processor Local APIC: 0xFFFFFFFF7FB7802C
+MADT I/O APIC: 0xFFFFFFFF7FB78034
+Allocated 32 bytes at 0xFFFF880000000020
+Allocated 64 bytes at 
+0xFFFF880000000060
+Freed 32-byte block
+Allocated 16 bytes at 0xFFFF880000000020
+Freed remaining blocks
+Array Size Test: 
+99, 98, 90, hi
+MCFG<
+PCIe Exists
+Bridge, Host
+Display Controller, VGA
+Bridge, ISA
+Mass Storage Controller, Serial ATA, ACHI 1.0
+Serial Bus Controller, SMBus
+Waiting for 1s...Done!
+Driver Loaded!
+Reg D
+IDE Driver Loaded!
+Bar 5: 0xFFFFFFFFC1010000
+AHCI Version: 1.0
+64-bit DMA support: yes
+Number of ports: 0x5
+Allocated 1KB for Command List
+Allocated 1KB for Command List
+Allocated 1KB for Command List
+Allocated 1KB for Command List
+Allocated 1KB for Command List
+Generic AHCI Initialized!
