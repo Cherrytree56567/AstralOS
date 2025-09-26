@@ -259,12 +259,12 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
     /*
      * IDE Driver Test
-    
-    BaseDriver* driver = kernelServices.driverMan.GetDevice(0x1, 0x1, 0x0);
+    */
+    BaseDriver* driver = kernelServices.driverMan.GetDevice(0x1, 0x6, 0x1);
     if (driver) {
-        kernelServices.basicConsole.Println(((String)"Found Driver: " + driver->name()).c_str());
+        kernelServices.basicConsole.Println(((String)"Found Driver: " + driver->DriverName()).c_str());
         BlockDevice* bldev = static_cast<BlockDevice*>(driver);
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 32; i++) {
             if (bldev->SetDrive(i) && bldev->SectorCount() > 0) {
                 ks->basicConsole.Println(((String)"Drive " + (String)to_hstring((uint64_t)i) + " is present").c_str());
                 break;
@@ -274,17 +274,32 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
         }
 
         uint32_t sectorSize = bldev->SectorSize();
-        char* buffer = new char[sectorSize];
+        uint32_t sectorCount = bldev->SectorCount();
+        const char* model = bldev->name();
 
-        uint64_t lba = 8;
-        if (bldev->ReadSector(lba, buffer))  {
-            ks->basicConsole.Print("Drive Buffer LBA0: ");
-            buffer[sectorSize - 1] = '\0';
-            ks->basicConsole.Println((char*)buffer);
-        } else {
-            ks->basicConsole.Println("Failed Reading Sector");
+        ks->basicConsole.Println(((String)"Model: " + (String)model).c_str());
+        ks->basicConsole.Println(((String)"Sector Size: " + (String)to_string((uint64_t)sectorSize)).c_str());
+        ks->basicConsole.Println(((String)"Sector Count: " + (String)to_string((uint64_t)sectorCount)).c_str());
+
+        uint64_t buf_phys = (uint64_t)ks->pageFrameAllocator.RequestPage();
+        uint64_t buf_virt = 0xFFFFFFFF00000000 + buf_phys;
+
+        ks->pageTableManager.MapMemory((void*)buf_virt, (void*)buf_phys, false);
+
+        memset((void*)buf_virt, 0, 512);
+
+        char* buffer = (char*)buf_virt;
+
+        for (uint64_t lba = 5040; lba < 5060; lba++) {
+            if (bldev->ReadSector(lba, (void*)buf_phys))  {
+                ks->basicConsole.Print(((String)"Drive Buffer LBA" + to_string(lba) + ": ").c_str());
+                buffer[sectorSize - 1] = '\0';
+                ks->basicConsole.Println((char*)buffer);
+            } else {
+                ks->basicConsole.Println("Failed Reading Sector");
+            }
         }
-    }*/
+    }
 
     while (true) {
         
