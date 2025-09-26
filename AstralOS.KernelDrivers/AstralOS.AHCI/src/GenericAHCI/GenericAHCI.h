@@ -26,6 +26,39 @@
 #define HBA_PxCMD_CR 0x8000
 
 /*
+ * From IPXE:
+ * https://dox.ipxe.org/ata_8h.html
+*/
+#define ATA_CMD_IDENTIFY 0xec
+
+/*
+ * From Huihoo:
+ * https://docs.huihoo.com/doxygen/linux/kernel/3.7/include_2linux_2ata_8h.html
+*/
+#define ATA_CMD_PACKET 0xA0
+
+/*
+ * From singlix:
+ * https://www.singlix.com/trdos/archive/code_archive/IDE_ATA_ATAPI_Tutorial.pdf
+*/
+#define ATA_CMD_READ_DMA_EXT 0x25
+
+#define ATAPI_CMD_IDENTIFY 0xa1
+
+/*
+ * From acess2:
+ * https://gitlab.ucc.gu.uwa.edu.au/tpg/acess2/-/blob/00a16a4e22cd2445414db9dc1ae0dfc99e69d584/KernelLand/Modules/Storage/AHCI/ata.h
+*/
+#define ATA_STATUS_BSY 0x80
+#define ATA_STATUS_DRQ 0x08
+
+/*
+ * From Quinn OS:
+ * https://git.quinnos.com/quinn-os/quinn-os/raw/commit/1046606ae29b2faa6354f41a5ea941c673a35fa5/ahci.c
+*/
+#define HBA_PxIS_TFES (1 << 30)
+
+/*
  * Structs from the OSDev Wiki:
  * https://wiki.osdev.org/AHCI
 */
@@ -265,6 +298,114 @@ struct HBA_CMD_TBL {
 	HBA_PRDT_ENTRY prdt_entry[1];
 };
 
+/*
+ * From Tianocore EDKII
+ * https://github.com/tianocore/edk2/blob/master/MdePkg/Include/IndustryStandard/Atapi.h#L78
+*/
+struct ATA_IDENTIFY_DATA {
+    uint16_t config;
+    uint16_t obsolete_1;
+    uint16_t specific_config;
+    uint16_t obsolete_3;
+    uint16_t retired_4_5[2];
+    uint16_t obsolete_6;
+    uint16_t cfa_reserved_7_8[2];
+    uint16_t retired_9;
+    char SerialNo[20];
+    uint16_t retired_20_21[2];
+    uint16_t obsolete_22;
+    char FirmwareVer[8];
+    char ModelName[40];
+    uint16_t multi_sector_cmd_max_sct_cnt;
+    uint16_t trusted_computing_support;
+    uint16_t capabilities_49;
+    uint16_t capabilities_50;
+    uint16_t obsolete_51_52[2];
+    uint16_t field_validity;
+    uint16_t obsolete_54_58[5];
+    uint16_t multi_sector_setting;
+    uint16_t user_addressable_sectors_lo;
+    uint16_t user_addressable_sectors_hi;
+    uint16_t obsolete_62;
+    uint16_t multi_word_dma_mode;
+    uint16_t advanced_pio_modes;
+    uint16_t min_multi_word_dma_cycle_time;
+    uint16_t rec_multi_word_dma_cycle_time;
+    uint16_t min_pio_cycle_time_without_flow_control;
+    uint16_t min_pio_cycle_time_with_flow_control;
+    uint16_t additional_supported;
+    uint16_t reserved_70;
+    uint16_t reserved_71_74[4];
+    uint16_t queue_depth;
+    uint16_t serial_ata_capabilities;
+    uint16_t reserved_77;
+    uint16_t serial_ata_features_supported;
+    uint16_t serial_ata_features_enabled;
+    uint16_t major_version_no;
+    uint16_t minor_version_no;
+    uint16_t command_set_supported_82;
+    uint16_t command_set_supported_83;
+    uint16_t command_set_feature_extn;
+    uint16_t command_set_feature_enb_85;
+    uint16_t command_set_feature_enb_86;
+    uint16_t command_set_feature_default;
+    uint16_t ultra_dma_mode;
+    uint16_t time_for_security_erase_unit;
+    uint16_t time_for_enhanced_security_erase_unit;
+    uint16_t advanced_power_management_level;
+    uint16_t master_password_identifier;
+    uint16_t hardware_configuration_test_result;
+    uint16_t obsolete_94;
+    uint16_t stream_minimum_request_size;
+    uint16_t streaming_transfer_time_for_dma;
+    uint16_t streaming_access_latency_for_dma_and_pio;
+    uint16_t streaming_performance_granularity[2];
+    uint16_t maximum_lba_for_48bit_addressing[4];
+    uint16_t streaming_transfer_time_for_pio;
+    uint16_t max_no_of_512byte_blocks_per_data_set_cmd;
+    uint16_t phy_logic_sector_support;
+    uint16_t interseek_delay_for_iso7779;
+    uint16_t world_wide_name[4];
+    uint16_t reserved_for_128bit_wwn_112_115[4];
+    uint16_t reserved_for_technical_report;
+    uint16_t logic_sector_size_lo;
+    uint16_t logic_sector_size_hi;
+    uint16_t features_and_command_sets_supported_ext;
+    uint16_t features_and_command_sets_enabled_ext;
+    uint16_t reserved_121_126[6];
+    uint16_t obsolete_127;
+    uint16_t security_status;
+    uint16_t vendor_specific_129_159[31];
+    uint16_t cfa_power_mode;
+    uint16_t reserved_for_compactflash_161_167[7];
+    uint16_t device_nominal_form_factor;
+    uint16_t is_data_set_cmd_supported;
+    char additional_product_identifier[8];
+    uint16_t reserved_174_175[2];
+    char media_serial_number[60];
+    uint16_t sct_command_transport;
+    uint16_t reserved_207_208[2];
+    uint16_t alignment_logic_in_phy_blocks;
+    uint16_t write_read_verify_sector_count_mode3[2];
+    uint16_t verify_sector_count_mode2[2];
+    uint16_t nv_cache_capabilities;
+    uint16_t nv_cache_size_in_logical_block_lsw;
+    uint16_t nv_cache_size_in_logical_block_msw;
+    uint16_t nominal_media_rotation_rate;
+    uint16_t reserved_218;
+    uint16_t nv_cache_options;
+    uint16_t write_read_verify_mode;
+    uint16_t reserved_221;
+    uint16_t transport_major_revision_number;
+    uint16_t transport_minor_revision_number;
+    uint16_t reserved_224_229[6];
+    uint64_t extended_no_of_addressable_sectors;
+    uint16_t min_number_per_download_microcode_mode3;
+    uint16_t max_number_per_download_microcode_mode3;
+    uint16_t reserved_236_254[19];
+    uint16_t integrity_word;
+};
+
 class GenericAHCI : public BlockDeviceFactory {
 public:
     virtual ~GenericAHCI() override {}
@@ -295,6 +436,16 @@ private:
     void start_cmd(HBA_PORT *port);
     void stop_cmd(HBA_PORT *port);
 
+	/*
+	 * Not OSDev Wiki code
+	*/
+	bool ahci_send_cmd(HBA_PORT* port, FIS_H2D* fis, void* buffer, uint32_t buf_size, uint16_t prdtl = 1);
+	bool cd_send_cmd(HBA_PORT* port, FIS_H2D* fis, void* buffer, uint32_t buf_size, uint8_t* atapi_packet, size_t packet_len);
+
     DriverServices* _ds = nullptr;
     DeviceKey devKey;
+	ATA_IDENTIFY_DATA* portInfo[32];
+	HBA_MEM* hba = nullptr;
+	uint8_t drive = 0;
+	bool driveSet = false;
 };

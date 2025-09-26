@@ -19,6 +19,16 @@ const char* to_hstridng(uint64_t value) {
     return ptr;
 }
 
+void* memcpy(void* dest, const void* src, size_t n) {
+    unsigned char* d = (unsigned char*)dest;
+    const unsigned char* s = (const unsigned char*)src;
+
+    for (size_t i = 0; i < n; ++i)
+        d[i] = s[i];
+
+    return dest;
+}
+
 bool GenericAHCI::Supports(const DeviceKey& devKey) {
     if (devKey.classCode == 0x01 && devKey.subclass == 0x6 && devKey.progIF == 0x1) {
         return true;
@@ -180,6 +190,130 @@ void GenericAHCIDevice::stop_cmd(HBA_PORT *port) {
 	}
 }
 
+bool GenericAHCIDevice::ahci_send_cmd(HBA_PORT* port, FIS_H2D* fis, void* buffer, uint32_t buf_size, uint16_t prdtl) {
+    uint32_t slot = 0xFFFFFFFF;
+    uint32_t timer = 100000;
+    while (slot == 0xFFFFFFFF) {
+        uint32_t slots = port->sact | port->ci;
+        for (int i = 0; i < 32; i++) {
+            if ((slots & (1 << i)) == 0) {
+                slot = i;
+                break;
+            }
+        }
+        _ds->sleep(5);
+        if (timer-- == 0) {
+            return false;
+        }
+    }
+
+    int8_t status = port->tfd;
+
+    if (status & ATA_STATUS_BSY) {
+        _ds->Println("Device is busy");
+    }
+    if (status & ATA_STATUS_DRQ) {
+        _ds->Println("Device requesting data");
+    }
+
+    port->is = (uint32_t)-1;
+
+    HBA_CMD* cmdheader = (HBA_CMD*)port->clb;
+    HBA_CMD_TBL* cmdtbl = (HBA_CMD_TBL*)(0xFFFFFFFF00000000 + cmdheader[slot].ctba);
+
+    cmdheader[slot].cfl = sizeof(FIS_H2D) / sizeof(uint32_t);
+    cmdheader[slot].w = 0;
+    cmdheader[slot].c = 0;
+    cmdheader[slot].prdtl = prdtl;
+    cmdheader[slot].prdbc = 0;
+
+    cmdtbl->prdt_entry[0].dba = (uint32_t)((uintptr_t)buffer & 0xFFFFFFFF);
+    cmdtbl->prdt_entry[0].dbau = (uint32_t)(((uintptr_t)buffer >> 32) & 0xFFFFFFFF);
+    cmdtbl->prdt_entry[0].dbc = buf_size - 1;
+    cmdtbl->prdt_entry[0].i = 1;
+
+    memset(&cmdtbl->cfis, 0, sizeof(FIS_H2D));
+    memcpy(&cmdtbl->cfis, fis, sizeof(FIS_H2D));
+
+    while (port->tfd & (ATA_STATUS_BSY | ATA_STATUS_DRQ)) {
+
+    }
+
+    port->ci = 1 << slot;
+
+    while ((port->ci & (1 << slot))) {
+        if (port->is & HBA_PxIS_TFES) {
+            _ds->Println("AHCI: Task file error");
+            return false;
+        }
+    }
+
+    if (port->is & HBA_PxIS_TFES) {
+        return false;
+    }
+
+    return true;
+}
+
+bool GenericAHCIDevice::cd_send_cmd(HBA_PORT* port, FIS_H2D* fis, void* buffer, uint32_t bsize, uint8_t* packet, size_t len)  {
+    uint32_t slot = 0xFFFFFFFF;
+    uint32_t timer = 100000;
+    while (slot == 0xFFFFFFFF) {
+        uint32_t slots = port->sact | port->ci;
+        for (int i = 0; i < 32; i++) {
+            if ((slots & (1 << i)) == 0) {
+                slot = i;
+                break;
+            }
+        }
+        _ds->sleep(5);
+        if (timer-- == 0) {
+            return false;
+        }
+    }
+
+    port->is = (uint32_t)-1;
+
+    HBA_CMD* cmdheader = (HBA_CMD*)port->clb;
+    HBA_CMD_TBL* cmdtbl = (HBA_CMD_TBL*)(0xFFFFFFFF00000000 + cmdheader[slot].ctba);
+
+    cmdheader[slot].cfl = sizeof(FIS_H2D) / sizeof(uint32_t);
+    cmdheader[slot].w = (buffer && bsize > 0) ? 0 : 1;
+    cmdheader[slot].prdtl = (buffer && bsize > 0) ? 1 : 0;
+    cmdheader[slot].prdbc = 0;
+
+    if (buffer && bsize > 0) {
+        cmdtbl->prdt_entry[0].dba = (uint32_t)((uintptr_t)buffer & 0xFFFFFFFF);
+        cmdtbl->prdt_entry[0].dbau = (uint32_t)(((uintptr_t)buffer >> 32) & 0xFFFFFFFF);
+        cmdtbl->prdt_entry[0].dbc = bsize - 1;
+        cmdtbl->prdt_entry[0].i = 1;
+    }
+
+    memset(&cmdtbl->cfis, 0, sizeof(FIS_H2D));
+    memcpy(&cmdtbl->cfis, fis, sizeof(FIS_H2D));
+
+    memcpy(((uint8_t*)&cmdtbl->cfis) + sizeof(FIS_H2D), packet, len);
+
+    while (port->tfd & (ATA_STATUS_BSY | ATA_STATUS_DRQ)) {
+
+    }
+
+    port->ci = 1 << slot;
+
+    while ((port->ci & (1 << slot))) {
+        if (port->is & HBA_PxIS_TFES) {
+            port->is = (uint32_t)-1;
+            return false;
+        }
+    }
+
+    if (port->is & HBA_PxIS_TFES) {
+        return false;
+    }
+
+    return true;
+}
+
 /*
  * The OSDev Wiki didn't really explain
  * what AHCI is and how it works, so Ill
@@ -233,7 +367,8 @@ void GenericAHCIDevice::stop_cmd(HBA_PORT *port) {
  * Then we can read the capability registers and
  * check if 64-Bit DMA is Supported (optional).
  * 
- * Then for each port you must:
+ * Then for each port you must: *IN ORDER*
+ *  - Stop the port
  *  - Allocate memory for the command list the FIS and the command tables
  *  - Memory map them (no caching)
  *  - Set the command list and the recieved FIS Address Registers
@@ -276,7 +411,7 @@ void GenericAHCIDevice::Init(DriverServices& ds, DeviceKey& dKey) {
         bar5phys = _ds->ConfigReadDWord(devKey.bus, devKey.device, devKey.function, 0x24);
     }
     uint64_t bar5 = 0xFFFFFFFF00000000 + bar5phys;
-    HBA_MEM* hba = (HBA_MEM*)bar5;
+    hba = (HBA_MEM*)bar5;
     _ds->MapMemory((void*)bar5, (void*)bar5phys, false);
     _ds->Print("Bar 5: ");
     _ds->Println(to_hstridng(bar5));
@@ -284,6 +419,7 @@ void GenericAHCIDevice::Init(DriverServices& ds, DeviceKey& dKey) {
     uint32_t cap = hba->cap;
     uint32_t ports = hba->pi;
     uint32_t version = hba->vs;
+    uint8_t numPorts = cap & 0x1F;
 
     _ds->Print("AHCI Version: ");
     if (version == 0x10000) {
@@ -311,22 +447,6 @@ void GenericAHCIDevice::Init(DriverServices& ds, DeviceKey& dKey) {
             }
         }
     }
-
-    /*
-     * To reset our controller we must
-     * tell it to stop and wait for it
-     * to stop.
-     * 
-     * Now we can tell it to reset and
-     * then... done
-    */
-    *ghc &= ~(1 << 0);
-
-    while (*ghc & (1 << 0)) {
-
-    }
-
-    *ghc |= (1 << 0);
     
     /*
      * Enable AHCI Mode and interrupts
@@ -338,32 +458,289 @@ void GenericAHCIDevice::Init(DriverServices& ds, DeviceKey& dKey) {
      * Check info in Capabilities ptr.
     */
     bool supports64BitDMA = (cap & (1 << 31)) != 0;
-    uint8_t numPorts = cap & 0x1F;
-    
-    _ds->Print("64-bit DMA support: ");
-    _ds->Println(supports64BitDMA ? "yes" : "no");
-    _ds->Print("Number of ports: ");
-    _ds->Println(to_hstridng(numPorts));
+
+    /*
+     * I'd prefer to make my own code,
+     * but this func from the OSDev 
+     * wiki should just be for debugging.
+    */
+    probe_port(hba);
 
     for (uint8_t port = 0; port < numPorts; port++) {
         HBA_PORT* p = &hba->ports[port];
 
+        stop_cmd(p);
+
+        /*
+         * We can skip empty ports to avoid
+         * allocating unnecessary memory.
+        */
+        if (check_type(p) == AHCI_DEV_NULL) {
+            continue;
+        }
+
+        /*
+         * We need to stop the port by
+         * clearing the ST bit and the FRE 
+         * bit, then we can wait until the FR 
+         * and CR bits are cleared.
+         * 
+         * This is because we need to alloc 
+         * mem for the AHCI stuff
+        */
+        p->cmd &= ~HBA_PxCMD_ST;
+        p->cmd &= ~HBA_PxCMD_FRE;
+
+        while ((p->cmd & (HBA_PxCMD_FR | HBA_PxCMD_CR)) != 0) {
+            
+        }
+
+        /*
+         * We must allocate enough memory for the
+         * Command tables, FISes and Command List
+         * 
+         * The Command List must be *1KB* aligned
+         * The FIS (FB) must be *256Byte* aligned
+         * The Command Tables are aligned by 128B
+        */
         uintptr_t clb_phys = (uint64_t)_ds->RequestPage();
+        uintptr_t page_end = clb_phys + 0x1000;
+
+        clb_phys = (clb_phys + 1023) & ~((uintptr_t)1023);
+
         uintptr_t clb_virt = 0xFFFFFFFF00000000 + clb_phys;
+
         _ds->MapMemory((void*)clb_virt, (void*)clb_phys, false);
-        clb_virt = (clb_virt + 1023) & ~((uintptr_t)1023);
         memset((void*)clb_virt, 0, 1024);
 
-        p->clb = clb_phys;
-        p->clbu = 0;
+        p->clb = (uint32_t)clb_phys;
+        p->clbu = (uint32_t)(clb_phys >> 32);
 
-        _ds->Println("Allocated 1KB for Command List");
+        /*
+         * Since we allocated a whole *4KB* page,
+         * we can just find the end of the clb to
+         * use for our FIS.
+        */
+        uintptr_t fb_phys = clb_phys + 1024;
+
+        fb_phys = (fb_phys + 255) & ~((uintptr_t)255);
+
+        uintptr_t fb_virt = 0xFFFFFFFF00000000 + fb_phys;
+
+        memset((void*)fb_virt, 0, 256);
+
+        p->fb = fb_phys;
+        p->fbu = (fb_phys >> 32);
+
+        /*
+         * Now we get to the tricky part, we must
+         * allocate enough memory for the Command
+         * Tables.
+         * 
+         * I wanted maximum memory efficiency, so
+         * I used the previous page from allocing
+         * a page for the clb. Then I added an if
+         * statement to check if there wasn't any
+         * space left and to request more pages.
+         * 
+         * Also, make sure you map these as unca-
+         * -cheable so that they won't be slow or
+         * inaccurate.
+         * 
+         * Each Command Table is 256 Bytes long &
+         * is aligned by 128 Bytes.
+        */
+        HBA_CMD* cmdheader = (HBA_CMD*)p->clb;
+        uint64_t cmdPorts = ((cap >> 8) & 0x1F) + 1;
+
+        uint64_t currPhys = fb_phys + 256;
+
+        for (int i = 0; i < cmdPorts; i++) {
+            currPhys = (currPhys + 127) & ~((uintptr_t)127);
+            if ((currPhys + 256) > page_end) {
+                currPhys = (uint64_t)_ds->RequestPage();
+                page_end = currPhys + 0x1000;
+
+                uint64_t currVirt = 0xFFFFFFFF00000000 + currPhys;
+
+                _ds->MapMemory((void*)currVirt, (void*)currPhys, false);
+            }
+
+            uintptr_t currVirt = 0xFFFFFFFF00000000 + currPhys;
+
+            memset((void*)currVirt, 0, 256);
+
+            cmdheader[i].ctba = (uint32_t)currPhys;
+            cmdheader[i].ctbau = (uint32_t)(currPhys >> 32);
+            cmdheader[i].prdtl = 8;
+
+            currPhys = currPhys + 256;
+        }
+
+        start_cmd(p);
+
+        /*
+         * Lets see if it's reset
+        */
+        uint32_t ssts = p->ssts;
+        uint8_t det = ssts & 0x0F;
+        uint8_t ipm = (ssts >> 8) & 0x0F;
+
+        if (det != HBA_PORT_DET_PRESENT || ipm != HBA_PORT_IPM_ACTIVE) {
+            _ds->Println("Failed to reset Port!!");
+        }
+
+        /*
+         * Now we can enable Interrupts
+        */
+        p->ie = (1 << 30);
+
+        /*
+         * Pretty much the same as before
+        */
+        if (det == HBA_PORT_DET_PRESENT && ipm == HBA_PORT_IPM_ACTIVE) {
+            //_ds->Println("Drive is Connected!!");
+        } else {
+            _ds->Println("No Drive/ Inactive Port");
+            continue;
+        }
+
+        /*
+         * We can finally send the IDENTIFY
+         * command and get some info on the
+         * drive.
+        */
+        if (check_type(p) == AHCI_DEV_SATA) {
+            FIS_H2D fis;
+            memset(&fis, 0, sizeof(FIS_H2D));
+            fis.fis_type = FIS_TYPE_REG_H2D;
+            fis.c = 1;
+            fis.command = ATA_CMD_IDENTIFY;
+            fis.device = 0;
+
+            uint64_t buf_phys = (uint64_t)_ds->RequestPage();
+            uint64_t buf_virt = 0xFFFFFFFF00000000 + buf_phys;
+
+            _ds->MapMemory((void*)buf_virt, (void*)buf_phys, false);
+
+            memset((void*)buf_virt, 0, 512);
+
+            if (ahci_send_cmd(p, &fis, (void*)buf_phys, 512)) {
+                ATA_IDENTIFY_DATA* id = (ATA_IDENTIFY_DATA*)buf_virt;
+                
+                uint32_t sectors = id->user_addressable_sectors_lo | (id->user_addressable_sectors_hi << 16);
+                uint32_t sector_size = id->logic_sector_size_lo | (id->logic_sector_size_hi << 16);
+
+                if (sector_size == 0) {
+                    sector_size = 512;
+                }
+
+                portInfo[port] = id;
+
+                if (!driveSet) {
+                    drive = port;
+                    driveSet = true;
+                }
+            } else {
+                _ds->Println("IDENTIFY ATA failed");
+            }
+        } else if (check_type(p) == AHCI_DEV_SATAPI) {
+            uint8_t tur_packet[12] = {0x00};
+
+            FIS_H2D cdfis{};
+            memset(&cdfis, 0, sizeof(FIS_H2D));
+            cdfis.fis_type = FIS_TYPE_REG_H2D;
+            cdfis.c = 1;
+            cdfis.command = ATA_CMD_PACKET;
+            cdfis.device = 0;
+
+            if (!cd_send_cmd(p, &cdfis, nullptr, 0, tur_packet, 12)) {
+                _ds->Println("No CD present in drive");
+            } else {
+                //_ds->Println("CD detected! Safe to send IDENTIFY PACKET");
+                FIS_H2D fis;
+                memset(&fis, 0, sizeof(FIS_H2D));
+                fis.fis_type = FIS_TYPE_REG_H2D;
+                fis.c = 1;
+                fis.command = ATA_CMD_IDENTIFY;
+                fis.device = 0;
+
+                uint64_t buf_phys = (uint64_t)_ds->RequestPage();
+                uint64_t buf_virt = 0xFFFFFFFF00000000 + buf_phys;
+
+                _ds->MapMemory((void*)buf_virt, (void*)buf_phys, false);
+
+                memset((void*)buf_virt, 0, 512);
+
+                if (ahci_send_cmd(p, &fis, (void*)buf_phys, 512)) {
+                    ATA_IDENTIFY_DATA* id = (ATA_IDENTIFY_DATA*)buf_virt;
+                    
+                    uint32_t sectors = id->user_addressable_sectors_lo | (id->user_addressable_sectors_hi << 16);
+                    uint32_t sector_size = id->logic_sector_size_lo | (id->logic_sector_size_hi << 16);
+
+                    if (sector_size == 0) {
+                        sector_size = 512;
+                    }
+
+                    portInfo[port] = id;
+
+                    if (!driveSet) {
+                        drive = port;
+                        driveSet = true;
+                    }
+                } else {
+                    _ds->Println("IDENTIFY ATA failed");
+                }
+            }
+        }
     }
 
     _ds->Println("Generic AHCI Initialized!");
 }
 
+/*
+ * Now we get to the fun stuff.
+ * 
+ * We can now read a sector by
+ * issuing a ATA_CMD_READ_DMA_EX
+ * command using a FIS.
+ * 
+ * Btw, most of the code in this
+ * function is from the OSDev
+ * Wiki.
+ * 
+ * First we should clear any pending
+ * interrupts.
+ * 
+ * Then we can use our ahci_send_cmd
+ * helper to read the sector.
+*/
 bool GenericAHCIDevice::ReadSector(uint64_t lba, void* buffer) {
+    HBA_PORT* port = &hba->ports[drive];
+    port->is = (uint32_t)-1;
+
+    FIS_H2D fis{};
+    fis.fis_type = FIS_TYPE_REG_H2D;
+    fis.c = 1;
+    fis.command = ATA_CMD_READ_DMA_EXT;
+    fis.device = 1 << 6;
+
+    fis.lba0 = (uint8_t)(lba & 0xFF);
+    fis.lba1 = (uint8_t)((lba >> 8) & 0xFF);
+    fis.lba2 = (uint8_t)((lba >> 16) & 0xFF);
+    fis.lba3 = (uint8_t)((lba >> 24) & 0xFF);
+    fis.lba4 = (uint8_t)((lba >> 32) & 0xFF);
+    fis.lba5 = (uint8_t)((lba >> 40) & 0xFF);
+
+    fis.countl = 1;
+    fis.counth = 0;
+
+    bool success = ahci_send_cmd(port, &fis, buffer, 512, 1);
+    if (!success) {
+        _ds->Println("ReadSector: Failed");
+        return false;
+    }
+
     return true;
 }
 
@@ -371,12 +748,27 @@ bool GenericAHCIDevice::WriteSector(uint64_t lba, void* buffer) {
     return true;
 }
 
+bool GenericAHCIDevice::SetDrive(uint8_t port) {
+    if (port >= 32) {
+        return false;
+    }
+
+    drive = port;
+    return true;
+}
+
 uint64_t GenericAHCIDevice::SectorCount() const {
-    return 0x0;
+    uint32_t sectors = portInfo[drive]->user_addressable_sectors_lo | (portInfo[drive]->user_addressable_sectors_hi << 16);
+    return sectors;
 }
 
 uint32_t GenericAHCIDevice::SectorSize() const {
-    return 0x0;
+    uint32_t sector_size = portInfo[drive]->logic_sector_size_lo | (portInfo[drive]->logic_sector_size_hi << 16);
+
+    if (sector_size == 0) {
+        sector_size = 512;
+    }
+    return sector_size;
 }
 
 void* GenericAHCIDevice::GetInternalBuffer() {
@@ -384,19 +776,26 @@ void* GenericAHCIDevice::GetInternalBuffer() {
 }
 
 uint8_t GenericAHCIDevice::GetClass() {
-    return 0x0;
+    return devKey.classCode;
 }
 
 uint8_t GenericAHCIDevice::GetSubClass() {
-    return 0x0;
+    return devKey.subclass;
 }
 
 uint8_t GenericAHCIDevice::GetProgIF() {
-    return 0x0;
+    return devKey.progIF;
 }
 
 const char* GenericAHCIDevice::name() const {
-    return "";
+    uint16_t* modelWords = (uint16_t*)portInfo[drive]->ModelName;
+    char model[41];
+    for (int i = 0; i < 20; i++) {
+        model[i*2]   = modelWords[i] >> 8;
+        model[i*2+1] = modelWords[i] & 0xFF;
+    }
+    model[40] = '\0';
+    return _ds->strdup(model);
 }
 
 /*
@@ -406,5 +805,5 @@ const char* GenericAHCIDevice::name() const {
  * at 0x8 in mem.
 */
 const char* GenericAHCIDevice::DriverName() const {
-    return "";
+    return "Generic AHCI Driver";
 }
