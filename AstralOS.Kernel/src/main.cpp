@@ -258,7 +258,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     kernelServices.driverMan.DetectDevices(devices);
 
     /*
-     * IDE Driver Test
+     * AHCI Driver Test
     */
     BaseDriver* driver = kernelServices.driverMan.GetDevice(0x1, 0x6, 0x1);
     if (driver) {
@@ -286,11 +286,42 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
         ks->pageTableManager.MapMemory((void*)buf_virt, (void*)buf_phys, false);
 
-        memset((void*)buf_virt, 0, 512);
-
         char* buffer = (char*)buf_virt;
 
-        for (uint64_t lba = 5040; lba < 5060; lba++) {
+        for (uint64_t lba = 5042; lba < 5047; lba++) {
+            memset((void*)buf_virt, 0, sectorSize);
+            if (bldev->ReadSector(lba, (void*)buf_phys))  {
+                ks->basicConsole.Print(((String)"Drive Buffer LBA" + to_string(lba) + ": ").c_str());
+                buffer[sectorSize - 1] = '\0';
+                ks->basicConsole.Println((char*)buffer);
+            } else {
+                ks->basicConsole.Println("Failed Reading Sector");
+            }
+        }
+
+        /*
+         * We should reuse our old buffer!
+        */
+        memset((void*)buf_virt, 0, sectorSize);
+        strcpy((char*)buf_virt, "Hello World!");
+
+        /*
+         * WARNING: THIS IS A DESTRUCTIVE TEST AND
+         * CAN/WILL DESTROY DATA ON THE DISK.
+         * 
+         * THIS IS ONLY FOR DEBUGGING!!!
+         * 
+         * In this case, when you re-run the qemu
+         * command (not the testing command, bc it
+         * re copies the qcow2 file), it will show
+         * `Hello Wo.rld` instead of the boot dir.
+        */
+        if (!bldev->WriteSector(5043, (void*)buf_phys))  {
+            ks->basicConsole.Println("Failed Reading Sector");
+        }
+
+        for (uint64_t lba = 5042; lba < 5045; lba++) {
+            memset((void*)buf_virt, 0, sectorSize);
             if (bldev->ReadSector(lba, (void*)buf_phys))  {
                 ks->basicConsole.Print(((String)"Drive Buffer LBA" + to_string(lba) + ": ").c_str());
                 buffer[sectorSize - 1] = '\0';

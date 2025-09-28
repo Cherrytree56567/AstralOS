@@ -43,6 +43,10 @@ void PCIe::checkAllSegments() {
     for (size_t i = 0; i < numSegments; i++) {
         MCFGEntry entry = mcfgTable->entries[i];
         for (uint64_t bus = entry.StartPCIBusNum; bus <= entry.EndPCIBusNum; bus++) {
+            uint64_t busStart = entry.BaseAddr + (bus << 20);
+            for (uint64_t offset = 0; offset < (1 << 20); offset += 0x1000) {
+                ks->pageTableManager.MapMemory((void*)(busStart + offset), (void*)(busStart + offset));
+            }
             checkBus(entry.BaseAddr, entry.PCISegmentGroupNum, bus);
         }
     }
@@ -54,7 +58,6 @@ void PCIe::checkAllSegments() {
  */
 void PCIe::checkBus(uint64_t baseAddr, uint16_t segment, uint8_t bus) {
     uint64_t busAddr = baseAddr + (bus << 20);
-    ks->pageTableManager.MapMemory((void*)busAddr, (void*)busAddr);
 
     for (uint8_t device = 0; device < 32; device++) {
         checkDevice(busAddr, segment, bus, device);
@@ -68,7 +71,6 @@ void PCIe::checkBus(uint64_t baseAddr, uint16_t segment, uint8_t bus) {
 */
 void PCIe::checkDevice(uint64_t busAddr, uint16_t segment, uint8_t bus, uint8_t device) {
     uint64_t deviceAddr = busAddr + (device << 15);
-    ks->pageTableManager.MapMemory((void*)deviceAddr, (void*)deviceAddr);
 
     for (uint64_t function = 0; function < 8; function++) {
         uint16_t vendorID = getVendorID(segment, bus, device, function);
@@ -93,7 +95,6 @@ void PCIe::checkFunction(uint64_t baseAddress, uint16_t segment, uint8_t bus, ui
     if (deviceAlreadyFound(segment, bus, device, function)) return;
 
     uint64_t functionAddr = baseAddress + (function << 12);
-    ks->pageTableManager.MapMemory((void*)functionAddr, (void*)functionAddr);
 
     PCIDeviceHeader* hdr = (PCIDeviceHeader*)functionAddr;
 

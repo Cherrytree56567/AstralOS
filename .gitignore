@@ -15,3 +15,7 @@ CMakePresets.json
 **/CMakeScripts/
 **/Testing/
 **/_deps/
+**/emsdk/
+emsdk
+**/node_modules/
+node_modules

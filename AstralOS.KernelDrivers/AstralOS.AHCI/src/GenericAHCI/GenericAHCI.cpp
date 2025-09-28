@@ -190,7 +190,7 @@ void GenericAHCIDevice::stop_cmd(HBA_PORT *port) {
 	}
 }
 
-bool GenericAHCIDevice::ahci_send_cmd(HBA_PORT* port, FIS_H2D* fis, void* buffer, uint32_t buf_size, uint16_t prdtl) {
+bool GenericAHCIDevice::ahci_send_cmd(HBA_PORT* port, FIS_H2D* fis, void* buffer, uint32_t buf_size, uint16_t prdtl, bool write) {
     uint32_t slot = 0xFFFFFFFF;
     uint32_t timer = 100000;
     while (slot == 0xFFFFFFFF) {
@@ -222,7 +222,11 @@ bool GenericAHCIDevice::ahci_send_cmd(HBA_PORT* port, FIS_H2D* fis, void* buffer
     HBA_CMD_TBL* cmdtbl = (HBA_CMD_TBL*)(0xFFFFFFFF00000000 + cmdheader[slot].ctba);
 
     cmdheader[slot].cfl = sizeof(FIS_H2D) / sizeof(uint32_t);
-    cmdheader[slot].w = 0;
+    if (write) {
+        cmdheader[slot].w = 1;
+    } else {
+        cmdheader[slot].w = 0;
+    }
     cmdheader[slot].c = 0;
     cmdheader[slot].prdtl = prdtl;
     cmdheader[slot].prdbc = 0;
@@ -463,8 +467,11 @@ void GenericAHCIDevice::Init(DriverServices& ds, DeviceKey& dKey) {
      * I'd prefer to make my own code,
      * but this func from the OSDev 
      * wiki should just be for debugging.
+     * 
+     * We don't need this for now, bc it
+     * takes up too much console space.
     */
-    probe_port(hba);
+    //probe_port(hba);
 
     for (uint8_t port = 0; port < numPorts; port++) {
         HBA_PORT* p = &hba->ports[port];
@@ -744,7 +751,39 @@ bool GenericAHCIDevice::ReadSector(uint64_t lba, void* buffer) {
     return true;
 }
 
+/*
+ * The Write Sector function is
+ * pretty much the same except
+ * we need to issue an ATA CMD
+ * WRITE DMA EXT command and we
+ * need to set the write bit.
+*/
 bool GenericAHCIDevice::WriteSector(uint64_t lba, void* buffer) {
+    HBA_PORT* port = &hba->ports[drive];
+    port->is = (uint32_t)-1;
+
+    FIS_H2D fis{};
+    fis.fis_type = FIS_TYPE_REG_H2D;
+    fis.c = 1;
+    fis.command = ATA_CMD_WRITE_DMA_EXT;
+    fis.device = 1 << 6;
+
+    fis.lba0 = (uint8_t)(lba & 0xFF);
+    fis.lba1 = (uint8_t)((lba >> 8) & 0xFF);
+    fis.lba2 = (uint8_t)((lba >> 16) & 0xFF);
+    fis.lba3 = (uint8_t)((lba >> 24) & 0xFF);
+    fis.lba4 = (uint8_t)((lba >> 32) & 0xFF);
+    fis.lba5 = (uint8_t)((lba >> 40) & 0xFF);
+
+    fis.countl = 1;
+    fis.counth = 0;
+
+    bool success = ahci_send_cmd(port, &fis, buffer, 512, 1, true);
+    if (!success) {
+        _ds->Println("WriteSector: Failed");
+        return false;
+    }
+
     return true;
 }
 

@@ -5,93 +5,33 @@ EDK II
 UEFI v2.70 (EDK II, 0x00010000)
 [1m[33m[40mMapping table[0m[37m[40m
 [1m[33m[40m      FS0:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40mHD0a65535a1:;BLK1:
-          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(1,GPT,F0353AA3-66DC-4CF5-81F6-C57E345F387C,0x800,0x2F000)
+          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(1,GPT,A3F8E078-857B-49D1-9934-3E4821146D04,0x800,0x2F000)
 [1m[33m[40m     BLK0:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
           PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)
 [1m[33m[40m     BLK3:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
           PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x2,0xFFFF,0x0)
 [1m[33m[40m     BLK2:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
-          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(2,GPT,0BE9F4B2-FDEF-48D1-A75B-D5007B5CC6B9,0x2F800,0x13D0000)
+          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(2,GPT,6D2AC5E4-931E-40A5-A272-B98FE3074F97,0x2F800,0x13D0000)
 [15;01HPress [1m[37m[40mESC[0m[37m[40m in 5 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 4 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.
 [16;01H[1m[33m[40mShell> [0m[37m[40m[16;08Hf[16;09H[16;09Hs[16;10H[16;10H0[16;11H[16;11H:[16;12H[16;12H
-[17;01H[1m[33m[40mFS0:\> [0m[37m[40m[17;08Hc[17;09H[17;09Hd[17;10H[17;10H [17;11H[17;11He[17;12H[17;12Hf[17;13H[17;13Hi[17;14H[17;14H/[17;15H[17;15Hb[17;16H[17;16Ho[17;17H[17;17Ho[17;18H[17;18Ht[17;19H[17;19H
+[17;01H[1m[33m[40mFS0:\> [0m[37m[40m[17;08Hc[17;09H[17;09Hd[17;10H[17;10H [17;11H[17;11He[17;12H[17;12Hf[17;13H[17;13Hi[17;14H[17;14H/[17;15H[17;15Hb[17;16H[17;16Ho[17;17H[17;17Ho[17;18H[17;18Hk[17;19H[17;18H [17;18H[17;18Ht[17;19H[17;19H
 [18;01H[1m[33m[40mFS0:\efi\boot\> [0m[37m[40m[18;17HBOOTX64.EFI[18;28H[18;28H
-Found ACPI 2.0 RSDP at: 0x7FB7E014
-Volume label is ''
-Offset: 0x1000Addr: 0x1000Offset: 0x10000Addr: 0x10000Offset: 0x2F000Addr: 0x2F000Offset: 0x35000Addr: 0x35000initramfs loaded at 0x7E39D018 (67584 bytes)
-GOP located
-ss
-Handles freed
-Buffer freed
-nn
-Boot Info Framebuffer Addr: Current Addr: 0xFFFFFFFF0000D321
-RSDP Addr: 0xFFFFFFFF7FB7E014
-RSDP Signature: RSD PTR ÷BOCHS t–∑$
-RSDP OEM ID: BOCHS t–∑$
-RSDP Revision: 0x2
-ACPI XSDT Addr: 0xFFFFFFFF7FB7D0E8
-XSDT Length: 0x54
-XSDT Signature: XSDTT
-XSDT OEM ID: BOCHS BXPC    
-XSDT Entries: 0x6
-Interrupts Initialized.
-APIC is Supported.
-IOAPIC initialized, all IRQs masked.
-APIC is Enabled.
-MADT Address: 0xFFFFFFFF7FB78000
-MADT Processor Local APIC: 0xFFFFFFFF7FB7802C
-MADT I/O APIC: 0xFFFFFFFF7FB78034
-Allocated 32 bytes at 0xFFFF880000000020
-Allocated 64 bytes at 
-0xFFFF880000000060
-Freed 32-byte block
-Allocated 16 bytes at 0xFFFF880000000020
-Freed remaining blocks
-Array Size Test: 
-99, 98, 90, hi
-MCFG<
-PCIe Exists
-Bridge, Host
-Display Controller, VGA
-Bridge, ISA
-Mass Storage Controller, Serial ATA, ACHI 1.0
-Serial Bus Controller, SMBus
-Waiting for 1s...Done!
-Driver Loaded!
-Reg D
-IDE Driver Loaded!
-Bar 5: 0xFFFFFFFFC1010000
-AHCI Version: 1.0
-SATA drive found at port 0x0
-No drive found at port 0x1
-SATAPI drive found at port 0x2
-No drive found at port 0x3
-No drive found at port 0x4
-No drive found at port 0x5
-No CD present in drive
-Generic AHCI Initialized!
-Found Driver: Generic AHCI Driver
-Drive 0x0 is present
-Model: QEMU HARDDISK                           
-Sector Size: 512
-Sector Count: 20971520
-Drive Buffer LBA5040: 
-Drive Buffer LBA5041: 
-Drive Buffer LBA5042: EFI        
-Drive Buffer LBA5043: .          
-Drive Buffer LBA5044: .          
-Drive Buffer LBA5045: MZê
-Drive Buffer LBA5046: .dynamic
-Drive Buffer LBA5047: HÉÏQRHç=ÛœˇˇHç5Ïø
-Drive Buffer LBA5048: }ËHãEËHâ«Ë";
-Drive Buffer LBA5049: ˇˇˇHãH“Hâ—HâÚHâ∆HâœËF
-Drive Buffer LBA5050: ¸ˇˇÈÕ
-Drive Buffer LBA5051: ¯H–∂
-Drive Buffer LBA5052: 
-Drive Buffer LBA5053: ãE–H9EÇ‹˛ˇˇHãE‡Hâ«Ëó>
-Drive Buffer LBA5054: 
-Drive Buffer LBA5055: H«E‡
-Drive Buffer LBA5056: Hâ«∏
-Drive Buffer LBA5057: 
-Drive Buffer LBA5058: âE®HÉ}®
-Drive Buffer LBA5059: HçaŒ
+ss
+!!!! X64 Exception Type - 06(#UD - Invalid Opcode)  CPU Apic ID - 00000000 !!!!
+RIP  - 00000000000B0000, CS  - 0000000000000038, RFLAGS - 0000000000000213
+RAX  - 000000003F9EE018, RCX - 0000000000000018, RDX - 000000003F160000
+RBX  - 0000000000000000, RSP - 000000003FF072C8, RBP - 000000003FF07540
+RSI  - 0000000000000000, RDI - 000000003F9EE018
+R8   - 0000000000000000, R9  - 00000000000003F8, R10 - 0000000000000001
+R11  - 000000003FF068D0, R12 - 000000003E52B698, R13 - 000000003F9EE018
+R14  - 0000000000000000, R15 - 000000003E48A960
+DS   - 0000000000000030, ES  - 0000000000000030, FS  - 0000000000000030
+GS   - 0000000000000030, SS  - 0000000000000030
+CR0  - 0000000080010033, CR2 - 0000000000000000, CR3 - 000000003FC01000
+CR4  - 0000000000000668, CR8 - 0000000000000000
+DR0  - 0000000000000000, DR1 - 0000000000000000, DR2 - 0000000000000000
+DR3  - 0000000000000000, DR6 - 00000000FFFF0FF0, DR7 - 0000000000000400
+GDTR - 000000003F9EE698 0000000000000047, LDTR - 0000000000000000
+IDTR - 000000003F585018 0000000000000FFF,   TR - 0000000000000000
+FXSAVE_STATE - 000000003FF06F20
+!!!! Can't find image information. !!!!
