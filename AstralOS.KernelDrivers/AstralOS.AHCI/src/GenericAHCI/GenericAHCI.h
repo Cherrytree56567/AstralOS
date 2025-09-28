@@ -41,7 +41,22 @@
  * From singlix:
  * https://www.singlix.com/trdos/archive/code_archive/IDE_ATA_ATAPI_Tutorial.pdf
 */
+#define ATA_CMD_READ_PIO 0x20
+#define ATA_CMD_READ_PIO_EXT 0x24
+#define ATA_CMD_READ_DMA 0xC8
 #define ATA_CMD_READ_DMA_EXT 0x25
+#define ATA_CMD_WRITE_PIO 0x30
+#define ATA_CMD_WRITE_PIO_EXT 0x34
+#define ATA_CMD_WRITE_DMA 0xCA
+#define ATA_CMD_WRITE_DMA_EXT 0x35
+#define ATA_CMD_CACHE_FLUSH 0xE7
+#define ATA_CMD_CACHE_FLUSH_EXT 0xEA
+#define ATA_CMD_PACKET 0xA0
+#define ATA_CMD_IDENTIFY_PACKET 0xA1
+#define ATA_CMD_IDENTIFY 0xEC
+
+#define ATAPI_CMD_READ 0xA8
+#define ATAPI_CMD_EJECT 0x1B
 
 #define ATAPI_CMD_IDENTIFY 0xa1
 
@@ -439,7 +454,7 @@ private:
 	/*
 	 * Not OSDev Wiki code
 	*/
-	bool ahci_send_cmd(HBA_PORT* port, FIS_H2D* fis, void* buffer, uint32_t buf_size, uint16_t prdtl = 1);
+	bool ahci_send_cmd(HBA_PORT* port, FIS_H2D* fis, void* buffer, uint32_t buf_size, uint16_t prdtl = 1, bool write = false);
 	bool cd_send_cmd(HBA_PORT* port, FIS_H2D* fis, void* buffer, uint32_t buf_size, uint8_t* atapi_packet, size_t packet_len);
 
     DriverServices* _ds = nullptr;

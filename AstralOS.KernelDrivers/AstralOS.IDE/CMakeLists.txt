@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(AstralOSSATAAHCI)
+project(AstralOSIDE)
 
 set(BIN_DIR "${CMAKE_SOURCE_DIR}/../bin")
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")

@@ -1,7 +1,7 @@
 ---
 Title: "AstralOS"
 Author: "@CT5"
-Description: "Describe your PCB project in a short sentence!"
+Description: "A simple OS made in C++. It includes a lot of features, like a hybrid kernel (eventually) and a multi partition os. The code contains comments showing how everything works and which parts are from other sources."
 Created On: "IDK"
 ---
 

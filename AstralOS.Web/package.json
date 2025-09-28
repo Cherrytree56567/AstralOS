@@ -1,0 +1,22 @@
+{
+  "name": "web",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "build": "npx @tailwindcss/cli -i ./dist/style.css -o ./src/style.css",
+    "run": "cd src && http-server -p 8080 --gzip --cors"
+  },
+  "keywords": [],
+  "author": "CT5",
+  "license": "MIT",
+  "description": "Astral OS Website",
+  "devDependencies": {
+    "@catppuccin/tailwindcss": "^1.0.0",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.13"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.13"
+  }
+}
