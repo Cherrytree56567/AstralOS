@@ -465,11 +465,18 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
             UINTN DescriptorSize;
             UINT32 DescriptorVersion;
 
-            MapSize = 0;
+            MapSize = sizeof(EFI_MEMORY_DESCRIPTOR) * 8;
+            Status = uefi_call_wrapper(BS->AllocatePool, 3, EfiLoaderData, MapSize, (void**)&Map);
+            if (EFI_ERROR(Status)) {
+                Print(L"Failed to allocate initial memory map buffer: %r\n", Status);
+            }
+
             // First call to get size
             Status = uefi_call_wrapper(BS->GetMemoryMap, 5, &MapSize, Map, &MapKey, &DescriptorSize, &DescriptorVersion);
+            if (EFI_ERROR(Status)) {
+                Print(L"Failed to GGet memory map: %r\n", Status);
+            }
 
-            MapSize += DescriptorSize;
             MapSize += DescriptorSize;
 
             // Allocate map
