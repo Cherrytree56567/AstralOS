@@ -258,8 +258,6 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     kernelServices.driverMan.DetectDevices(devices);
     kernelServices.driverMan.DetectDrivers();
 
-    kernelServices.basicConsole.Println("NEXT");
-
     /*
      * AHCI Driver Test
     */
@@ -327,6 +325,41 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
             memset((void*)buf_virt, 0, sectorSize);
             if (bldev->ReadSector(lba, (void*)buf_phys))  {
                 ks->basicConsole.Print(((String)"Drive Buffer LBA" + to_string(lba) + ": ").c_str());
+                buffer[sectorSize - 1] = '\0';
+                ks->basicConsole.Println((char*)buffer);
+            } else {
+                ks->basicConsole.Println("Failed Reading Sector");
+            }
+        }
+    }
+
+    /*
+     * GPT Driver Test
+    */
+    BaseDriver* Partdriver = kernelServices.driverMan.GetDevice(DriverType::Partition);
+    if (Partdriver) {
+        kernelServices.basicConsole.Println(((String)"Found Partition Driver: " + Partdriver->DriverName()).c_str());
+        PartitionDevice* bldev = static_cast<PartitionDevice*>(Partdriver);
+
+        uint64_t buf_phys = (uint64_t)ks->pageFrameAllocator.RequestPage();
+        uint64_t buf_virt = 0xFFFFFFFF00000000 + buf_phys;
+
+        ks->pageTableManager.MapMemory((void*)buf_virt, (void*)buf_phys, false);
+
+        uint32_t sectorSize = bldev->SectorSize();
+        uint32_t sectorCount = bldev->SectorCount();
+        const char* model = bldev->name();
+
+        ks->basicConsole.Println(((String)"Model: " + (String)model).c_str());
+        ks->basicConsole.Println(((String)"Sector Size: " + (String)to_string((uint64_t)sectorSize)).c_str());
+        ks->basicConsole.Println(((String)"Sector Count: " + (String)to_string((uint64_t)sectorCount)).c_str());
+
+        char* buffer = (char*)buf_virt;
+
+        for (uint64_t lba = 0; lba < sectorCount; lba++) {
+            memset((void*)buf_virt, 0, sectorSize);
+            if (bldev->ReadSector(lba, (void*)buf_phys))  {
+                ks->basicConsole.Print(((String)"Partition Buffer LBA" + to_string(lba) + ": ").c_str());
                 buffer[sectorSize - 1] = '\0';
                 ks->basicConsole.Println((char*)buffer);
             } else {
