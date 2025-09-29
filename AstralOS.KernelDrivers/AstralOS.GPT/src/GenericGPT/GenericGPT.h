@@ -7,6 +7,10 @@
 struct PMBR {
     uint8_t BootIndicator;
     uint8_t StartingCHS[3];
+    uint8_t OSType;
+    uint8_t EndingCHS[3];
+    uint32_t StartingLBA;
+    uint32_t EndingLBA;
 };
 
 class GenericGPT : public PartitionDriverFactory {
