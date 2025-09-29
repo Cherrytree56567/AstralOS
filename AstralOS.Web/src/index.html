@@ -28,17 +28,17 @@
 
             </div>
         </div>
-        <script src="coi-serviceworker.js"></script>
-        <script src="module.js"></script>
-        <script src="image/load-rootfs.js"></script>
-        <script src="image/load-uefi.js"></script>
-        <script src="image/load-rom.js"></script>
-        <script src="image/dist/stack.js"></script>
+        <script src="./coi-serviceworker.js"></script>
+        <script src="./module.js"></script>
+        <script src="./image/load-rootfs.js"></script>
+        <script src="./image/load-uefi.js"></script>
+        <script src="./image/load-rom.js"></script>
+        <script src="./image/dist/stack.js"></script>
         <script type="module">
             import 'https://unpkg.com/xterm@5.3.0/lib/xterm.js';
             import 'https://unpkg.com/xterm-pty/index.js';
-            import 'module.js'
-            import initEmscriptenModule from 'image/out.js';
+            import './module.js'
+            import initEmscriptenModule from './image/out.js';
 
             const xterm = new Terminal();
             xterm.open(document.getElementById("terminal"));
