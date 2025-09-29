@@ -44,23 +44,13 @@ void DriverManager::Initialize() {
             if (entry) {
                 DriverInfo (*driver_entry)(DriverServices&) = (DriverInfo(*)(DriverServices&))entry;
                 DriverInfo di = driver_entry(GetDS());
-                /*ks->basicConsole.Println(((String)"Driver Name: " 
-                                        + di.name
-                                        + ", Version: "
-                                        + to_string((int64_t)di.verMaj)
-                                        + "."
-                                        + to_string((int64_t)di.verMin)
-                                        + ", Exit Code: "
-                                        + to_string((int64_t)di.exCode)).c_str());*/
             }
         }
     }
 }
 
 void DriverManager::RegisterDriver(BaseDriverFactory* factory) {
-    //ks->basicConsole.Println(((String)"Registering Driver: " + to_hstring((uint64_t)factory)).c_str());
     factories.push_back(factory);
-    //ks->basicConsole.Println("Registered Driver!");
 }
 
 /*
@@ -74,6 +64,54 @@ void DriverManager::DetectDevices(Array<DeviceKey>& devices) {
             if ((factory)->Supports(dev)) {
                 BaseDriver* device = factory->CreateDevice();
                 device->Init(ds, dev);
+                DeviceDrivers.push_back(device);
+                break;
+            }
+        }
+    }
+}
+
+/*
+ * Right now, our Driver Manager only works
+ * for PCI/PCIe Devices. But if we want to
+ * have drivers for Partitioning and VFS's
+ * and stuff like that, we need to have a 
+ * function that gives drivers direct contol
+ * over the data of other drivers.
+ * 
+ * EG: Block Drivers
+ *           |
+ *           V
+ *   Partition Drivers
+ *           |
+ *           V
+ *      FS Drivers
+ * 
+ * From here everything gets really really
+ * confusing. So you need to have a layer
+ * system, where you have PCI/PCIe devices
+ * with software layers on top (eg: an ahci
+ * controller which manages drives would use
+ * a driver for partitions which would use a
+ * driver for filesystems).
+ * 
+ * One way to do this, is to give each layer
+ * a function that points back to the last
+ * layer.
+*/
+void DriverManager::DetectDrivers() {
+    for (size_t i = 0; i < (DeviceDrivers.size()); i++) {
+        BaseDriver* dev = DeviceDrivers.get(i);
+        DeviceKey devKey;
+        devKey.bars[0] = ((uint64_t)dev >> 32); // HIGH: 0x12345678XXXXXXXX
+        devKey.bars[1] = ((uint64_t)dev & 0xFFFFFFFF); // LOW: 0xXXXXXXXXABCDEF00
+        devKey.bars[2] = 22;
+        for (size_t j = 0; j < factories.size(); j++) {
+            auto& factory = factories[j];
+            if (factory->GetLayerType() != SOFTWARE) continue;
+            if ((factory)->Supports(devKey)) {
+                BaseDriver* device = factory->CreateDevice();
+                device->Init(ds, devKey);
                 DeviceDrivers.push_back(device);
                 break;
             }
