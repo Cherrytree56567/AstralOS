@@ -470,6 +470,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
             Status = uefi_call_wrapper(BS->GetMemoryMap, 5, &MapSize, Map, &MapKey, &DescriptorSize, &DescriptorVersion);
 
             MapSize += DescriptorSize;
+            MapSize += DescriptorSize;
 
             // Allocate map
             Status = uefi_call_wrapper(BS->AllocatePool, 3, EfiLoaderData, MapSize, (void**)&Map);
