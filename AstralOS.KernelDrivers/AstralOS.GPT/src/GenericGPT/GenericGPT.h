@@ -4,6 +4,10 @@
 #include "../DriverServices.h"
 #include <cstdint>
 
+struct PMBR {
+    
+};
+
 class GenericGPT : public PartitionDriverFactory {
 public:
     virtual ~GenericGPT() {}
