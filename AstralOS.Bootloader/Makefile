@@ -130,6 +130,19 @@ init/fast:
 .PHONY : init/fast
 
 #=============================================================================
+# Target rules for targets named copy_files
+
+# Build rule for target.
+copy_files: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 copy_files
+.PHONY : copy_files
+
+# fast build rule for target.
+copy_files/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/copy_files.dir/build.make CMakeFiles/copy_files.dir/build
+.PHONY : copy_files/fast
+
+#=============================================================================
 # Target rules for targets named build
 
 # Build rule for target.
@@ -165,6 +178,7 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... _clean"
 	@echo "... build"
+	@echo "... copy_files"
 	@echo "... init"
 .PHONY : help
 
