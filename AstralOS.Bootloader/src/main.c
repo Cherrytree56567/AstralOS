@@ -465,13 +465,10 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
             UINTN DescriptorSize;
             UINT32 DescriptorVersion;
 
-            MapSize = sizeof(EFI_MEMORY_DESCRIPTOR) * 8;
-            Status = uefi_call_wrapper(BS->AllocatePool, 3, EfiLoaderData, MapSize, (void**)&Map);
-            if (EFI_ERROR(Status)) {
-                Print(L"Failed to allocate initial memory map buffer: %r\n", Status);
-            }
+            SafeFree(ParentDevicePath);
 
             // First call to get size
+            MapSize = 0;
             Status = uefi_call_wrapper(BS->GetMemoryMap, 5, &MapSize, Map, &MapKey, &DescriptorSize, &DescriptorVersion);
             if (EFI_ERROR(Status)) {
                 Print(L"Failed to GGet memory map: %r\n", Status);
@@ -498,8 +495,6 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
                 Print(L"Failed to exit boot services: %r\n", status);
                 return status; // Handle error appropriately
             }
-
-            SafeFree(ParentDevicePath);
 
             bi.mMap = Map;
 			bi.mMapSize = MapSize;
