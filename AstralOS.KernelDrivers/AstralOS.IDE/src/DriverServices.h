@@ -11,7 +11,14 @@ struct DriverServices;
 
 enum DriverType {
     BaseDev,
-    BlockDev
+    BlockDev,
+    Partition
+};
+
+enum LayerType {
+    OTHER = 0,
+    PCIE = 1,
+    SOFTWARE = 2
 };
 
 class BaseDriver {
@@ -24,6 +31,7 @@ public:
     virtual uint8_t GetSubClass() = 0;
     virtual uint8_t GetProgIF() = 0;
     virtual DriverType GetDriverType() = 0;
+    virtual BaseDriver* GetParentLayer() { return NULL; }
 };
 
 class BaseDriverFactory {
@@ -31,6 +39,7 @@ public:
     virtual ~BaseDriverFactory() {}
     virtual bool Supports(const DeviceKey& devKey) = 0;
     virtual BaseDriver* CreateDevice() = 0;
+    virtual LayerType GetLayerType() { return PCIE; }
 };
 
 class BlockDevice : public BaseDriver {
@@ -59,6 +68,36 @@ public:
     virtual ~BlockDeviceFactory() {}
     virtual bool Supports(const DeviceKey& devKey) override = 0;
     virtual BlockDevice* CreateDevice() override = 0;
+    virtual LayerType GetLayerType() override { return PCIE; }
+};
+
+class PartitionDevice : public BaseDriver {
+public:
+    virtual void Init(DriverServices& ds, DeviceKey& devKey) override = 0;
+    virtual bool ReadSector(uint64_t lba, void* buffer) = 0;
+    virtual bool WriteSector(uint64_t lba, void* buffer) = 0;
+    virtual bool SetParition(uint8_t partition) = 0;
+
+    virtual uint64_t SectorCount() const = 0;
+    virtual uint32_t SectorSize() const = 0;
+
+    virtual uint8_t GetClass() override = 0;
+    virtual uint8_t GetSubClass() override = 0;
+    virtual uint8_t GetProgIF() override = 0;
+    virtual const char* name() const override = 0;
+    virtual const char* DriverName() const override = 0;
+    virtual BaseDriver* GetParentLayer() override = 0;
+    virtual DriverType GetDriverType() override {
+        return Partition;
+    }
+};
+
+class PartitionDriverFactory : public BaseDriverFactory {
+public:
+    virtual ~PartitionDriverFactory() {}
+    virtual bool Supports(const DeviceKey& devKey) = 0;
+    virtual PartitionDevice* CreateDevice() = 0;
+    virtual LayerType GetLayerType() override { return SOFTWARE; }
 };
 
 struct DriverServices {
