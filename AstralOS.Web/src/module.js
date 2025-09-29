@@ -20,4 +20,4 @@ Module['arguments'] = [
 Module['locateFile'] = function(path, prefix) {
     return '/AstralOS/image/' + path;
 };
-Module['mainScriptUrlOrBlob'] = '/AstralOS/image/out.js'
+Module['mainScriptUrlOrBlob'] = '/image/out.js'
