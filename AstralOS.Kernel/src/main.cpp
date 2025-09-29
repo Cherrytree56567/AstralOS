@@ -54,6 +54,15 @@ void list_recursive(char* dir, int depth = 0) {
     }
 }
 
+extern "C" {
+    __attribute__((section(".multiboot"))) __attribute__((aligned(8)))
+    const uint32_t multiboot_header[] = {
+        0x1BADB002,       // magic number
+        0x00010003,       // flags (align modules + memory info)
+        -(0x1BADB002 + 0x00010003) // checksum
+    };
+}
+
 extern "C" int _start(BootInfo* pBootInfo) {
     /*
      * Disable Interrupts

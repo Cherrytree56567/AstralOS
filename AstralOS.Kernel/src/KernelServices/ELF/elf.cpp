@@ -1,4 +1,5 @@
 #include "elf.h"
+#include "../KernelServices.h"
 
 Elf64_Ehdr* GetELFHeader(void* data) {
     Elf64_Ehdr *hdr = (Elf64_Ehdr*)data;

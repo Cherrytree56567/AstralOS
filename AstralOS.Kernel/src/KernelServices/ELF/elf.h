@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 #define ELF_NIDENT 16
 
