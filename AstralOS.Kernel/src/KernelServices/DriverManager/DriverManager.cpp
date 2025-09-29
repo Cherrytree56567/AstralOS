@@ -127,6 +127,14 @@ BaseDriver* DriverManager::GetDevice(uint8_t _class, uint8_t subclass, uint8_t p
     return nullptr;
 }
 
+BaseDriver* DriverManager::GetDevice(DriverType drvT) {
+    for (size_t i = 0; i < DeviceDrivers.size(); ++i) {
+        auto& dev = DeviceDrivers[i];
+        if (dev->GetDriverType() == drvT) return dev;
+    }
+    return nullptr;
+}
+
 const Array<BaseDriver*>& DriverManager::GetDevices() const {
     return DeviceDrivers;
 }

@@ -25,7 +25,6 @@ const char* to_hstring(uint64_t value) {
 extern "C"
 DriverInfo DriverMain(DriverServices& DServices) {
     g_ds = &DServices;
-    DServices.Println("Driver Loaded!");
 
     DriverInfo di((char*)"", 1, 0, 0);
     di.name = DServices.strdup("GPT Driver");
@@ -41,8 +40,6 @@ DriverInfo DriverMain(DriverServices& DServices) {
     GenericGPT* factory = new(mem) GenericGPT();
 
     DServices.RegisterDriver(factory);
-
-    DServices.Println("Reg GPT");
 
     return di;
 }
