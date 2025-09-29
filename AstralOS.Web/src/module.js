@@ -18,6 +18,6 @@ Module['arguments'] = [
     '-net', 'none'
 ];
 Module['locateFile'] = function(path, prefix) {
-    return '/image/' + path;
+    return '/AstralOS/image/' + path;
 };
-Module['mainScriptUrlOrBlob'] = '/image/out.js'
+Module['mainScriptUrlOrBlob'] = '/AstralOS/image/out.js'

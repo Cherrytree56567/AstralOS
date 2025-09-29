@@ -5,7 +5,8 @@
 #include <cstdint>
 
 struct PMBR {
-    
+    uint8_t BootIndicator;
+    uint8_t StartingCHS[3];
 };
 
 class GenericGPT : public PartitionDriverFactory {
