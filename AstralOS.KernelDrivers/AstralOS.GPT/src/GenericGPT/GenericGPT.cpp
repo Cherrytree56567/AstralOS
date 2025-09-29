@@ -44,6 +44,14 @@ PartitionDevice* GenericGPT::CreateDevice() {
     return device;
 }
 
+void* memset(void* dest, uint8_t value, size_t num) {
+    uint8_t* ptr = (uint8_t*)dest;
+    for (size_t i = 0; i < num; i++) {
+        ptr[i] = value;
+    }
+    return dest;
+}
+
 void GenericGPTDevice::Init(DriverServices& ds, DeviceKey& dKey) {
     _ds = &ds;
     devKey = dKey;
@@ -51,6 +59,19 @@ void GenericGPTDevice::Init(DriverServices& ds, DeviceKey& dKey) {
     uint64_t dev = ((uint64_t)devKey.bars[0] << 32) | devKey.bars[1];
     BaseDriver* bsdrv = (BaseDriver*)dev;
     bldev = (BlockDevice*)bsdrv;
+
+    uint64_t buf_phys = (uint64_t)_ds->RequestPage();
+    uint64_t buf_virt = 0xFFFFFFFF00000000 + buf_phys;
+
+    _ds->MapMemory((void*)buf_virt, (void*)buf_phys, false);
+
+    PMBR* pmbr = (PMBR*)buf_virt;
+
+    memset((void*)buf_virt, 0, bldev->SectorSize());
+    if (bldev->ReadSector(0, (void*)buf_phys)) {
+        _ds->Print("Ending LBA: ");
+        _ds->Println(to_hstridng(pmbr->EndingLBA));
+    }
 
     _ds->Println("Generic GPT Initialized!");
 }

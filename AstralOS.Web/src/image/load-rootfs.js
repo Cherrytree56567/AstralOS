@@ -31,7 +31,7 @@
         }
         Module['dataFileDownloads'] ??= {};
         try {
-          var response = await fetch("AstralOS/" + packageName);
+          var response = await fetch(packageName);
         } catch (e) {
           throw new Error(`Network Error: ${packageName}`, {e});
         }
