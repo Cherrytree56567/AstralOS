@@ -63,7 +63,7 @@ I fixed a few errors that I had before which were really really difficult to deb
 
 **Total time spent: Xh Xm**
 
-# September 29th: XX
+# September 29th: Added GPT Partitioning
 
 Today I was working on the bootloader thing from yesterday. I wanted to fix my messy frankenstein bootloader to work well and not hardcode values and stuff. After a long debugging session, I realised it was not worth it. I was thinking of switching to GRUB but I would have to revamp my kernel for that too. Then I tried to revamp my Driver System because before it would just work for PCI/PCIe Devices but not for other types of drivers like the partition driver I was working on. Once that was done, I worked on making a GPT Partition reader. It wasn't too hard, but it was a challenge.
 
