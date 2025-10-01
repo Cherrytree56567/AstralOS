@@ -79,3 +79,11 @@ The web demo thing was hard to patch, because the build system had a lot of erro
 ![Web](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/Web.png?raw=true)
 
 **Total time spent: 1h 44m**
+
+# October 2nd - October 1st: Web Demo Cool Bg
+
+I thought the demo was a bit too simple, so I added this cool react bits background to it that fit in with the theme of the os.
+
+![Web1](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/Web1.png?raw=true)
+
+**Total time spent: 1h 50m 11s**
