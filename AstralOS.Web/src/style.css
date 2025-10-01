@@ -9,6 +9,9 @@
 .container {
   width: 100%;
 }
+.m-\[0px\] {
+  margin: 0px;
+}
 .mb-\[1rem\] {
   margin-bottom: 1rem;
 }
@@ -24,8 +27,14 @@
 .table {
   display: table;
 }
+.h-\[50px\] {
+  height: 50px;
+}
 .w-\[65vw\] {
   width: 65vw;
+}
+.w-full {
+  width: 100%;
 }
 .grow {
   flex-grow: 1;
@@ -75,6 +84,9 @@
 .p-\[8px\] {
   padding: 8px;
 }
+.pl-\[50px\] {
+  padding-left: 50px;
+}
 .text-center {
   text-align: center;
 }
@@ -89,6 +101,9 @@
 }
 .text-ctp-text {
   color: var(--catppuccin-color-text);
+}
+.no-underline {
+  text-decoration-line: none;
 }
 .ring {
   --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
