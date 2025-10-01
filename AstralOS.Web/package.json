@@ -18,6 +18,8 @@
     "tailwindcss": "^4.1.13"
   },
   "dependencies": {
-    "@tailwindcss/cli": "^4.1.13"
+    "@tailwindcss/cli": "^4.1.13",
+    "clipboard": "^2.0.11",
+    "highlight.js": "^11.11.1"
   }
 }

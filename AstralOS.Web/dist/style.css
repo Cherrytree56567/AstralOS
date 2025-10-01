@@ -13,14 +13,14 @@ body {
 
 #terminal {
   background-color: var(--catppuccin-color-base) !important;
-  width: 720px; 
-  height: 408px;
+  width: 55vw;
+  height: 44vh;
 }
 
 .xterm-viewport {
   background-color: var(--catppuccin-color-base) !important;
-  width: 720px; 
-  height: 408px;
+  width: 55vw;
+  height: 44vh;
 }
 
 .xterm-screen {
@@ -39,11 +39,16 @@ body {
 }
 
 .xterm-fg-11 {
-    color: var(--catppuccin-color-yellow) !important;
+  color: var(--catppuccin-color-yellow) !important;
 }
 
 .xterm-fg-7 {
   color: var(--catppuccin-color-subtext1) !important;
+}
+
+.xterm-screen {
+  width: 55vw;
+  height: 44vh;
 }
 
 .xterm-fg-15 {
@@ -51,9 +56,20 @@ body {
 }
 
 .xterm-cursor-block {
-    background-color: var(--catppuccin-color-text) !important;
+  background-color: var(--catppuccin-color-text) !important;
 }
 
 .font-bold {
-    font-weight: bold;
+  font-weight: bold;
+}
+
+.container {
+  width: 50%;
+}
+
+.code {
+  background-color: var(--catppuccin-color-surface0) !important;
+  border-radius: 5px;
+  text-align: left;
+  padding: 15px;
 }
