@@ -5,6 +5,57 @@ var Module = (() => {
   return (
 async function(moduleArg = {}) {
 
+// Support for growable heap + pthreads, where the buffer may change, so JS views
+// must be updated.
+function GROWABLE_HEAP_I8() {
+  if (wasmMemory.buffer != HEAP8.buffer) {
+    updateMemoryViews();
+  }
+  return HEAP8;
+}
+function GROWABLE_HEAP_U8() {
+  if (wasmMemory.buffer != HEAP8.buffer) {
+    updateMemoryViews();
+  }
+  return HEAPU8;
+}
+function GROWABLE_HEAP_I16() {
+  if (wasmMemory.buffer != HEAP8.buffer) {
+    updateMemoryViews();
+  }
+  return HEAP16;
+}
+function GROWABLE_HEAP_U16() {
+  if (wasmMemory.buffer != HEAP8.buffer) {
+    updateMemoryViews();
+  }
+  return HEAPU16;
+}
+function GROWABLE_HEAP_I32() {
+  if (wasmMemory.buffer != HEAP8.buffer) {
+    updateMemoryViews();
+  }
+  return HEAP32;
+}
+function GROWABLE_HEAP_U32() {
+  if (wasmMemory.buffer != HEAP8.buffer) {
+    updateMemoryViews();
+  }
+  return HEAPU32;
+}
+function GROWABLE_HEAP_F32() {
+  if (wasmMemory.buffer != HEAP8.buffer) {
+    updateMemoryViews();
+  }
+  return HEAPF32;
+}
+function GROWABLE_HEAP_F64() {
+  if (wasmMemory.buffer != HEAP8.buffer) {
+    updateMemoryViews();
+  }
+  return HEAPF64;
+}
+
 var Module = moduleArg;
 
 var readyPromiseResolve, readyPromiseReject;
@@ -163,7 +214,7 @@ if (ENVIRONMENT_IS_NODE) {
   console.log = /** @type{!function(this:Console, ...*): undefined} */ (print);
   console.warn = console.error = /** @type{!function(this:Console, ...*): undefined} */ (typeof printErr != "undefined" ? printErr : print);
  }
-} else  if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
+} else if (ENVIRONMENT_IS_WEB || ENVIRONMENT_IS_WORKER) {
  if (ENVIRONMENT_IS_WORKER) {
   scriptDirectory = self.location.href;
  } else if (typeof document != "undefined" && document.currentScript) {
@@ -209,7 +260,7 @@ if (ENVIRONMENT_IS_NODE) {
    xhr.send(null);
   };
  }
-} else  {
+} else {
  throw new Error("environment detection error");
 }
 
@@ -378,7 +429,7 @@ if (ENVIRONMENT_IS_PTHREAD) {
  } else {
   wasmMemory = new WebAssembly.Memory({
    "initial": INITIAL_MEMORY / 65536,
-   "maximum": INITIAL_MEMORY / 65536,
+   "maximum": 4294967296 / 65536,
    "shared": true
   });
   if (!(wasmMemory.buffer instanceof SharedArrayBuffer)) {
@@ -403,9 +454,9 @@ function writeStackCookie() {
  if (max == 0) {
   max += 4;
  }
- HEAPU32[((max) >>> 2) >>> 0] = 34821223;
- HEAPU32[(((max) + (4)) >>> 2) >>> 0] = 2310721022;
- HEAPU32[((0) >>> 2) >>> 0] = 1668509029;
+ GROWABLE_HEAP_U32()[((max) >>> 2) >>> 0] = 34821223;
+ GROWABLE_HEAP_U32()[(((max) + (4)) >>> 2) >>> 0] = 2310721022;
+ GROWABLE_HEAP_U32()[((0) >>> 2) >>> 0] = 1668509029;
 }
 
 function checkStackCookie() {
@@ -414,12 +465,12 @@ function checkStackCookie() {
  if (max == 0) {
   max += 4;
  }
- var cookie1 = HEAPU32[((max) >>> 2) >>> 0];
- var cookie2 = HEAPU32[(((max) + (4)) >>> 2) >>> 0];
+ var cookie1 = GROWABLE_HEAP_U32()[((max) >>> 2) >>> 0];
+ var cookie2 = GROWABLE_HEAP_U32()[(((max) + (4)) >>> 2) >>> 0];
  if (cookie1 != 34821223 || cookie2 != 2310721022) {
   abort(`Stack overflow! Stack cookie has been overwritten at ${ptrToString(max)}, expected hex dwords 0x89BACDFE and 0x2135467, but received ${ptrToString(cookie2)} ${ptrToString(cookie1)}`);
  }
- if (HEAPU32[((0) >>> 2) >>> 0] != 1668509029) /* 'emsc' */ {
+ if (GROWABLE_HEAP_U32()[((0) >>> 2) >>> 0] != 1668509029) /* 'emsc' */ {
   abort("Runtime error: The application has corrupted its heap memory area (address zero)!");
  }
 }
@@ -678,7 +729,7 @@ function instantiateArrayBuffer(binaryFile, imports, receiver) {
 }
 
 function instantiateAsync(binary, binaryFile, imports, callback) {
- if (!binary && typeof WebAssembly.instantiateStreaming == "function" && !isDataURI(binaryFile) &&  !isFileURI(binaryFile) &&  !ENVIRONMENT_IS_NODE && typeof fetch == "function") {
+ if (!binary && typeof WebAssembly.instantiateStreaming == "function" && !isDataURI(binaryFile) && !isFileURI(binaryFile) && !ENVIRONMENT_IS_NODE && typeof fetch == "function") {
   return fetch(binaryFile, {
    credentials: "same-origin"
   }).then(response => {
@@ -748,7 +799,7 @@ function ignoredModuleProp(prop) {
 }
 
 function isExportedByForceFilesystem(name) {
- return name === "FS_createPath" || name === "FS_createDataFile" || name === "FS_createPreloadedFile" || name === "FS_unlink" || name === "addRunDependency" ||  name === "FS_createLazyFile" || name === "FS_createDevice" || name === "removeRunDependency";
+ return name === "FS_createPath" || name === "FS_createDataFile" || name === "FS_createPreloadedFile" || name === "FS_unlink" || name === "addRunDependency" || name === "FS_createLazyFile" || name === "FS_createDevice" || name === "removeRunDependency";
 }
 
 function missingGlobal(sym, msg) {
@@ -807,11 +858,11 @@ function unexportedRuntimeSymbol(sym) {
 function dbg(text) {
  if (ENVIRONMENT_IS_NODE) {
   fs.writeSync(2, Array.from(arguments).join(" ") + "\n");
- } else  console.warn.apply(console, arguments);
+ } else console.warn.apply(console, arguments);
 }
 
 function instantiate_wasm() {
- const memory_v = new DataView(HEAP8.buffer);
+ const memory_v = new DataView(GROWABLE_HEAP_I8().buffer);
  const tb_ptr = memory_v.getInt32(Module.__wasm32_tb.tb_ptr_ptr, true);
  const export_vec_size = memory_v.getInt32(tb_ptr + 4, true);
  const export_vec_begin = tb_ptr + 4 + 4;
@@ -823,7 +874,7 @@ function instantiate_wasm() {
  const wasm_begin = tmp_body_begin + tmp_body_size + 4;
  const import_vec_size = memory_v.getInt32(wasm_begin + wasm_size, true);
  const import_vec_begin = wasm_begin + wasm_size + 4;
- const wasmBytes = new Uint8Array(HEAP8.slice(wasm_begin, wasm_begin + wasm_size));
+ const wasmBytes = new Uint8Array(GROWABLE_HEAP_I8().slice(wasm_begin, wasm_begin + wasm_size));
  var helper = {};
  for (var i = 0; i < import_vec_size / 4; i++) {
   helper[i] = wasmTable.get(memory_v.getInt32(import_vec_begin + i * 4, true));
@@ -841,7 +892,7 @@ function instantiate_wasm() {
 }
 
 function remove_module_js() {
- const memory_v = new DataView(HEAP8.buffer);
+ const memory_v = new DataView(GROWABLE_HEAP_I8().buffer);
  const remove_n = memory_v.getInt32(Module.__wasm32_tb.to_remove_instance_idx_ptr, true);
  for (var i = 0; i < remove_n * 4; i += 4) {
   removeFunction(memory_v.getInt32(Module.__wasm32_tb.to_remove_instance_ptr + i, true));
@@ -858,7 +909,7 @@ function init_wasm32_js(tb_ptr_ptr, cur_core_num, to_remove_instance_ptr, to_rem
   instance_garbage_collected_ptr: instance_garbage_collected_ptr,
   inst_gc_registry: new FinalizationRegistry(i => {
    if (i == "instance") {
-    const memory_v = new DataView(HEAP8.buffer);
+    const memory_v = new DataView(GROWABLE_HEAP_I8().buffer);
     let v = memory_v.getInt32(Module.__wasm32_tb.instance_garbage_collected_ptr, true);
     memory_v.setInt32(Module.__wasm32_tb.instance_garbage_collected_ptr, v + 1, true);
    }
@@ -867,16 +918,16 @@ function init_wasm32_js(tb_ptr_ptr, cur_core_num, to_remove_instance_ptr, to_rem
 }
 
 function unbox_small_structs(type_ptr) {
- var type_id = HEAPU16[(type_ptr + 6 >> 1) + 0 >>> 0];
+ var type_id = GROWABLE_HEAP_U16()[(type_ptr + 6 >> 1) + 0 >>> 0];
  while (type_id === 13) {
-  var elements = HEAPU32[(type_ptr + 8 >> 2) + 0 >>> 0];
-  var first_element = HEAPU32[(elements >> 2) + 0 >>> 0];
+  var elements = GROWABLE_HEAP_U32()[(type_ptr + 8 >> 2) + 0 >>> 0];
+  var first_element = GROWABLE_HEAP_U32()[(elements >> 2) + 0 >>> 0];
   if (first_element === 0) {
    type_id = 0;
    break;
-  } else if (HEAPU32[(elements >> 2) + 1 >>> 0] === 0) {
+  } else if (GROWABLE_HEAP_U32()[(elements >> 2) + 1 >>> 0] === 0) {
    type_ptr = first_element;
-   type_id = HEAPU16[(first_element + 6 >> 1) + 0 >>> 0];
+   type_id = GROWABLE_HEAP_U16()[(first_element + 6 >> 1) + 0 >>> 0];
   } else {
    break;
   }
@@ -885,11 +936,11 @@ function unbox_small_structs(type_ptr) {
 }
 
 function ffi_call_js(cif, fn, rvalue, avalue) {
- var abi = HEAPU32[(cif >> 2) + 0 >>> 0];
- var nargs = HEAPU32[(cif >> 2) + 1 >>> 0];
- var nfixedargs = HEAPU32[(cif >> 2) + 6 >>> 0];
- var arg_types_ptr = HEAPU32[(cif >> 2) + 2 >>> 0];
- var rtype_unboxed = unbox_small_structs(HEAPU32[(cif >> 2) + 3 >>> 0]);
+ var abi = GROWABLE_HEAP_U32()[(cif >> 2) + 0 >>> 0];
+ var nargs = GROWABLE_HEAP_U32()[(cif >> 2) + 1 >>> 0];
+ var nfixedargs = GROWABLE_HEAP_U32()[(cif >> 2) + 6 >>> 0];
+ var arg_types_ptr = GROWABLE_HEAP_U32()[(cif >> 2) + 2 >>> 0];
+ var rtype_unboxed = unbox_small_structs(GROWABLE_HEAP_U32()[(cif >> 2) + 3 >>> 0]);
  var rtype_ptr = rtype_unboxed[0];
  var rtype_id = rtype_unboxed[1];
  var orig_stack_ptr = stackSave();
@@ -907,8 +958,8 @@ function ffi_call_js(cif, fn, rvalue, avalue) {
   ret_by_arg = true;
  }
  for (var i = 0; i < nfixedargs; i++) {
-  var arg_ptr = HEAPU32[(avalue >> 2) + i >>> 0];
-  var arg_unboxed = unbox_small_structs(HEAPU32[(arg_types_ptr >> 2) + i >>> 0]);
+  var arg_ptr = GROWABLE_HEAP_U32()[(avalue >> 2) + i >>> 0];
+  var arg_unboxed = unbox_small_structs(GROWABLE_HEAP_U32()[(arg_types_ptr >> 2) + i >>> 0]);
   var arg_type_ptr = arg_unboxed[0];
   var arg_type_id = arg_unboxed[1];
   switch (arg_type_id) {
@@ -916,37 +967,37 @@ function ffi_call_js(cif, fn, rvalue, avalue) {
   case 10:
   case 9:
   case 14:
-   args.push(HEAPU32[(arg_ptr >> 2) + 0 >>> 0]);
+   args.push(GROWABLE_HEAP_U32()[(arg_ptr >> 2) + 0 >>> 0]);
    ;
    break;
 
   case 2:
-   args.push(HEAPF32[(arg_ptr >> 2) + 0 >>> 0]);
+   args.push(GROWABLE_HEAP_F32()[(arg_ptr >> 2) + 0 >>> 0]);
    ;
    break;
 
   case 3:
-   args.push(HEAPF64[(arg_ptr >> 3) + 0 >>> 0]);
+   args.push(GROWABLE_HEAP_F64()[(arg_ptr >> 3) + 0 >>> 0]);
    ;
    break;
 
   case 5:
-   args.push(HEAPU8[arg_ptr + 0 >>> 0]);
+   args.push(GROWABLE_HEAP_U8()[arg_ptr + 0 >>> 0]);
    ;
    break;
 
   case 6:
-   args.push(HEAP8[arg_ptr + 0 >>> 0]);
+   args.push(GROWABLE_HEAP_I8()[arg_ptr + 0 >>> 0]);
    ;
    break;
 
   case 7:
-   args.push(HEAPU16[(arg_ptr >> 1) + 0 >>> 0]);
+   args.push(GROWABLE_HEAP_U16()[(arg_ptr >> 1) + 0 >>> 0]);
    ;
    break;
 
   case 8:
-   args.push(HEAP16[(arg_ptr >> 1) + 0 >>> 0]);
+   args.push(GROWABLE_HEAP_I16()[(arg_ptr >> 1) + 0 >>> 0]);
    ;
    break;
 
@@ -963,10 +1014,10 @@ function ffi_call_js(cif, fn, rvalue, avalue) {
    break;
 
   case 13:
-   var size = HEAPU32[(arg_type_ptr >> 2) + 0 >>> 0];
-   var align = HEAPU16[(arg_type_ptr + 4 >> 1) + 0 >>> 0];
+   var size = GROWABLE_HEAP_U32()[(arg_type_ptr >> 2) + 0 >>> 0];
+   var align = GROWABLE_HEAP_U16()[(arg_type_ptr + 4 >> 1) + 0 >>> 0];
    ((cur_stack_ptr -= (size)), (cur_stack_ptr &= (~((align) - 1))));
-   HEAP8.subarray(cur_stack_ptr >>> 0, cur_stack_ptr + size >>> 0).set(HEAP8.subarray(arg_ptr >>> 0, arg_ptr + size >>> 0));
+   GROWABLE_HEAP_I8().subarray(cur_stack_ptr >>> 0, cur_stack_ptr + size >>> 0).set(GROWABLE_HEAP_I8().subarray(arg_ptr >>> 0, arg_ptr + size >>> 0));
    args.push(cur_stack_ptr);
    ;
    break;
@@ -981,21 +1032,21 @@ function ffi_call_js(cif, fn, rvalue, avalue) {
  if (nfixedargs != nargs) {
   var struct_arg_info = [];
   for (var i = nargs - 1; i >= nfixedargs; i--) {
-   var arg_ptr = HEAPU32[(avalue >> 2) + i >>> 0];
-   var arg_unboxed = unbox_small_structs(HEAPU32[(arg_types_ptr >> 2) + i >>> 0]);
+   var arg_ptr = GROWABLE_HEAP_U32()[(avalue >> 2) + i >>> 0];
+   var arg_unboxed = unbox_small_structs(GROWABLE_HEAP_U32()[(arg_types_ptr >> 2) + i >>> 0]);
    var arg_type_ptr = arg_unboxed[0];
    var arg_type_id = arg_unboxed[1];
    switch (arg_type_id) {
    case 5:
    case 6:
     ((cur_stack_ptr -= (1)), (cur_stack_ptr &= (~((1) - 1))));
-    HEAPU8[cur_stack_ptr + 0 >>> 0] = HEAPU8[arg_ptr + 0 >>> 0];
+    GROWABLE_HEAP_U8()[cur_stack_ptr + 0 >>> 0] = GROWABLE_HEAP_U8()[arg_ptr + 0 >>> 0];
     break;
 
    case 7:
    case 8:
     ((cur_stack_ptr -= (2)), (cur_stack_ptr &= (~((2) - 1))));
-    HEAPU16[(cur_stack_ptr >> 1) + 0 >>> 0] = HEAPU16[(arg_ptr >> 1) + 0 >>> 0];
+    GROWABLE_HEAP_U16()[(cur_stack_ptr >> 1) + 0 >>> 0] = GROWABLE_HEAP_U16()[(arg_ptr >> 1) + 0 >>> 0];
     break;
 
    case 1:
@@ -1004,28 +1055,28 @@ function ffi_call_js(cif, fn, rvalue, avalue) {
    case 14:
    case 2:
     ((cur_stack_ptr -= (4)), (cur_stack_ptr &= (~((4) - 1))));
-    HEAPU32[(cur_stack_ptr >> 2) + 0 >>> 0] = HEAPU32[(arg_ptr >> 2) + 0 >>> 0];
+    GROWABLE_HEAP_U32()[(cur_stack_ptr >> 2) + 0 >>> 0] = GROWABLE_HEAP_U32()[(arg_ptr >> 2) + 0 >>> 0];
     break;
 
    case 3:
    case 11:
    case 12:
     ((cur_stack_ptr -= (8)), (cur_stack_ptr &= (~((8) - 1))));
-    HEAPU32[(cur_stack_ptr >> 2) + 0 >>> 0] = HEAPU32[(arg_ptr >> 2) + 0 >>> 0];
-    HEAPU32[(cur_stack_ptr >> 2) + 1 >>> 0] = HEAPU32[(arg_ptr >> 2) + 1 >>> 0];
+    GROWABLE_HEAP_U32()[(cur_stack_ptr >> 2) + 0 >>> 0] = GROWABLE_HEAP_U32()[(arg_ptr >> 2) + 0 >>> 0];
+    GROWABLE_HEAP_U32()[(cur_stack_ptr >> 2) + 1 >>> 0] = GROWABLE_HEAP_U32()[(arg_ptr >> 2) + 1 >>> 0];
     break;
 
    case 4:
     ((cur_stack_ptr -= (16)), (cur_stack_ptr &= (~((8) - 1))));
-    HEAPU32[(cur_stack_ptr >> 2) + 0 >>> 0] = HEAPU32[(arg_ptr >> 2) + 0 >>> 0];
-    HEAPU32[(cur_stack_ptr >> 2) + 1 >>> 0] = HEAPU32[(arg_ptr >> 2) + 1 >>> 0];
-    HEAPU32[(cur_stack_ptr >> 2) + 2 >>> 0] = HEAPU32[(arg_ptr >> 2) + 2 >>> 0];
-    HEAPU32[(cur_stack_ptr >> 2) + 3 >>> 0] = HEAPU32[(arg_ptr >> 2) + 3 >>> 0];
+    GROWABLE_HEAP_U32()[(cur_stack_ptr >> 2) + 0 >>> 0] = GROWABLE_HEAP_U32()[(arg_ptr >> 2) + 0 >>> 0];
+    GROWABLE_HEAP_U32()[(cur_stack_ptr >> 2) + 1 >>> 0] = GROWABLE_HEAP_U32()[(arg_ptr >> 2) + 1 >>> 0];
+    GROWABLE_HEAP_U32()[(cur_stack_ptr >> 2) + 2 >>> 0] = GROWABLE_HEAP_U32()[(arg_ptr >> 2) + 2 >>> 0];
+    GROWABLE_HEAP_U32()[(cur_stack_ptr >> 2) + 3 >>> 0] = GROWABLE_HEAP_U32()[(arg_ptr >> 2) + 3 >>> 0];
     break;
 
    case 13:
     ((cur_stack_ptr -= (4)), (cur_stack_ptr &= (~((4) - 1))));
-    struct_arg_info.push([ cur_stack_ptr, arg_ptr, HEAPU32[(arg_type_ptr >> 2) + 0 >>> 0], HEAPU16[(arg_type_ptr + 4 >> 1) + 0 >>> 0] ]);
+    struct_arg_info.push([ cur_stack_ptr, arg_ptr, GROWABLE_HEAP_U32()[(arg_type_ptr >> 2) + 0 >>> 0], GROWABLE_HEAP_U16()[(arg_type_ptr + 4 >> 1) + 0 >>> 0] ]);
     break;
 
    case 15:
@@ -1043,8 +1094,8 @@ function ffi_call_js(cif, fn, rvalue, avalue) {
    var size = struct_info[2];
    var align = struct_info[3];
    ((cur_stack_ptr -= (size)), (cur_stack_ptr &= (~((align) - 1))));
-   HEAP8.subarray(cur_stack_ptr >>> 0, cur_stack_ptr + size >>> 0).set(HEAP8.subarray(arg_ptr >>> 0, arg_ptr + size >>> 0));
-   HEAPU32[(arg_target >> 2) + 0 >>> 0] = cur_stack_ptr;
+   GROWABLE_HEAP_I8().subarray(cur_stack_ptr >>> 0, cur_stack_ptr + size >>> 0).set(GROWABLE_HEAP_I8().subarray(arg_ptr >>> 0, arg_ptr + size >>> 0));
+   GROWABLE_HEAP_U32()[(arg_target >> 2) + 0 >>> 0] = cur_stack_ptr;
   }
  }
  stackRestore(cur_stack_ptr);
@@ -1062,25 +1113,25 @@ function ffi_call_js(cif, fn, rvalue, avalue) {
  case 9:
  case 10:
  case 14:
-  HEAPU32[(rvalue >> 2) + 0 >>> 0] = result;
+  GROWABLE_HEAP_U32()[(rvalue >> 2) + 0 >>> 0] = result;
   break;
 
  case 2:
-  HEAPF32[(rvalue >> 2) + 0 >>> 0] = result;
+  GROWABLE_HEAP_F32()[(rvalue >> 2) + 0 >>> 0] = result;
   break;
 
  case 3:
-  HEAPF64[(rvalue >> 3) + 0 >>> 0] = result;
+  GROWABLE_HEAP_F64()[(rvalue >> 3) + 0 >>> 0] = result;
   break;
 
  case 5:
  case 6:
-  HEAPU8[rvalue + 0 >>> 0] = result;
+  GROWABLE_HEAP_U8()[rvalue + 0 >>> 0] = result;
   break;
 
  case 7:
  case 8:
-  HEAPU16[(rvalue >> 1) + 0 >>> 0] = result;
+  GROWABLE_HEAP_U16()[(rvalue >> 1) + 0 >>> 0] = result;
   break;
 
  case 11:
@@ -1099,23 +1150,23 @@ function ffi_call_js(cif, fn, rvalue, avalue) {
 function ffi_closure_alloc_js(size, code) {
  var closure = _malloc(size);
  var index = getEmptyTableSlot();
- HEAPU32[(code >> 2) + 0 >>> 0] = index;
- HEAPU32[(closure >> 2) + 0 >>> 0] = index;
+ GROWABLE_HEAP_U32()[(code >> 2) + 0 >>> 0] = index;
+ GROWABLE_HEAP_U32()[(closure >> 2) + 0 >>> 0] = index;
  return closure;
 }
 
 function ffi_closure_free_js(closure) {
- var index = HEAPU32[(closure >> 2) + 0 >>> 0];
+ var index = GROWABLE_HEAP_U32()[(closure >> 2) + 0 >>> 0];
  freeTableIndexes.push(index);
  _free(closure);
 }
 
 function ffi_prep_closure_loc_js(closure, cif, fun, user_data, codeloc) {
- var abi = HEAPU32[(cif >> 2) + 0 >>> 0];
- var nargs = HEAPU32[(cif >> 2) + 1 >>> 0];
- var nfixedargs = HEAPU32[(cif >> 2) + 6 >>> 0];
- var arg_types_ptr = HEAPU32[(cif >> 2) + 2 >>> 0];
- var rtype_unboxed = unbox_small_structs(HEAPU32[(cif >> 2) + 3 >>> 0]);
+ var abi = GROWABLE_HEAP_U32()[(cif >> 2) + 0 >>> 0];
+ var nargs = GROWABLE_HEAP_U32()[(cif >> 2) + 1 >>> 0];
+ var nfixedargs = GROWABLE_HEAP_U32()[(cif >> 2) + 6 >>> 0];
+ var arg_types_ptr = GROWABLE_HEAP_U32()[(cif >> 2) + 2 >>> 0];
+ var rtype_unboxed = unbox_small_structs(GROWABLE_HEAP_U32()[(cif >> 2) + 3 >>> 0]);
  var rtype_ptr = rtype_unboxed[0];
  var rtype_id = rtype_unboxed[1];
  var sig;
@@ -1164,11 +1215,11 @@ function ffi_prep_closure_loc_js(closure, cif, fun, user_data, codeloc) {
  var unboxed_arg_type_id_list = [];
  var unboxed_arg_type_info_list = [];
  for (var i = 0; i < nargs; i++) {
-  var arg_unboxed = unbox_small_structs(HEAPU32[(arg_types_ptr >> 2) + i >>> 0]);
+  var arg_unboxed = unbox_small_structs(GROWABLE_HEAP_U32()[(arg_types_ptr >> 2) + i >>> 0]);
   var arg_type_ptr = arg_unboxed[0];
   var arg_type_id = arg_unboxed[1];
   unboxed_arg_type_id_list.push(arg_type_id);
-  unboxed_arg_type_info_list.push([ HEAPU32[(arg_type_ptr >> 2) + 0 >>> 0], HEAPU16[(arg_type_ptr + 4 >> 1) + 0 >>> 0] ]);
+  unboxed_arg_type_info_list.push([ GROWABLE_HEAP_U32()[(arg_type_ptr >> 2) + 0 >>> 0], GROWABLE_HEAP_U16()[(arg_type_ptr + 4 >> 1) + 0 >>> 0] ]);
  }
  for (var i = 0; i < nfixedargs; i++) {
   switch (unboxed_arg_type_id_list[i]) {
@@ -1238,15 +1289,15 @@ function ffi_prep_closure_loc_js(closure, cif, fun, user_data, codeloc) {
    case 5:
    case 6:
     ((cur_ptr -= (1)), (cur_ptr &= (~((4) - 1))));
-    HEAPU32[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
-    HEAPU8[cur_ptr + 0 >>> 0] = cur_arg;
+    GROWABLE_HEAP_U32()[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
+    GROWABLE_HEAP_U8()[cur_ptr + 0 >>> 0] = cur_arg;
     break;
 
    case 7:
    case 8:
     ((cur_ptr -= (2)), (cur_ptr &= (~((4) - 1))));
-    HEAPU32[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
-    HEAPU16[(cur_ptr >> 1) + 0 >>> 0] = cur_arg;
+    GROWABLE_HEAP_U32()[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
+    GROWABLE_HEAP_U16()[(cur_ptr >> 1) + 0 >>> 0] = cur_arg;
     break;
 
    case 1:
@@ -1254,38 +1305,38 @@ function ffi_prep_closure_loc_js(closure, cif, fun, user_data, codeloc) {
    case 10:
    case 14:
     ((cur_ptr -= (4)), (cur_ptr &= (~((4) - 1))));
-    HEAPU32[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
-    HEAPU32[(cur_ptr >> 2) + 0 >>> 0] = cur_arg;
+    GROWABLE_HEAP_U32()[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
+    GROWABLE_HEAP_U32()[(cur_ptr >> 2) + 0 >>> 0] = cur_arg;
     break;
 
    case 13:
     ((cur_ptr -= (arg_size)), (cur_ptr &= (~((arg_align) - 1))));
-    HEAP8.subarray(cur_ptr >>> 0, cur_ptr + arg_size >>> 0).set(HEAP8.subarray(cur_arg >>> 0, cur_arg + arg_size >>> 0));
-    HEAPU32[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
+    GROWABLE_HEAP_I8().subarray(cur_ptr >>> 0, cur_ptr + arg_size >>> 0).set(GROWABLE_HEAP_I8().subarray(cur_arg >>> 0, cur_arg + arg_size >>> 0));
+    GROWABLE_HEAP_U32()[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
     break;
 
    case 2:
     ((cur_ptr -= (4)), (cur_ptr &= (~((4) - 1))));
-    HEAPU32[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
-    HEAPF32[(cur_ptr >> 2) + 0 >>> 0] = cur_arg;
+    GROWABLE_HEAP_U32()[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
+    GROWABLE_HEAP_F32()[(cur_ptr >> 2) + 0 >>> 0] = cur_arg;
     break;
 
    case 3:
     ((cur_ptr -= (8)), (cur_ptr &= (~((8) - 1))));
-    HEAPU32[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
-    HEAPF64[(cur_ptr >> 3) + 0 >>> 0] = cur_arg;
+    GROWABLE_HEAP_U32()[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
+    GROWABLE_HEAP_F64()[(cur_ptr >> 3) + 0 >>> 0] = cur_arg;
     break;
 
    case 11:
    case 12:
     ((cur_ptr -= (8)), (cur_ptr &= (~((8) - 1))));
-    HEAPU32[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
+    GROWABLE_HEAP_U32()[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
     HEAPU64[(cur_ptr >> 3) + 0] = cur_arg;
     break;
 
    case 4:
     ((cur_ptr -= (16)), (cur_ptr &= (~((8) - 1))));
-    HEAPU32[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
+    GROWABLE_HEAP_U32()[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
     HEAPU64[(cur_ptr >> 3) + 0] = cur_arg;
     cur_arg = args[jsarg_idx++];
     HEAPU64[(cur_ptr >> 3) + 1] = cur_arg;
@@ -1299,33 +1350,33 @@ function ffi_prep_closure_loc_js(closure, cif, fun, user_data, codeloc) {
    var arg_size = arg_type_info[0];
    var arg_align = arg_type_info[1];
    if (arg_type_id === 13) {
-    var struct_ptr = HEAPU32[(varargs >> 2) + 0 >>> 0];
+    var struct_ptr = GROWABLE_HEAP_U32()[(varargs >> 2) + 0 >>> 0];
     ((cur_ptr -= (arg_size)), (cur_ptr &= (~((arg_align) - 1))));
-    HEAP8.subarray(cur_ptr >>> 0, cur_ptr + arg_size >>> 0).set(HEAP8.subarray(struct_ptr >>> 0, struct_ptr + arg_size >>> 0));
-    HEAPU32[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
+    GROWABLE_HEAP_I8().subarray(cur_ptr >>> 0, cur_ptr + arg_size >>> 0).set(GROWABLE_HEAP_I8().subarray(struct_ptr >>> 0, struct_ptr + arg_size >>> 0));
+    GROWABLE_HEAP_U32()[(args_ptr >> 2) + carg_idx >>> 0] = cur_ptr;
    } else {
-    HEAPU32[(args_ptr >> 2) + carg_idx >>> 0] = varargs;
+    GROWABLE_HEAP_U32()[(args_ptr >> 2) + carg_idx >>> 0] = varargs;
    }
    varargs += 4;
   }
   stackRestore(cur_ptr);
   stackAlloc(0);
   0;
-  getWasmTableEntry(HEAPU32[(closure >> 2) + 2 >>> 0])(HEAPU32[(closure >> 2) + 1 >>> 0], ret_ptr, args_ptr, HEAPU32[(closure >> 2) + 3 >>> 0]);
+  getWasmTableEntry(GROWABLE_HEAP_U32()[(closure >> 2) + 2 >>> 0])(GROWABLE_HEAP_U32()[(closure >> 2) + 1 >>> 0], ret_ptr, args_ptr, GROWABLE_HEAP_U32()[(closure >> 2) + 3 >>> 0]);
   stackRestore(orig_stack_ptr);
   if (!ret_by_arg) {
    switch (sig[0]) {
    case "i":
-    return HEAPU32[(ret_ptr >> 2) + 0 >>> 0];
+    return GROWABLE_HEAP_U32()[(ret_ptr >> 2) + 0 >>> 0];
 
    case "j":
     return HEAPU64[(ret_ptr >> 3) + 0];
 
    case "d":
-    return HEAPF64[(ret_ptr >> 3) + 0 >>> 0];
+    return GROWABLE_HEAP_F64()[(ret_ptr >> 3) + 0 >>> 0];
 
    case "f":
-    return HEAPF32[(ret_ptr >> 2) + 0 >>> 0];
+    return GROWABLE_HEAP_F32()[(ret_ptr >> 2) + 0 >>> 0];
    }
   }
  }
@@ -1335,9 +1386,9 @@ function ffi_prep_closure_loc_js(closure, cif, fun, user_data, codeloc) {
   return 1;
  }
  setWasmTableEntry(codeloc, wasm_trampoline);
- HEAPU32[(closure >> 2) + 1 >>> 0] = cif;
- HEAPU32[(closure >> 2) + 2 >>> 0] = fun;
- HEAPU32[(closure >> 2) + 3 >>> 0] = user_data;
+ GROWABLE_HEAP_U32()[(closure >> 2) + 1 >>> 0] = cif;
+ GROWABLE_HEAP_U32()[(closure >> 2) + 2 >>> 0] = fun;
+ GROWABLE_HEAP_U32()[(closure >> 2) + 3 >>> 0] = user_data;
  return 0;
 }
 
@@ -1384,7 +1435,7 @@ var cleanupThread = pthread_ptr => {
 };
 
 var zeroMemory = (address, size) => {
- HEAPU8.fill(0, address, address + size);
+ GROWABLE_HEAP_U8().fill(0, address, address + size);
  return address;
 };
 
@@ -1491,7 +1542,7 @@ var initRandomFill = () => {
     return view => crypto_module["randomFillSync"](view);
    }
    var randomBytes = crypto_module["randomBytes"];
-   return view => (view.set(randomBytes(view.byteLength)),  view);
+   return view => (view.set(randomBytes(view.byteLength)), view);
   } catch (e) {}
  }
  abort("no cryptographic support found for randomDevice. consider polyfilling it if you want to use something insecure like Math.random(), e.g. put this in a --pre-js: var crypto = { getRandomValues: (array) => { for (var i = 0; i < array.length; i++) array[i] = (Math.random()*256)|0 } };");
@@ -1648,8 +1699,8 @@ var TTY = {
    return readBytes.length;
   },
   write: (stream, buffer, offset, length) => {
-   if (buffer === HEAP8) {
-    buffer = HEAPU8;
+   if (buffer === GROWABLE_HEAP_I8()) {
+    buffer = GROWABLE_HEAP_U8();
    } else if (!(buffer instanceof Uint8Array)) {
     throw new Error(`Unexpected buffer type: ${buffer.constructor.name}`);
    }
@@ -1936,6 +1987,9 @@ var MEMFS = {
   },
   write(stream, buffer, offset, length, position, canOwn) {
    assert(!(buffer instanceof ArrayBuffer));
+   if (buffer.buffer === GROWABLE_HEAP_I8().buffer) {
+    canOwn = false;
+   }
    if (!length) return 0;
    var node = stream.node;
    node.timestamp = Date.now();
@@ -1990,7 +2044,7 @@ var MEMFS = {
    var ptr;
    var allocated;
    var contents = stream.node.contents;
-   if (!(flags & 2) && contents.buffer === HEAP8.buffer) {
+   if (!(flags & 2) && contents.buffer === GROWABLE_HEAP_I8().buffer) {
     allocated = false;
     ptr = contents.byteOffset;
    } else {
@@ -2006,7 +2060,7 @@ var MEMFS = {
     if (!ptr) {
      throw new FS.ErrnoError(48);
     }
-    HEAP8.set(contents, ptr >>> 0);
+    GROWABLE_HEAP_I8().set(contents, ptr >>> 0);
    }
    return {
     ptr: ptr,
@@ -2509,7 +2563,7 @@ var LZ4 = {
      }
      return j;
     };
-    var maxInputSize = 2113929216, minMatch = 4,  hashLog = 16, hashShift = (minMatch * 8) - hashLog, hashSize = 1 << hashLog, copyLength = 8, lastLiterals = 5, mfLimit = copyLength + minMatch, skipStrength = 6, mlBits = 4, mlMask = (1 << mlBits) - 1, runBits = 8 - mlBits, runMask = (1 << runBits) - 1, hasher = /* XXX uint32( */ 2654435761;
+    var maxInputSize = 2113929216, minMatch = 4, hashLog = 16, hashShift = (minMatch * 8) - hashLog, hashSize = 1 << hashLog, copyLength = 8, lastLiterals = 5, mfLimit = copyLength + minMatch, skipStrength = 6, mlBits = 4, mlMask = (1 << mlBits) - 1, runBits = 8 - mlBits, runMask = (1 << runBits) - 1, hasher = /* XXX uint32( */ 2654435761;
     /* ) */ assert(hashShift === 16);
     var hashTable = new Int16Array(1 << 16);
     var empty = new Int16Array(hashTable.length);
@@ -2529,7 +2583,7 @@ var LZ4 = {
      if (src.length > mfLimit) {
       var n = exports.compressBound(src.length);
       if (dlen < n) throw Error("output too small: " + dlen + " < " + n);
-      var step = 1, findMatchAttempts = (1 << skipStrength) + 3,  srcLength = src.length - mfLimit;
+      var step = 1, findMatchAttempts = (1 << skipStrength) + 3, srcLength = src.length - mfLimit;
       while (pos + minMatch < srcLength) {
        var sequenceLowBits = src[pos + 1] << 8 | src[pos];
        var sequenceHighBits = src[pos + 3] << 8 | src[pos + 2];
@@ -3047,7 +3101,7 @@ var FS = {
   if (FS.isLink(node.mode)) {
    return 32;
   } else if (FS.isDir(node.mode)) {
-   if (FS.flagsToPermissionString(flags) !== "r" ||  (flags & 512)) {
+   if (FS.flagsToPermissionString(flags) !== "r" || (flags & 512)) {
     return 31;
    }
   }
@@ -4273,7 +4327,7 @@ var FS = {
    if (!ptr) {
     throw new FS.ErrnoError(48);
    }
-   writeChunks(stream, HEAP8, ptr, length, position);
+   writeChunks(stream, GROWABLE_HEAP_I8(), ptr, length, position);
    return {
     ptr: ptr,
     allocated: true
@@ -4319,7 +4373,7 @@ var FS = {
      */ var UTF8ToString = (ptr, maxBytesToRead) => {
  assert(typeof ptr == "number", `UTF8ToString expects a number (got ${typeof ptr})`);
  ptr >>>= 0;
- return ptr ? UTF8ArrayToString(HEAPU8, ptr, maxBytesToRead) : "";
+ return ptr ? UTF8ArrayToString(GROWABLE_HEAP_U8(), ptr, maxBytesToRead) : "";
 };
 
 var SYSCALLS = {
@@ -4352,24 +4406,24 @@ var SYSCALLS = {
    }
    throw e;
   }
-  HEAP32[((buf) >>> 2) >>> 0] = stat.dev;
-  HEAP32[(((buf) + (4)) >>> 2) >>> 0] = stat.mode;
-  HEAPU32[(((buf) + (8)) >>> 2) >>> 0] = stat.nlink;
-  HEAP32[(((buf) + (12)) >>> 2) >>> 0] = stat.uid;
-  HEAP32[(((buf) + (16)) >>> 2) >>> 0] = stat.gid;
-  HEAP32[(((buf) + (20)) >>> 2) >>> 0] = stat.rdev;
+  GROWABLE_HEAP_I32()[((buf) >>> 2) >>> 0] = stat.dev;
+  GROWABLE_HEAP_I32()[(((buf) + (4)) >>> 2) >>> 0] = stat.mode;
+  GROWABLE_HEAP_U32()[(((buf) + (8)) >>> 2) >>> 0] = stat.nlink;
+  GROWABLE_HEAP_I32()[(((buf) + (12)) >>> 2) >>> 0] = stat.uid;
+  GROWABLE_HEAP_I32()[(((buf) + (16)) >>> 2) >>> 0] = stat.gid;
+  GROWABLE_HEAP_I32()[(((buf) + (20)) >>> 2) >>> 0] = stat.rdev;
   HEAP64[(((buf) + (24)) >>> 3)] = BigInt(stat.size);
-  HEAP32[(((buf) + (32)) >>> 2) >>> 0] = 4096;
-  HEAP32[(((buf) + (36)) >>> 2) >>> 0] = stat.blocks;
+  GROWABLE_HEAP_I32()[(((buf) + (32)) >>> 2) >>> 0] = 4096;
+  GROWABLE_HEAP_I32()[(((buf) + (36)) >>> 2) >>> 0] = stat.blocks;
   var atime = stat.atime.getTime();
   var mtime = stat.mtime.getTime();
   var ctime = stat.ctime.getTime();
   HEAP64[(((buf) + (40)) >>> 3)] = BigInt(Math.floor(atime / 1e3));
-  HEAPU32[(((buf) + (48)) >>> 2) >>> 0] = (atime % 1e3) * 1e3;
+  GROWABLE_HEAP_U32()[(((buf) + (48)) >>> 2) >>> 0] = (atime % 1e3) * 1e3;
   HEAP64[(((buf) + (56)) >>> 3)] = BigInt(Math.floor(mtime / 1e3));
-  HEAPU32[(((buf) + (64)) >>> 2) >>> 0] = (mtime % 1e3) * 1e3;
+  GROWABLE_HEAP_U32()[(((buf) + (64)) >>> 2) >>> 0] = (mtime % 1e3) * 1e3;
   HEAP64[(((buf) + (72)) >>> 3)] = BigInt(Math.floor(ctime / 1e3));
-  HEAPU32[(((buf) + (80)) >>> 2) >>> 0] = (ctime % 1e3) * 1e3;
+  GROWABLE_HEAP_U32()[(((buf) + (80)) >>> 2) >>> 0] = (ctime % 1e3) * 1e3;
   HEAP64[(((buf) + (88)) >>> 3)] = BigInt(stat.ino);
   return 0;
  },
@@ -4380,13 +4434,13 @@ var SYSCALLS = {
   if (flags & 2) {
    return 0;
   }
-  var buffer = HEAPU8.slice(addr, addr + len);
+  var buffer = GROWABLE_HEAP_U8().slice(addr, addr + len);
   FS.msync(stream, buffer, offset, len, flags);
  },
  varargs: undefined,
  get() {
   assert(SYSCALLS.varargs != undefined);
-  var ret = HEAP32[((+SYSCALLS.varargs) >>> 2) >>> 0];
+  var ret = GROWABLE_HEAP_I32()[((+SYSCALLS.varargs) >>> 2) >>> 0];
   SYSCALLS.varargs += 4;
   return ret;
  },
@@ -4430,7 +4484,7 @@ var bigintToI53Checked = num => (num < MIN_INT53 || num > MAX_INT53) ? NaN : Num
     HEAP64[b + 2 * i + 1] = arg;
    } else {
     HEAP64[b + 2 * i] = 0n;
-    HEAPF64[b + 2 * i + 1 >>> 0] = arg;
+    GROWABLE_HEAP_F64()[b + 2 * i + 1 >>> 0] = arg;
    }
   }
   return __emscripten_run_on_main_thread_js(index, serializedNumCallArgs, args, sync);
@@ -4668,8 +4722,8 @@ var callRuntimeCallbacks = callbacks => {
 
 var establishStackSpace = () => {
  var pthread_ptr = _pthread_self();
- var stackHigh = HEAPU32[(((pthread_ptr) + (52)) >>> 2) >>> 0];
- var stackSize = HEAPU32[(((pthread_ptr) + (56)) >>> 2) >>> 0];
+ var stackHigh = GROWABLE_HEAP_U32()[(((pthread_ptr) + (52)) >>> 2) >>> 0];
+ var stackSize = GROWABLE_HEAP_U32()[(((pthread_ptr) + (56)) >>> 2) >>> 0];
  var stackLow = stackHigh - stackSize;
  assert(stackHigh != 0);
  assert(stackLow != 0);
@@ -4699,28 +4753,28 @@ function exitOnMainThread(returnCode) {
  if (type.endsWith("*")) type = "*";
  switch (type) {
  case "i1":
-  return HEAP8[((ptr) >>> 0) >>> 0];
+  return GROWABLE_HEAP_I8()[((ptr) >>> 0) >>> 0];
 
  case "i8":
-  return HEAP8[((ptr) >>> 0) >>> 0];
+  return GROWABLE_HEAP_I8()[((ptr) >>> 0) >>> 0];
 
  case "i16":
-  return HEAP16[((ptr) >>> 1) >>> 0];
+  return GROWABLE_HEAP_I16()[((ptr) >>> 1) >>> 0];
 
  case "i32":
-  return HEAP32[((ptr) >>> 2) >>> 0];
+  return GROWABLE_HEAP_I32()[((ptr) >>> 2) >>> 0];
 
  case "i64":
   return HEAP64[((ptr) >>> 3)];
 
  case "float":
-  return HEAPF32[((ptr) >>> 2) >>> 0];
+  return GROWABLE_HEAP_F32()[((ptr) >>> 2) >>> 0];
 
  case "double":
-  return HEAPF64[((ptr) >>> 3) >>> 0];
+  return GROWABLE_HEAP_F64()[((ptr) >>> 3) >>> 0];
 
  case "*":
-  return HEAPU32[((ptr) >>> 2) >>> 0];
+  return GROWABLE_HEAP_U32()[((ptr) >>> 2) >>> 0];
 
  default:
   abort(`invalid type for getValue: ${type}`);
@@ -4760,19 +4814,19 @@ var runtimeKeepalivePush = () => {
  if (type.endsWith("*")) type = "*";
  switch (type) {
  case "i1":
-  HEAP8[((ptr) >>> 0) >>> 0] = value;
+  GROWABLE_HEAP_I8()[((ptr) >>> 0) >>> 0] = value;
   break;
 
  case "i8":
-  HEAP8[((ptr) >>> 0) >>> 0] = value;
+  GROWABLE_HEAP_I8()[((ptr) >>> 0) >>> 0] = value;
   break;
 
  case "i16":
-  HEAP16[((ptr) >>> 1) >>> 0] = value;
+  GROWABLE_HEAP_I16()[((ptr) >>> 1) >>> 0] = value;
   break;
 
  case "i32":
-  HEAP32[((ptr) >>> 2) >>> 0] = value;
+  GROWABLE_HEAP_I32()[((ptr) >>> 2) >>> 0] = value;
   break;
 
  case "i64":
@@ -4780,15 +4834,15 @@ var runtimeKeepalivePush = () => {
   break;
 
  case "float":
-  HEAPF32[((ptr) >>> 2) >>> 0] = value;
+  GROWABLE_HEAP_F32()[((ptr) >>> 2) >>> 0] = value;
   break;
 
  case "double":
-  HEAPF64[((ptr) >>> 3) >>> 0] = value;
+  GROWABLE_HEAP_F64()[((ptr) >>> 3) >>> 0] = value;
   break;
 
  case "*":
-  HEAPU32[((ptr) >>> 2) >>> 0] = value;
+  GROWABLE_HEAP_U32()[((ptr) >>> 2) >>> 0] = value;
   break;
 
  default:
@@ -4980,7 +5034,7 @@ var SOCKFS = {
     if (ws._socket) {
      addr = ws._socket.remoteAddress;
      port = ws._socket.remotePort;
-    } else  {
+    } else {
      var result = /ws[s]?:\/\/([^:]+):(\d+)/.exec(ws.url);
      if (!result) {
       throw new Error("WebSocket URL must be in the format ws(s)://address:port");
@@ -5068,7 +5122,7 @@ var SOCKFS = {
     if (typeof data == "string") {
      var encoder = new TextEncoder;
      data = encoder.encode(data);
-    } else  {
+    } else {
      assert(data.byteLength !== undefined);
      if (data.byteLength == 0) {
       return;
@@ -5125,11 +5179,11 @@ var SOCKFS = {
     return sock.pending.length ? (64 | 1) : 0;
    }
    var mask = 0;
-   var dest = sock.type === 1 ?  SOCKFS.websocket_sock_ops.getPeer(sock, sock.daddr, sock.dport) : null;
-   if (sock.recv_queue.length || !dest ||  (dest && dest.socket.readyState === dest.socket.CLOSING) || (dest && dest.socket.readyState === dest.socket.CLOSED)) {
+   var dest = sock.type === 1 ? SOCKFS.websocket_sock_ops.getPeer(sock, sock.daddr, sock.dport) : null;
+   if (sock.recv_queue.length || !dest || (dest && dest.socket.readyState === dest.socket.CLOSING) || (dest && dest.socket.readyState === dest.socket.CLOSED)) {
     mask |= (64 | 1);
    }
-   if (!dest ||  (dest && dest.socket.readyState === dest.socket.OPEN)) {
+   if (!dest || (dest && dest.socket.readyState === dest.socket.OPEN)) {
     mask |= 4;
    }
    if ((dest && dest.socket.readyState === dest.socket.CLOSING) || (dest && dest.socket.readyState === dest.socket.CLOSED)) {
@@ -5144,7 +5198,7 @@ var SOCKFS = {
     if (sock.recv_queue.length) {
      bytes = sock.recv_queue[0].data.length;
     }
-    HEAP32[((arg) >>> 2) >>> 0] = bytes;
+    GROWABLE_HEAP_I32()[((arg) >>> 2) >>> 0] = bytes;
     return 0;
 
    default:
@@ -5358,7 +5412,7 @@ var getSocketFromFD = fd => {
 };
 
 var setErrNo = value => {
- HEAP32[((___errno_location()) >>> 2) >>> 0] = value;
+ GROWABLE_HEAP_I32()[((___errno_location()) >>> 2) >>> 0] = value;
  return value;
 };
 
@@ -5401,7 +5455,7 @@ var inetPton6 = str => {
  }
  if (str.startsWith("::")) {
   str = str.replace("::", "Z:");
- } else  {
+ } else {
   str = str.replace("::", ":Z:");
  }
  if (str.indexOf(".") > 0) {
@@ -5438,25 +5492,25 @@ var inetPton6 = str => {
   addr = inetPton4(addr);
   zeroMemory(sa, 16);
   if (addrlen) {
-   HEAP32[((addrlen) >>> 2) >>> 0] = 16;
+   GROWABLE_HEAP_I32()[((addrlen) >>> 2) >>> 0] = 16;
   }
-  HEAP16[((sa) >>> 1) >>> 0] = family;
-  HEAP32[(((sa) + (4)) >>> 2) >>> 0] = addr;
-  HEAP16[(((sa) + (2)) >>> 1) >>> 0] = _htons(port);
+  GROWABLE_HEAP_I16()[((sa) >>> 1) >>> 0] = family;
+  GROWABLE_HEAP_I32()[(((sa) + (4)) >>> 2) >>> 0] = addr;
+  GROWABLE_HEAP_I16()[(((sa) + (2)) >>> 1) >>> 0] = _htons(port);
   break;
 
  case 10:
   addr = inetPton6(addr);
   zeroMemory(sa, 28);
   if (addrlen) {
-   HEAP32[((addrlen) >>> 2) >>> 0] = 28;
+   GROWABLE_HEAP_I32()[((addrlen) >>> 2) >>> 0] = 28;
   }
-  HEAP32[((sa) >>> 2) >>> 0] = family;
-  HEAP32[(((sa) + (8)) >>> 2) >>> 0] = addr[0];
-  HEAP32[(((sa) + (12)) >>> 2) >>> 0] = addr[1];
-  HEAP32[(((sa) + (16)) >>> 2) >>> 0] = addr[2];
-  HEAP32[(((sa) + (20)) >>> 2) >>> 0] = addr[3];
-  HEAP16[(((sa) + (2)) >>> 1) >>> 0] = _htons(port);
+  GROWABLE_HEAP_I32()[((sa) >>> 2) >>> 0] = family;
+  GROWABLE_HEAP_I32()[(((sa) + (8)) >>> 2) >>> 0] = addr[0];
+  GROWABLE_HEAP_I32()[(((sa) + (12)) >>> 2) >>> 0] = addr[1];
+  GROWABLE_HEAP_I32()[(((sa) + (16)) >>> 2) >>> 0] = addr[2];
+  GROWABLE_HEAP_I32()[(((sa) + (20)) >>> 2) >>> 0] = addr[3];
+  GROWABLE_HEAP_I16()[(((sa) + (2)) >>> 1) >>> 0] = _htons(port);
   break;
 
  default:
@@ -5582,8 +5636,8 @@ var inetNtop6 = ints => {
 };
 
 var readSockaddr = (sa, salen) => {
- var family = HEAP16[((sa) >>> 1) >>> 0];
- var port = _ntohs(HEAPU16[(((sa) + (2)) >>> 1) >>> 0]);
+ var family = GROWABLE_HEAP_I16()[((sa) >>> 1) >>> 0];
+ var port = _ntohs(GROWABLE_HEAP_U16()[(((sa) + (2)) >>> 1) >>> 0]);
  var addr;
  switch (family) {
  case 2:
@@ -5592,7 +5646,7 @@ var readSockaddr = (sa, salen) => {
     errno: 28
    };
   }
-  addr = HEAP32[(((sa) + (4)) >>> 2) >>> 0];
+  addr = GROWABLE_HEAP_I32()[(((sa) + (4)) >>> 2) >>> 0];
   addr = inetNtop4(addr);
   break;
 
@@ -5602,7 +5656,7 @@ var readSockaddr = (sa, salen) => {
     errno: 28
    };
   }
-  addr = [ HEAP32[(((sa) + (8)) >>> 2) >>> 0], HEAP32[(((sa) + (12)) >>> 2) >>> 0], HEAP32[(((sa) + (16)) >>> 2) >>> 0], HEAP32[(((sa) + (20)) >>> 2) >>> 0] ];
+  addr = [ GROWABLE_HEAP_I32()[(((sa) + (8)) >>> 2) >>> 0], GROWABLE_HEAP_I32()[(((sa) + (12)) >>> 2) >>> 0], GROWABLE_HEAP_I32()[(((sa) + (16)) >>> 2) >>> 0], GROWABLE_HEAP_I32()[(((sa) + (20)) >>> 2) >>> 0] ];
   addr = inetNtop6(addr);
   break;
 
@@ -5811,7 +5865,7 @@ function ___syscall_fcntl64(fd, cmd, varargs) {
    {
     var arg = SYSCALLS.getp();
     var offset = 0;
-    HEAP16[(((arg) + (offset)) >>> 1) >>> 0] = 2;
+    GROWABLE_HEAP_I16()[(((arg) + (offset)) >>> 1) >>> 0] = 2;
     return 0;
    }
 
@@ -5858,16 +5912,16 @@ function ___syscall_statfs64(path, size, buf) {
  try {
   path = SYSCALLS.getStr(path);
   assert(size === 64);
-  HEAP32[(((buf) + (4)) >>> 2) >>> 0] = 4096;
-  HEAP32[(((buf) + (40)) >>> 2) >>> 0] = 4096;
-  HEAP32[(((buf) + (8)) >>> 2) >>> 0] = 1e6;
-  HEAP32[(((buf) + (12)) >>> 2) >>> 0] = 5e5;
-  HEAP32[(((buf) + (16)) >>> 2) >>> 0] = 5e5;
-  HEAP32[(((buf) + (20)) >>> 2) >>> 0] = FS.nextInode;
-  HEAP32[(((buf) + (24)) >>> 2) >>> 0] = 1e6;
-  HEAP32[(((buf) + (28)) >>> 2) >>> 0] = 42;
-  HEAP32[(((buf) + (44)) >>> 2) >>> 0] = 2;
-  HEAP32[(((buf) + (36)) >>> 2) >>> 0] = 255;
+  GROWABLE_HEAP_I32()[(((buf) + (4)) >>> 2) >>> 0] = 4096;
+  GROWABLE_HEAP_I32()[(((buf) + (40)) >>> 2) >>> 0] = 4096;
+  GROWABLE_HEAP_I32()[(((buf) + (8)) >>> 2) >>> 0] = 1e6;
+  GROWABLE_HEAP_I32()[(((buf) + (12)) >>> 2) >>> 0] = 5e5;
+  GROWABLE_HEAP_I32()[(((buf) + (16)) >>> 2) >>> 0] = 5e5;
+  GROWABLE_HEAP_I32()[(((buf) + (20)) >>> 2) >>> 0] = FS.nextInode;
+  GROWABLE_HEAP_I32()[(((buf) + (24)) >>> 2) >>> 0] = 1e6;
+  GROWABLE_HEAP_I32()[(((buf) + (28)) >>> 2) >>> 0] = 42;
+  GROWABLE_HEAP_I32()[(((buf) + (44)) >>> 2) >>> 0] = 2;
+  GROWABLE_HEAP_I32()[(((buf) + (36)) >>> 2) >>> 0] = 255;
   return 0;
  } catch (e) {
   if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
@@ -5903,7 +5957,7 @@ function ___syscall_ftruncate64(fd, length) {
 
 var stringToUTF8 = (str, outPtr, maxBytesToWrite) => {
  assert(typeof maxBytesToWrite == "number", "stringToUTF8(str, outPtr, maxBytesToWrite) is missing the third parameter that specifies the length of the output buffer!");
- return stringToUTF8Array(str, HEAPU8, outPtr, maxBytesToWrite);
+ return stringToUTF8Array(str, GROWABLE_HEAP_U8(), outPtr, maxBytesToWrite);
 };
 
 function ___syscall_getcwd(buf, size) {
@@ -5952,13 +6006,13 @@ function ___syscall_getdents64(fd, dirp, count) {
    } else {
     var child = FS.lookupNode(stream.node, name);
     id = child.id;
-    type = FS.isChrdev(child.mode) ? 2 :  FS.isDir(child.mode) ? 4 :  FS.isLink(child.mode) ? 10 :  8;
+    type = FS.isChrdev(child.mode) ? 2 : FS.isDir(child.mode) ? 4 : FS.isLink(child.mode) ? 10 : 8;
    }
    assert(id);
    HEAP64[((dirp + pos) >>> 3)] = BigInt(id);
    HEAP64[(((dirp + pos) + (8)) >>> 3)] = BigInt((idx + 1) * struct_size);
-   HEAP16[(((dirp + pos) + (16)) >>> 1) >>> 0] = 280;
-   HEAP8[(((dirp + pos) + (18)) >>> 0) >>> 0] = type;
+   GROWABLE_HEAP_I16()[(((dirp + pos) + (16)) >>> 1) >>> 0] = 280;
+   GROWABLE_HEAP_I8()[(((dirp + pos) + (18)) >>> 0) >>> 0] = type;
    stringToUTF8(name, dirp + pos + 19, 256);
    pos += struct_size;
    idx += 1;
@@ -6012,14 +6066,14 @@ function ___syscall_getsockopt(fd, level, optname, optval, optlen, d1) {
   var sock = getSocketFromFD(fd);
   if (level === 1) {
    if (optname === 4) {
-    HEAP32[((optval) >>> 2) >>> 0] = sock.error;
-    HEAP32[((optlen) >>> 2) >>> 0] = 4;
+    GROWABLE_HEAP_I32()[((optval) >>> 2) >>> 0] = sock.error;
+    GROWABLE_HEAP_I32()[((optlen) >>> 2) >>> 0] = 4;
     sock.error = null;
     return 0;
    }
   }
   return -50;
- }  catch (e) {
+ } catch (e) {
   if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
   return -e.errno;
  }
@@ -6044,12 +6098,12 @@ function ___syscall_ioctl(fd, op, varargs) {
     if (stream.tty.ops.ioctl_tcgets) {
      var termios = stream.tty.ops.ioctl_tcgets(stream);
      var argp = SYSCALLS.getp();
-     HEAP32[((argp) >>> 2) >>> 0] = termios.c_iflag || 0;
-     HEAP32[(((argp) + (4)) >>> 2) >>> 0] = termios.c_oflag || 0;
-     HEAP32[(((argp) + (8)) >>> 2) >>> 0] = termios.c_cflag || 0;
-     HEAP32[(((argp) + (12)) >>> 2) >>> 0] = termios.c_lflag || 0;
+     GROWABLE_HEAP_I32()[((argp) >>> 2) >>> 0] = termios.c_iflag || 0;
+     GROWABLE_HEAP_I32()[(((argp) + (4)) >>> 2) >>> 0] = termios.c_oflag || 0;
+     GROWABLE_HEAP_I32()[(((argp) + (8)) >>> 2) >>> 0] = termios.c_cflag || 0;
+     GROWABLE_HEAP_I32()[(((argp) + (12)) >>> 2) >>> 0] = termios.c_lflag || 0;
      for (var i = 0; i < 32; i++) {
-      HEAP8[(((argp + i) + (17)) >>> 0) >>> 0] = termios.c_cc[i] || 0;
+      GROWABLE_HEAP_I8()[(((argp + i) + (17)) >>> 0) >>> 0] = termios.c_cc[i] || 0;
      }
      return 0;
     }
@@ -6071,13 +6125,13 @@ function ___syscall_ioctl(fd, op, varargs) {
     if (!stream.tty) return -59;
     if (stream.tty.ops.ioctl_tcsets) {
      var argp = SYSCALLS.getp();
-     var c_iflag = HEAP32[((argp) >>> 2) >>> 0];
-     var c_oflag = HEAP32[(((argp) + (4)) >>> 2) >>> 0];
-     var c_cflag = HEAP32[(((argp) + (8)) >>> 2) >>> 0];
-     var c_lflag = HEAP32[(((argp) + (12)) >>> 2) >>> 0];
+     var c_iflag = GROWABLE_HEAP_I32()[((argp) >>> 2) >>> 0];
+     var c_oflag = GROWABLE_HEAP_I32()[(((argp) + (4)) >>> 2) >>> 0];
+     var c_cflag = GROWABLE_HEAP_I32()[(((argp) + (8)) >>> 2) >>> 0];
+     var c_lflag = GROWABLE_HEAP_I32()[(((argp) + (12)) >>> 2) >>> 0];
      var c_cc = [];
      for (var i = 0; i < 32; i++) {
-      c_cc.push(HEAP8[(((argp + i) + (17)) >>> 0) >>> 0]);
+      c_cc.push(GROWABLE_HEAP_I8()[(((argp + i) + (17)) >>> 0) >>> 0]);
      }
      return stream.tty.ops.ioctl_tcsets(stream.tty, op, {
       c_iflag: c_iflag,
@@ -6094,7 +6148,7 @@ function ___syscall_ioctl(fd, op, varargs) {
    {
     if (!stream.tty) return -59;
     var argp = SYSCALLS.getp();
-    HEAP32[((argp) >>> 2) >>> 0] = 0;
+    GROWABLE_HEAP_I32()[((argp) >>> 2) >>> 0] = 0;
     return 0;
    }
 
@@ -6116,8 +6170,8 @@ function ___syscall_ioctl(fd, op, varargs) {
     if (stream.tty.ops.ioctl_tiocgwinsz) {
      var winsize = stream.tty.ops.ioctl_tiocgwinsz(stream.tty);
      var argp = SYSCALLS.getp();
-     HEAP16[((argp) >>> 1) >>> 0] = winsize[0];
-     HEAP16[(((argp) + (2)) >>> 1) >>> 0] = winsize[1];
+     GROWABLE_HEAP_I16()[((argp) >>> 1) >>> 0] = winsize[0];
+     GROWABLE_HEAP_I16()[(((argp) + (2)) >>> 1) >>> 0] = winsize[1];
     }
     return 0;
    }
@@ -6137,7 +6191,7 @@ function ___syscall_ioctl(fd, op, varargs) {
   default:
    return -28;
   }
- }  catch (e) {
+ } catch (e) {
   if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
   return -e.errno;
  }
@@ -6406,8 +6460,8 @@ function ___syscall_pipe(fdPtr) {
    throw new FS.ErrnoError(21);
   }
   var res = PIPEFS.createPipe();
-  HEAP32[((fdPtr) >>> 2) >>> 0] = res.readable_fd;
-  HEAP32[(((fdPtr) + (4)) >>> 2) >>> 0] = res.writable_fd;
+  GROWABLE_HEAP_I32()[((fdPtr) >>> 2) >>> 0] = res.readable_fd;
+  GROWABLE_HEAP_I32()[(((fdPtr) + (4)) >>> 2) >>> 0] = res.writable_fd;
   return 0;
  } catch (e) {
   if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
@@ -6422,8 +6476,8 @@ function xterm_pty_old_poll(fds, nfds, timeout) {
   var nonzero = 0;
   for (var i = 0; i < nfds; i++) {
    var pollfd = fds + 8 * i;
-   var fd = HEAP32[((pollfd) >>> 2) >>> 0];
-   var events = HEAP16[(((pollfd) + (4)) >>> 1) >>> 0];
+   var fd = GROWABLE_HEAP_I32()[((pollfd) >>> 2) >>> 0];
+   var events = GROWABLE_HEAP_I16()[(((pollfd) + (4)) >>> 1) >>> 0];
    var mask = 32;
    var stream = FS.getStream(fd);
    if (stream) {
@@ -6434,7 +6488,7 @@ function xterm_pty_old_poll(fds, nfds, timeout) {
    }
    mask &= events | 8 | 16;
    if (mask) nonzero++;
-   HEAP16[(((pollfd) + (6)) >>> 1) >>> 0] = mask;
+   GROWABLE_HEAP_I16()[(((pollfd) + (6)) >>> 1) >>> 0] = mask;
   }
   return nonzero;
  } catch (e) {
@@ -6465,8 +6519,8 @@ var PTY_waitForReadableWithCallback = callback => {
 var PTY_waitForReadableWithAtomicImpl = function(atomicIndex) {
  if (ENVIRONMENT_IS_PTHREAD) return proxyToMainThread(31, 0, atomicIndex);
  PTY_waitForReadableWithCallback(type => {
-  Atomics.store(HEAP32, atomicIndex, type);
-  Atomics.notify(HEAP32, atomicIndex);
+  Atomics.store(GROWABLE_HEAP_I32(), atomicIndex, type);
+  Atomics.notify(GROWABLE_HEAP_I32(), atomicIndex);
  });
 };
 
@@ -6476,10 +6530,10 @@ var PTY_waitForReadableWithAtomic = callback => {
  if (!PTY_atomicIndex) {
   PTY_atomicIndex = _malloc(4) >> 2;
  }
- HEAP32[PTY_atomicIndex >>> 0] = -1;
+ GROWABLE_HEAP_I32()[PTY_atomicIndex >>> 0] = -1;
  PTY_waitForReadableWithAtomicImpl(PTY_atomicIndex);
- Atomics.wait(HEAP32, PTY_atomicIndex, -1);
- callback(HEAP32[PTY_atomicIndex >>> 0]);
+ Atomics.wait(GROWABLE_HEAP_I32(), PTY_atomicIndex, -1);
+ callback(GROWABLE_HEAP_I32()[PTY_atomicIndex >>> 0]);
 };
 
 var PTY_waitForReadable = PTY_waitForReadableWithAtomic;
@@ -6528,9 +6582,9 @@ function ___syscall_readlinkat(dirfd, path, buf, bufsize) {
   if (bufsize <= 0) return -28;
   var ret = FS.readlink(path);
   var len = Math.min(bufsize, lengthBytesUTF8(ret));
-  var endChar = HEAP8[buf + len >>> 0];
+  var endChar = GROWABLE_HEAP_I8()[buf + len >>> 0];
   stringToUTF8(ret, buf, bufsize + 1);
-  HEAP8[buf + len >>> 0] = endChar;
+  GROWABLE_HEAP_I8()[buf + len >>> 0] = endChar;
   return len;
  } catch (e) {
   if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
@@ -6552,7 +6606,7 @@ function ___syscall_recvfrom(fd, buf, len, flags, addr, addrlen) {
    var errno = writeSockaddr(addr, sock.family, DNS.lookup_name(msg.addr), msg.port, addrlen);
    assert(!errno);
   }
-  HEAPU8.set(msg.buffer, buf >>> 0);
+  GROWABLE_HEAP_U8().set(msg.buffer, buf >>> 0);
   return msg.buffer.byteLength;
  } catch (e) {
   if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
@@ -6565,15 +6619,15 @@ function ___syscall_recvmsg(fd, message, flags, d1, d2, d3) {
  message >>>= 0;
  try {
   var sock = getSocketFromFD(fd);
-  var iov = HEAPU32[(((message) + (8)) >>> 2) >>> 0];
-  var num = HEAP32[(((message) + (12)) >>> 2) >>> 0];
+  var iov = GROWABLE_HEAP_U32()[(((message) + (8)) >>> 2) >>> 0];
+  var num = GROWABLE_HEAP_I32()[(((message) + (12)) >>> 2) >>> 0];
   var total = 0;
   for (var i = 0; i < num; i++) {
-   total += HEAP32[(((iov) + ((8 * i) + 4)) >>> 2) >>> 0];
+   total += GROWABLE_HEAP_I32()[(((iov) + ((8 * i) + 4)) >>> 2) >>> 0];
   }
   var msg = sock.sock_ops.recvmsg(sock, total);
   if (!msg) return 0;
-  var name = HEAPU32[((message) >>> 2) >>> 0];
+  var name = GROWABLE_HEAP_U32()[((message) >>> 2) >>> 0];
   if (name) {
    var errno = writeSockaddr(name, sock.family, DNS.lookup_name(msg.addr), msg.port);
    assert(!errno);
@@ -6581,14 +6635,14 @@ function ___syscall_recvmsg(fd, message, flags, d1, d2, d3) {
   var bytesRead = 0;
   var bytesRemaining = msg.buffer.byteLength;
   for (var i = 0; bytesRemaining > 0 && i < num; i++) {
-   var iovbase = HEAPU32[(((iov) + ((8 * i) + 0)) >>> 2) >>> 0];
-   var iovlen = HEAP32[(((iov) + ((8 * i) + 4)) >>> 2) >>> 0];
+   var iovbase = GROWABLE_HEAP_U32()[(((iov) + ((8 * i) + 0)) >>> 2) >>> 0];
+   var iovlen = GROWABLE_HEAP_I32()[(((iov) + ((8 * i) + 4)) >>> 2) >>> 0];
    if (!iovlen) {
     continue;
    }
    var length = Math.min(iovlen, bytesRemaining);
    var buf = msg.buffer.subarray(bytesRead, bytesRead + length);
-   HEAPU8.set(buf, iovbase + bytesRead >>> 0);
+   GROWABLE_HEAP_U8().set(buf, iovbase + bytesRead >>> 0);
    bytesRead += length;
    bytesRemaining -= length;
   }
@@ -6636,11 +6690,11 @@ function ___syscall_sendmsg(fd, message, flags, d1, d2, d3) {
  d2 >>>= 0;
  try {
   var sock = getSocketFromFD(fd);
-  var iov = HEAPU32[(((message) + (8)) >>> 2) >>> 0];
-  var num = HEAP32[(((message) + (12)) >>> 2) >>> 0];
+  var iov = GROWABLE_HEAP_U32()[(((message) + (8)) >>> 2) >>> 0];
+  var num = GROWABLE_HEAP_I32()[(((message) + (12)) >>> 2) >>> 0];
   var addr, port;
-  var name = HEAPU32[((message) >>> 2) >>> 0];
-  var namelen = HEAP32[(((message) + (4)) >>> 2) >>> 0];
+  var name = GROWABLE_HEAP_U32()[((message) >>> 2) >>> 0];
+  var namelen = GROWABLE_HEAP_I32()[(((message) + (4)) >>> 2) >>> 0];
   if (name) {
    var info = readSockaddr(name, namelen);
    if (info.errno) return -info.errno;
@@ -6649,15 +6703,15 @@ function ___syscall_sendmsg(fd, message, flags, d1, d2, d3) {
   }
   var total = 0;
   for (var i = 0; i < num; i++) {
-   total += HEAP32[(((iov) + ((8 * i) + 4)) >>> 2) >>> 0];
+   total += GROWABLE_HEAP_I32()[(((iov) + ((8 * i) + 4)) >>> 2) >>> 0];
   }
   var view = new Uint8Array(total);
   var offset = 0;
   for (var i = 0; i < num; i++) {
-   var iovbase = HEAPU32[(((iov) + ((8 * i) + 0)) >>> 2) >>> 0];
-   var iovlen = HEAP32[(((iov) + ((8 * i) + 4)) >>> 2) >>> 0];
+   var iovbase = GROWABLE_HEAP_U32()[(((iov) + ((8 * i) + 0)) >>> 2) >>> 0];
+   var iovlen = GROWABLE_HEAP_I32()[(((iov) + ((8 * i) + 4)) >>> 2) >>> 0];
    for (var j = 0; j < iovlen; j++) {
-    view[offset++] = HEAP8[(((iovbase) + (j)) >>> 0) >>> 0];
+    view[offset++] = GROWABLE_HEAP_I8()[(((iovbase) + (j)) >>> 0) >>> 0];
    }
   }
   return sock.sock_ops.sendmsg(sock, view, 0, total, addr, port);
@@ -6677,9 +6731,9 @@ function ___syscall_sendto(fd, message, length, flags, addr, addr_len) {
   var sock = getSocketFromFD(fd);
   var dest = getSocketAddress(addr, addr_len, true);
   if (!dest) {
-   return FS.write(sock.stream, HEAP8, message, length);
+   return FS.write(sock.stream, GROWABLE_HEAP_I8(), message, length);
   }
-  return sock.sock_ops.sendmsg(sock, HEAP8, message, length, dest.addr, dest.port);
+  return sock.sock_ops.sendmsg(sock, GROWABLE_HEAP_I8(), message, length, dest.addr, dest.port);
  } catch (e) {
   if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
   return -e.errno;
@@ -6745,7 +6799,7 @@ function ___syscall_unlinkat(dirfd, path, flags) {
  }
 }
 
-var readI53FromI64 = ptr => HEAPU32[((ptr) >>> 2) >>> 0] + HEAP32[(((ptr) + (4)) >>> 2) >>> 0] * 4294967296;
+var readI53FromI64 = ptr => GROWABLE_HEAP_U32()[((ptr) >>> 2) >>> 0] + GROWABLE_HEAP_I32()[(((ptr) + (4)) >>> 2) >>> 0] * 4294967296;
 
 function ___syscall_utimensat(dirfd, path, times, flags) {
  if (ENVIRONMENT_IS_PTHREAD) return proxyToMainThread(43, 1, dirfd, path, times, flags);
@@ -6760,11 +6814,11 @@ function ___syscall_utimensat(dirfd, path, times, flags) {
    var mtime = atime;
   } else {
    var seconds = readI53FromI64(times);
-   var nanoseconds = HEAP32[(((times) + (8)) >>> 2) >>> 0];
+   var nanoseconds = GROWABLE_HEAP_I32()[(((times) + (8)) >>> 2) >>> 0];
    atime = (seconds * 1e3) + (nanoseconds / (1e3 * 1e3));
    times += 16;
    seconds = readI53FromI64(times);
-   nanoseconds = HEAP32[(((times) + (8)) >>> 2) >>> 0];
+   nanoseconds = GROWABLE_HEAP_I32()[(((times) + (8)) >>> 2) >>> 0];
    mtime = (seconds * 1e3) + (nanoseconds / (1e3 * 1e3));
   }
   FS.utime(path, atime, mtime);
@@ -6805,11 +6859,11 @@ var callUserCallback = func => {
 function __emscripten_thread_mailbox_await(pthread_ptr) {
  pthread_ptr >>>= 0;
  if (typeof Atomics.waitAsync === "function") {
-  var wait = Atomics.waitAsync(HEAP32, ((pthread_ptr) >>> 2), pthread_ptr);
+  var wait = Atomics.waitAsync(GROWABLE_HEAP_I32(), ((pthread_ptr) >>> 2), pthread_ptr);
   assert(wait.async);
   wait.value.then(checkMailbox);
   var waitingAsync = pthread_ptr + 128;
-  Atomics.store(HEAP32, ((waitingAsync) >>> 2), 1);
+  Atomics.store(GROWABLE_HEAP_I32(), ((waitingAsync) >>> 2), 1);
  }
 }
 
@@ -6860,7 +6914,7 @@ function __emscripten_receive_on_main_thread_js(index, callingThread, numCallArg
   if (HEAP64[b + 2 * i]) {
    proxiedJSCallArgs[i] = HEAP64[b + 2 * i + 1];
   } else {
-   proxiedJSCallArgs[i] = HEAPF64[b + 2 * i + 1 >>> 0];
+   proxiedJSCallArgs[i] = GROWABLE_HEAP_F64()[b + 2 * i + 1 >>> 0];
   }
  }
  var func = proxiedFunctionTable[index];
@@ -6893,16 +6947,16 @@ function __gmtime_js(time, tmPtr) {
  time = bigintToI53Checked(time);
  tmPtr >>>= 0;
  var date = new Date(time * 1e3);
- HEAP32[((tmPtr) >>> 2) >>> 0] = date.getUTCSeconds();
- HEAP32[(((tmPtr) + (4)) >>> 2) >>> 0] = date.getUTCMinutes();
- HEAP32[(((tmPtr) + (8)) >>> 2) >>> 0] = date.getUTCHours();
- HEAP32[(((tmPtr) + (12)) >>> 2) >>> 0] = date.getUTCDate();
- HEAP32[(((tmPtr) + (16)) >>> 2) >>> 0] = date.getUTCMonth();
- HEAP32[(((tmPtr) + (20)) >>> 2) >>> 0] = date.getUTCFullYear() - 1900;
- HEAP32[(((tmPtr) + (24)) >>> 2) >>> 0] = date.getUTCDay();
+ GROWABLE_HEAP_I32()[((tmPtr) >>> 2) >>> 0] = date.getUTCSeconds();
+ GROWABLE_HEAP_I32()[(((tmPtr) + (4)) >>> 2) >>> 0] = date.getUTCMinutes();
+ GROWABLE_HEAP_I32()[(((tmPtr) + (8)) >>> 2) >>> 0] = date.getUTCHours();
+ GROWABLE_HEAP_I32()[(((tmPtr) + (12)) >>> 2) >>> 0] = date.getUTCDate();
+ GROWABLE_HEAP_I32()[(((tmPtr) + (16)) >>> 2) >>> 0] = date.getUTCMonth();
+ GROWABLE_HEAP_I32()[(((tmPtr) + (20)) >>> 2) >>> 0] = date.getUTCFullYear() - 1900;
+ GROWABLE_HEAP_I32()[(((tmPtr) + (24)) >>> 2) >>> 0] = date.getUTCDay();
  var start = Date.UTC(date.getUTCFullYear(), 0, 1, 0, 0, 0, 0);
  var yday = ((date.getTime() - start) / (1e3 * 60 * 60 * 24)) | 0;
- HEAP32[(((tmPtr) + (28)) >>> 2) >>> 0] = yday;
+ GROWABLE_HEAP_I32()[(((tmPtr) + (28)) >>> 2) >>> 0] = yday;
 }
 
 var isLeapYear = year => year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
@@ -6922,49 +6976,49 @@ function __localtime_js(time, tmPtr) {
  time = bigintToI53Checked(time);
  tmPtr >>>= 0;
  var date = new Date(time * 1e3);
- HEAP32[((tmPtr) >>> 2) >>> 0] = date.getSeconds();
- HEAP32[(((tmPtr) + (4)) >>> 2) >>> 0] = date.getMinutes();
- HEAP32[(((tmPtr) + (8)) >>> 2) >>> 0] = date.getHours();
- HEAP32[(((tmPtr) + (12)) >>> 2) >>> 0] = date.getDate();
- HEAP32[(((tmPtr) + (16)) >>> 2) >>> 0] = date.getMonth();
- HEAP32[(((tmPtr) + (20)) >>> 2) >>> 0] = date.getFullYear() - 1900;
- HEAP32[(((tmPtr) + (24)) >>> 2) >>> 0] = date.getDay();
+ GROWABLE_HEAP_I32()[((tmPtr) >>> 2) >>> 0] = date.getSeconds();
+ GROWABLE_HEAP_I32()[(((tmPtr) + (4)) >>> 2) >>> 0] = date.getMinutes();
+ GROWABLE_HEAP_I32()[(((tmPtr) + (8)) >>> 2) >>> 0] = date.getHours();
+ GROWABLE_HEAP_I32()[(((tmPtr) + (12)) >>> 2) >>> 0] = date.getDate();
+ GROWABLE_HEAP_I32()[(((tmPtr) + (16)) >>> 2) >>> 0] = date.getMonth();
+ GROWABLE_HEAP_I32()[(((tmPtr) + (20)) >>> 2) >>> 0] = date.getFullYear() - 1900;
+ GROWABLE_HEAP_I32()[(((tmPtr) + (24)) >>> 2) >>> 0] = date.getDay();
  var yday = ydayFromDate(date) | 0;
- HEAP32[(((tmPtr) + (28)) >>> 2) >>> 0] = yday;
- HEAP32[(((tmPtr) + (36)) >>> 2) >>> 0] = -(date.getTimezoneOffset() * 60);
+ GROWABLE_HEAP_I32()[(((tmPtr) + (28)) >>> 2) >>> 0] = yday;
+ GROWABLE_HEAP_I32()[(((tmPtr) + (36)) >>> 2) >>> 0] = -(date.getTimezoneOffset() * 60);
  var start = new Date(date.getFullYear(), 0, 1);
  var summerOffset = new Date(date.getFullYear(), 6, 1).getTimezoneOffset();
  var winterOffset = start.getTimezoneOffset();
  var dst = (summerOffset != winterOffset && date.getTimezoneOffset() == Math.min(winterOffset, summerOffset)) | 0;
- HEAP32[(((tmPtr) + (32)) >>> 2) >>> 0] = dst;
+ GROWABLE_HEAP_I32()[(((tmPtr) + (32)) >>> 2) >>> 0] = dst;
 }
 
 var __mktime_js = function(tmPtr) {
  tmPtr >>>= 0;
  var ret = (() => {
-  var date = new Date(HEAP32[(((tmPtr) + (20)) >>> 2) >>> 0] + 1900, HEAP32[(((tmPtr) + (16)) >>> 2) >>> 0], HEAP32[(((tmPtr) + (12)) >>> 2) >>> 0], HEAP32[(((tmPtr) + (8)) >>> 2) >>> 0], HEAP32[(((tmPtr) + (4)) >>> 2) >>> 0], HEAP32[((tmPtr) >>> 2) >>> 0], 0);
-  var dst = HEAP32[(((tmPtr) + (32)) >>> 2) >>> 0];
+  var date = new Date(GROWABLE_HEAP_I32()[(((tmPtr) + (20)) >>> 2) >>> 0] + 1900, GROWABLE_HEAP_I32()[(((tmPtr) + (16)) >>> 2) >>> 0], GROWABLE_HEAP_I32()[(((tmPtr) + (12)) >>> 2) >>> 0], GROWABLE_HEAP_I32()[(((tmPtr) + (8)) >>> 2) >>> 0], GROWABLE_HEAP_I32()[(((tmPtr) + (4)) >>> 2) >>> 0], GROWABLE_HEAP_I32()[((tmPtr) >>> 2) >>> 0], 0);
+  var dst = GROWABLE_HEAP_I32()[(((tmPtr) + (32)) >>> 2) >>> 0];
   var guessedOffset = date.getTimezoneOffset();
   var start = new Date(date.getFullYear(), 0, 1);
   var summerOffset = new Date(date.getFullYear(), 6, 1).getTimezoneOffset();
   var winterOffset = start.getTimezoneOffset();
   var dstOffset = Math.min(winterOffset, summerOffset);
   if (dst < 0) {
-   HEAP32[(((tmPtr) + (32)) >>> 2) >>> 0] = Number(summerOffset != winterOffset && dstOffset == guessedOffset);
+   GROWABLE_HEAP_I32()[(((tmPtr) + (32)) >>> 2) >>> 0] = Number(summerOffset != winterOffset && dstOffset == guessedOffset);
   } else if ((dst > 0) != (dstOffset == guessedOffset)) {
    var nonDstOffset = Math.max(winterOffset, summerOffset);
    var trueOffset = dst > 0 ? dstOffset : nonDstOffset;
    date.setTime(date.getTime() + (trueOffset - guessedOffset) * 6e4);
   }
-  HEAP32[(((tmPtr) + (24)) >>> 2) >>> 0] = date.getDay();
+  GROWABLE_HEAP_I32()[(((tmPtr) + (24)) >>> 2) >>> 0] = date.getDay();
   var yday = ydayFromDate(date) | 0;
-  HEAP32[(((tmPtr) + (28)) >>> 2) >>> 0] = yday;
-  HEAP32[((tmPtr) >>> 2) >>> 0] = date.getSeconds();
-  HEAP32[(((tmPtr) + (4)) >>> 2) >>> 0] = date.getMinutes();
-  HEAP32[(((tmPtr) + (8)) >>> 2) >>> 0] = date.getHours();
-  HEAP32[(((tmPtr) + (12)) >>> 2) >>> 0] = date.getDate();
-  HEAP32[(((tmPtr) + (16)) >>> 2) >>> 0] = date.getMonth();
-  HEAP32[(((tmPtr) + (20)) >>> 2) >>> 0] = date.getYear();
+  GROWABLE_HEAP_I32()[(((tmPtr) + (28)) >>> 2) >>> 0] = yday;
+  GROWABLE_HEAP_I32()[((tmPtr) >>> 2) >>> 0] = date.getSeconds();
+  GROWABLE_HEAP_I32()[(((tmPtr) + (4)) >>> 2) >>> 0] = date.getMinutes();
+  GROWABLE_HEAP_I32()[(((tmPtr) + (8)) >>> 2) >>> 0] = date.getHours();
+  GROWABLE_HEAP_I32()[(((tmPtr) + (12)) >>> 2) >>> 0] = date.getDate();
+  GROWABLE_HEAP_I32()[(((tmPtr) + (16)) >>> 2) >>> 0] = date.getMonth();
+  GROWABLE_HEAP_I32()[(((tmPtr) + (20)) >>> 2) >>> 0] = date.getYear();
   var timeMs = date.getTime();
   if (isNaN(timeMs)) {
    setErrNo(61);
@@ -6986,8 +7040,8 @@ function __mmap_js(len, prot, flags, fd, offset, allocated, addr) {
   var stream = SYSCALLS.getStreamFromFD(fd);
   var res = FS.mmap(stream, len, offset, prot, flags);
   var ptr = res.ptr;
-  HEAP32[((allocated) >>> 2) >>> 0] = res.allocated;
-  HEAPU32[((addr) >>> 2) >>> 0] = ptr;
+  GROWABLE_HEAP_I32()[((allocated) >>> 2) >>> 0] = res.allocated;
+  GROWABLE_HEAP_U32()[((addr) >>> 2) >>> 0] = ptr;
   return 0;
  } catch (e) {
   if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
@@ -7022,7 +7076,7 @@ function __munmap_js(addr, len, prot, flags, fd, offset) {
    SYSCALLS.doMsync(addr, stream, len, flags, offset);
   }
   FS.munmap(stream);
- }  catch (e) {
+ } catch (e) {
   if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
   return -e.errno;
  }
@@ -7045,8 +7099,8 @@ function __tzset_js(timezone, daylight, tzname) {
  var winterOffset = winter.getTimezoneOffset();
  var summerOffset = summer.getTimezoneOffset();
  var stdTimezoneOffset = Math.max(winterOffset, summerOffset);
- HEAPU32[((timezone) >>> 2) >>> 0] = stdTimezoneOffset * 60;
- HEAP32[((daylight) >>> 2) >>> 0] = Number(winterOffset != summerOffset);
+ GROWABLE_HEAP_U32()[((timezone) >>> 2) >>> 0] = stdTimezoneOffset * 60;
+ GROWABLE_HEAP_I32()[((daylight) >>> 2) >>> 0] = Number(winterOffset != summerOffset);
  function extractZone(date) {
   var match = date.toTimeString().match(/\(([A-Za-z ]+)\)$/);
   return match ? match[1] : "GMT";
@@ -7056,11 +7110,11 @@ function __tzset_js(timezone, daylight, tzname) {
  var winterNamePtr = stringToNewUTF8(winterName);
  var summerNamePtr = stringToNewUTF8(summerName);
  if (summerOffset < winterOffset) {
-  HEAPU32[((tzname) >>> 2) >>> 0] = winterNamePtr;
-  HEAPU32[(((tzname) + (4)) >>> 2) >>> 0] = summerNamePtr;
+  GROWABLE_HEAP_U32()[((tzname) >>> 2) >>> 0] = winterNamePtr;
+  GROWABLE_HEAP_U32()[(((tzname) + (4)) >>> 2) >>> 0] = summerNamePtr;
  } else {
-  HEAPU32[((tzname) >>> 2) >>> 0] = summerNamePtr;
-  HEAPU32[(((tzname) + (4)) >>> 2) >>> 0] = winterNamePtr;
+  GROWABLE_HEAP_U32()[((tzname) >>> 2) >>> 0] = summerNamePtr;
+  GROWABLE_HEAP_U32()[(((tzname) + (4)) >>> 2) >>> 0] = winterNamePtr;
  }
 }
 
@@ -7222,16 +7276,16 @@ var Asyncify = {
   return ptr;
  },
  setDataHeader(ptr, stack, stackSize) {
-  HEAPU32[((ptr) >>> 2) >>> 0] = stack;
-  HEAPU32[(((ptr) + (4)) >>> 2) >>> 0] = stack + stackSize;
+  GROWABLE_HEAP_U32()[((ptr) >>> 2) >>> 0] = stack;
+  GROWABLE_HEAP_U32()[(((ptr) + (4)) >>> 2) >>> 0] = stack + stackSize;
  },
  setDataRewindFunc(ptr) {
   var bottomOfCallStack = Asyncify.exportCallStack[0];
   var rewindId = Asyncify.getCallStackId(bottomOfCallStack);
-  HEAP32[(((ptr) + (8)) >>> 2) >>> 0] = rewindId;
+  GROWABLE_HEAP_I32()[(((ptr) + (8)) >>> 2) >>> 0] = rewindId;
  },
  getDataRewindFunc(ptr) {
-  var id = HEAP32[(((ptr) + (8)) >>> 2) >>> 0];
+  var id = GROWABLE_HEAP_I32()[(((ptr) + (8)) >>> 2) >>> 0];
   var name = Asyncify.callStackIdToName[id];
   var func = wasmExports[name];
   return func;
@@ -7323,16 +7377,16 @@ var Fibers = {
   }
  },
  finishContextSwitch(newFiber) {
-  var stack_base = HEAPU32[((newFiber) >>> 2) >>> 0];
-  var stack_max = HEAPU32[(((newFiber) + (4)) >>> 2) >>> 0];
+  var stack_base = GROWABLE_HEAP_U32()[((newFiber) >>> 2) >>> 0];
+  var stack_max = GROWABLE_HEAP_U32()[(((newFiber) + (4)) >>> 2) >>> 0];
   _emscripten_stack_set_limits(stack_base, stack_max);
-  stackRestore(HEAPU32[(((newFiber) + (8)) >>> 2) >>> 0]);
-  var entryPoint = HEAPU32[(((newFiber) + (12)) >>> 2) >>> 0];
+  stackRestore(GROWABLE_HEAP_U32()[(((newFiber) + (8)) >>> 2) >>> 0]);
+  var entryPoint = GROWABLE_HEAP_U32()[(((newFiber) + (12)) >>> 2) >>> 0];
   if (entryPoint !== 0) {
    writeStackCookie();
    Asyncify.currData = null;
-   HEAPU32[(((newFiber) + (12)) >>> 2) >>> 0] = 0;
-   var userData = HEAPU32[(((newFiber) + (16)) >>> 2) >>> 0];
+   GROWABLE_HEAP_U32()[(((newFiber) + (12)) >>> 2) >>> 0] = 0;
+   var userData = GROWABLE_HEAP_U32()[(((newFiber) + (16)) >>> 2) >>> 0];
    (a1 => dynCall_vi.apply(null, [ entryPoint, a1 ]))(userData);
   } else {
    var asyncifyData = newFiber + 20;
@@ -7355,7 +7409,7 @@ function _emscripten_fiber_swap(oldFiber, newFiber) {
   Asyncify.currData = asyncifyData;
   _asyncify_start_unwind(asyncifyData);
   var stackTop = stackSave();
-  HEAPU32[(((oldFiber) + (8)) >>> 2) >>> 0] = stackTop;
+  GROWABLE_HEAP_U32()[(((oldFiber) + (8)) >>> 2) >>> 0] = stackTop;
   Fibers.nextFiber = newFiber;
  } else {
   assert(Asyncify.state === Asyncify.State.Rewinding);
@@ -7367,7 +7421,7 @@ function _emscripten_fiber_swap(oldFiber, newFiber) {
 
 _emscripten_fiber_swap.isAsync = true;
 
-var getHeapMax = () => HEAPU8.length;
+var getHeapMax = () => 4294901760;
 
 function _emscripten_get_heap_max() {
  return getHeapMax();
@@ -7382,14 +7436,41 @@ var _emscripten_num_logical_cores = () => {
  return navigator["hardwareConcurrency"];
 };
 
-var abortOnCannotGrowMemory = requestedSize => {
- abort(`Cannot enlarge memory arrays to size ${requestedSize} bytes (OOM). Either (1) compile with -sINITIAL_MEMORY=X with X higher than the current value ${HEAP8.length}, (2) compile with -sALLOW_MEMORY_GROWTH which allows increasing the size at runtime, or (3) if you want malloc to return NULL (0) instead of this abort, compile with -sABORTING_MALLOC=0`);
+var growMemory = size => {
+ var b = wasmMemory.buffer;
+ var pages = (size - b.byteLength + 65535) / 65536;
+ try {
+  wasmMemory.grow(pages);
+  updateMemoryViews();
+  return 1;
+ } /*success*/ catch (e) {
+  err(`growMemory: Attempted to grow heap from ${b.byteLength} bytes to ${size} bytes, but got error: ${e}`);
+ }
 };
 
 function _emscripten_resize_heap(requestedSize) {
  requestedSize >>>= 0;
- var oldSize = HEAPU8.length;
- abortOnCannotGrowMemory(requestedSize);
+ var oldSize = GROWABLE_HEAP_U8().length;
+ if (requestedSize <= oldSize) {
+  return false;
+ }
+ var maxHeapSize = getHeapMax();
+ if (requestedSize > maxHeapSize) {
+  err(`Cannot enlarge memory, requested ${requestedSize} bytes, but the limit is ${maxHeapSize} bytes!`);
+  return false;
+ }
+ var alignUp = (x, multiple) => x + (multiple - x % multiple) % multiple;
+ for (var cutDown = 1; cutDown <= 4; cutDown *= 2) {
+  var overGrownHeapSize = oldSize * (1 + .2 / cutDown);
+  overGrownHeapSize = Math.min(overGrownHeapSize, requestedSize + 100663296);
+  var newSize = Math.min(maxHeapSize, alignUp(Math.max(requestedSize, overGrownHeapSize), 65536));
+  var replacement = growMemory(newSize);
+  if (replacement) {
+   return true;
+  }
+ }
+ err(`Failed to grow the heap from ${oldSize} bytes to ${newSize} bytes, not enough memory!`);
+ return false;
 }
 
 var _emscripten_runtime_keepalive_check = keepRuntimeAlive;
@@ -7439,9 +7520,9 @@ var getEnvStrings = () => {
 var stringToAscii = (str, buffer) => {
  for (var i = 0; i < str.length; ++i) {
   assert(str.charCodeAt(i) === (str.charCodeAt(i) & 255));
-  HEAP8[((buffer++) >>> 0) >>> 0] = str.charCodeAt(i);
+  GROWABLE_HEAP_I8()[((buffer++) >>> 0) >>> 0] = str.charCodeAt(i);
  }
- HEAP8[((buffer) >>> 0) >>> 0] = 0;
+ GROWABLE_HEAP_I8()[((buffer) >>> 0) >>> 0] = 0;
 };
 
 var _environ_get = function(__environ, environ_buf) {
@@ -7451,7 +7532,7 @@ var _environ_get = function(__environ, environ_buf) {
  var bufSize = 0;
  getEnvStrings().forEach((string, i) => {
   var ptr = environ_buf + bufSize;
-  HEAPU32[(((__environ) + (i * 4)) >>> 2) >>> 0] = ptr;
+  GROWABLE_HEAP_U32()[(((__environ) + (i * 4)) >>> 2) >>> 0] = ptr;
   stringToAscii(string, ptr);
   bufSize += string.length + 1;
  });
@@ -7463,10 +7544,10 @@ var _environ_sizes_get = function(penviron_count, penviron_buf_size) {
  penviron_count >>>= 0;
  penviron_buf_size >>>= 0;
  var strings = getEnvStrings();
- HEAPU32[((penviron_count) >>> 2) >>> 0] = strings.length;
+ GROWABLE_HEAP_U32()[((penviron_count) >>> 2) >>> 0] = strings.length;
  var bufSize = 0;
  strings.forEach(string => bufSize += string.length + 1);
- HEAPU32[((penviron_buf_size) >>> 2) >>> 0] = bufSize;
+ GROWABLE_HEAP_U32()[((penviron_buf_size) >>> 2) >>> 0] = bufSize;
  return 0;
 };
 
@@ -7493,8 +7574,8 @@ function _fd_fdstat_get(fd, pbuf) {
    var stream = SYSCALLS.getStreamFromFD(fd);
    var type = stream.tty ? 2 : FS.isDir(stream.mode) ? 3 : FS.isLink(stream.mode) ? 7 : 4;
   }
-  HEAP8[((pbuf) >>> 0) >>> 0] = type;
-  HEAP16[(((pbuf) + (2)) >>> 1) >>> 0] = flags;
+  GROWABLE_HEAP_I8()[((pbuf) >>> 0) >>> 0] = type;
+  GROWABLE_HEAP_I16()[(((pbuf) + (2)) >>> 1) >>> 0] = flags;
   HEAP64[(((pbuf) + (8)) >>> 3)] = BigInt(rightsBase);
   HEAP64[(((pbuf) + (16)) >>> 3)] = BigInt(rightsInheriting);
   return 0;
@@ -7507,10 +7588,10 @@ function _fd_fdstat_get(fd, pbuf) {
 /** @param {number=} offset */ var doReadv = (stream, iov, iovcnt, offset) => {
  var ret = 0;
  for (var i = 0; i < iovcnt; i++) {
-  var ptr = HEAPU32[((iov) >>> 2) >>> 0];
-  var len = HEAPU32[(((iov) + (4)) >>> 2) >>> 0];
+  var ptr = GROWABLE_HEAP_U32()[((iov) >>> 2) >>> 0];
+  var len = GROWABLE_HEAP_U32()[(((iov) + (4)) >>> 2) >>> 0];
   iov += 8;
-  var curr = FS.read(stream, HEAP8, ptr, len, offset);
+  var curr = FS.read(stream, GROWABLE_HEAP_I8(), ptr, len, offset);
   if (curr < 0) return -1;
   ret += curr;
   if (curr < len) break;
@@ -7531,7 +7612,7 @@ function _fd_pread(fd, iov, iovcnt, offset, pnum) {
   if (isNaN(offset)) return 61;
   var stream = SYSCALLS.getStreamFromFD(fd);
   var num = doReadv(stream, iov, iovcnt, offset);
-  HEAPU32[((pnum) >>> 2) >>> 0] = num;
+  GROWABLE_HEAP_U32()[((pnum) >>> 2) >>> 0] = num;
   return 0;
  } catch (e) {
   if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
@@ -7542,10 +7623,10 @@ function _fd_pread(fd, iov, iovcnt, offset, pnum) {
 /** @param {number=} offset */ var doWritev = (stream, iov, iovcnt, offset) => {
  var ret = 0;
  for (var i = 0; i < iovcnt; i++) {
-  var ptr = HEAPU32[((iov) >>> 2) >>> 0];
-  var len = HEAPU32[(((iov) + (4)) >>> 2) >>> 0];
+  var ptr = GROWABLE_HEAP_U32()[((iov) >>> 2) >>> 0];
+  var len = GROWABLE_HEAP_U32()[(((iov) + (4)) >>> 2) >>> 0];
   iov += 8;
-  var curr = FS.write(stream, HEAP8, ptr, len, offset);
+  var curr = FS.write(stream, GROWABLE_HEAP_I8(), ptr, len, offset);
   if (curr < 0) return -1;
   ret += curr;
   if (typeof offset !== "undefined") {
@@ -7565,7 +7646,7 @@ function _fd_pwrite(fd, iov, iovcnt, offset, pnum) {
   if (isNaN(offset)) return 61;
   var stream = SYSCALLS.getStreamFromFD(fd);
   var num = doWritev(stream, iov, iovcnt, offset);
-  HEAPU32[((pnum) >>> 2) >>> 0] = num;
+  GROWABLE_HEAP_U32()[((pnum) >>> 2) >>> 0] = num;
   return 0;
  } catch (e) {
   if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
@@ -7581,7 +7662,7 @@ function xterm_pty_old_fd_read(fd, iov, iovcnt, pnum) {
  try {
   var stream = SYSCALLS.getStreamFromFD(fd);
   var num = doReadv(stream, iov, iovcnt);
-  HEAPU32[((pnum) >>> 2) >>> 0] = num;
+  GROWABLE_HEAP_U32()[((pnum) >>> 2) >>> 0] = num;
   return 0;
  } catch (e) {
   if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
@@ -7663,7 +7744,7 @@ function _fd_write(fd, iov, iovcnt, pnum) {
  try {
   var stream = SYSCALLS.getStreamFromFD(fd);
   var num = doWritev(stream, iov, iovcnt);
-  HEAPU32[((pnum) >>> 2) >>> 0] = num;
+  GROWABLE_HEAP_U32()[((pnum) >>> 2) >>> 0] = num;
   return 0;
  } catch (e) {
   if (typeof FS == "undefined" || !(e.name === "ErrnoError")) throw e;
@@ -7695,24 +7776,24 @@ function _getaddrinfo(node, service, hint, out) {
   errno = writeSockaddr(sa, family, addr, port);
   assert(!errno);
   ai = _malloc(32);
-  HEAP32[(((ai) + (4)) >>> 2) >>> 0] = family;
-  HEAP32[(((ai) + (8)) >>> 2) >>> 0] = type;
-  HEAP32[(((ai) + (12)) >>> 2) >>> 0] = proto;
-  HEAPU32[(((ai) + (24)) >>> 2) >>> 0] = canon;
-  HEAPU32[(((ai) + (20)) >>> 2) >>> 0] = sa;
+  GROWABLE_HEAP_I32()[(((ai) + (4)) >>> 2) >>> 0] = family;
+  GROWABLE_HEAP_I32()[(((ai) + (8)) >>> 2) >>> 0] = type;
+  GROWABLE_HEAP_I32()[(((ai) + (12)) >>> 2) >>> 0] = proto;
+  GROWABLE_HEAP_U32()[(((ai) + (24)) >>> 2) >>> 0] = canon;
+  GROWABLE_HEAP_U32()[(((ai) + (20)) >>> 2) >>> 0] = sa;
   if (family === 10) {
-   HEAP32[(((ai) + (16)) >>> 2) >>> 0] = 28;
+   GROWABLE_HEAP_I32()[(((ai) + (16)) >>> 2) >>> 0] = 28;
   } else {
-   HEAP32[(((ai) + (16)) >>> 2) >>> 0] = 16;
+   GROWABLE_HEAP_I32()[(((ai) + (16)) >>> 2) >>> 0] = 16;
   }
-  HEAP32[(((ai) + (28)) >>> 2) >>> 0] = 0;
+  GROWABLE_HEAP_I32()[(((ai) + (28)) >>> 2) >>> 0] = 0;
   return ai;
  }
  if (hint) {
-  flags = HEAP32[((hint) >>> 2) >>> 0];
-  family = HEAP32[(((hint) + (4)) >>> 2) >>> 0];
-  type = HEAP32[(((hint) + (8)) >>> 2) >>> 0];
-  proto = HEAP32[(((hint) + (12)) >>> 2) >>> 0];
+  flags = GROWABLE_HEAP_I32()[((hint) >>> 2) >>> 0];
+  family = GROWABLE_HEAP_I32()[(((hint) + (4)) >>> 2) >>> 0];
+  type = GROWABLE_HEAP_I32()[(((hint) + (8)) >>> 2) >>> 0];
+  proto = GROWABLE_HEAP_I32()[(((hint) + (12)) >>> 2) >>> 0];
  }
  if (type && !proto) {
   proto = type === 2 ? 17 : 6;
@@ -7732,7 +7813,7 @@ function _getaddrinfo(node, service, hint, out) {
  if (flags & ~(1 | 2 | 4 | 1024 | 8 | 16 | 32)) {
   return -1;
  }
- if (hint !== 0 && (HEAP32[((hint) >>> 2) >>> 0] & 2) && !node) {
+ if (hint !== 0 && (GROWABLE_HEAP_I32()[((hint) >>> 2) >>> 0] & 2) && !node) {
   return -1;
  }
  if (flags & 32) {
@@ -7766,7 +7847,7 @@ function _getaddrinfo(node, service, hint, out) {
    }
   }
   ai = allocaddrinfo(family, type, proto, null, addr, port);
-  HEAPU32[((out) >>> 2) >>> 0] = ai;
+  GROWABLE_HEAP_U32()[((out) >>> 2) >>> 0] = ai;
   return 0;
  }
  node = UTF8ToString(node);
@@ -7792,7 +7873,7 @@ function _getaddrinfo(node, service, hint, out) {
  }
  if (addr != null) {
   ai = allocaddrinfo(family, type, proto, node, addr, port);
-  HEAPU32[((out) >>> 2) >>> 0] = ai;
+  GROWABLE_HEAP_U32()[((out) >>> 2) >>> 0] = ai;
   return 0;
  }
  if (flags & 4) {
@@ -7806,32 +7887,32 @@ function _getaddrinfo(node, service, hint, out) {
   addr = [ 0, 0, _htonl(65535), addr ];
  }
  ai = allocaddrinfo(family, type, proto, null, addr, port);
- HEAPU32[((out) >>> 2) >>> 0] = ai;
+ GROWABLE_HEAP_U32()[((out) >>> 2) >>> 0] = ai;
  return 0;
 }
 
 function _getentropy(buffer, size) {
  buffer >>>= 0;
  size >>>= 0;
- randomFill(HEAPU8.subarray(buffer >>> 0, buffer + size >>> 0));
+ randomFill(GROWABLE_HEAP_U8().subarray(buffer >>> 0, buffer + size >>> 0));
  return 0;
 }
 
 var getHostByName = name => {
  var ret = _malloc(20);
  var nameBuf = stringToNewUTF8(name);
- HEAPU32[((ret) >>> 2) >>> 0] = nameBuf;
+ GROWABLE_HEAP_U32()[((ret) >>> 2) >>> 0] = nameBuf;
  var aliasesBuf = _malloc(4);
- HEAPU32[((aliasesBuf) >>> 2) >>> 0] = 0;
- HEAPU32[(((ret) + (4)) >>> 2) >>> 0] = aliasesBuf;
+ GROWABLE_HEAP_U32()[((aliasesBuf) >>> 2) >>> 0] = 0;
+ GROWABLE_HEAP_U32()[(((ret) + (4)) >>> 2) >>> 0] = aliasesBuf;
  var afinet = 2;
- HEAP32[(((ret) + (8)) >>> 2) >>> 0] = afinet;
- HEAP32[(((ret) + (12)) >>> 2) >>> 0] = 4;
+ GROWABLE_HEAP_I32()[(((ret) + (8)) >>> 2) >>> 0] = afinet;
+ GROWABLE_HEAP_I32()[(((ret) + (12)) >>> 2) >>> 0] = 4;
  var addrListBuf = _malloc(12);
- HEAPU32[((addrListBuf) >>> 2) >>> 0] = addrListBuf + 8;
- HEAPU32[(((addrListBuf) + (4)) >>> 2) >>> 0] = 0;
- HEAP32[(((addrListBuf) + (8)) >>> 2) >>> 0] = inetPton4(DNS.lookup_name(name));
- HEAPU32[(((ret) + (16)) >>> 2) >>> 0] = addrListBuf;
+ GROWABLE_HEAP_U32()[((addrListBuf) >>> 2) >>> 0] = addrListBuf + 8;
+ GROWABLE_HEAP_U32()[(((addrListBuf) + (4)) >>> 2) >>> 0] = 0;
+ GROWABLE_HEAP_I32()[(((addrListBuf) + (8)) >>> 2) >>> 0] = inetPton4(DNS.lookup_name(name));
+ GROWABLE_HEAP_U32()[(((ret) + (16)) >>> 2) >>> 0] = addrListBuf;
  return ret;
 };
 
@@ -7914,7 +7995,7 @@ var addDays = (date, days) => {
 
 var writeArrayToMemory = (array, buffer) => {
  assert(array.length >= 0, "writeArrayToMemory array must have a length (should be an array or typed array)");
- HEAP8.set(array, buffer >>> 0);
+ GROWABLE_HEAP_I8().set(array, buffer >>> 0);
 };
 
 function _strftime(s, maxsize, format, tm) {
@@ -7922,18 +8003,18 @@ function _strftime(s, maxsize, format, tm) {
  maxsize >>>= 0;
  format >>>= 0;
  tm >>>= 0;
- var tm_zone = HEAPU32[(((tm) + (40)) >>> 2) >>> 0];
+ var tm_zone = GROWABLE_HEAP_U32()[(((tm) + (40)) >>> 2) >>> 0];
  var date = {
-  tm_sec: HEAP32[((tm) >>> 2) >>> 0],
-  tm_min: HEAP32[(((tm) + (4)) >>> 2) >>> 0],
-  tm_hour: HEAP32[(((tm) + (8)) >>> 2) >>> 0],
-  tm_mday: HEAP32[(((tm) + (12)) >>> 2) >>> 0],
-  tm_mon: HEAP32[(((tm) + (16)) >>> 2) >>> 0],
-  tm_year: HEAP32[(((tm) + (20)) >>> 2) >>> 0],
-  tm_wday: HEAP32[(((tm) + (24)) >>> 2) >>> 0],
-  tm_yday: HEAP32[(((tm) + (28)) >>> 2) >>> 0],
-  tm_isdst: HEAP32[(((tm) + (32)) >>> 2) >>> 0],
-  tm_gmtoff: HEAP32[(((tm) + (36)) >>> 2) >>> 0],
+  tm_sec: GROWABLE_HEAP_I32()[((tm) >>> 2) >>> 0],
+  tm_min: GROWABLE_HEAP_I32()[(((tm) + (4)) >>> 2) >>> 0],
+  tm_hour: GROWABLE_HEAP_I32()[(((tm) + (8)) >>> 2) >>> 0],
+  tm_mday: GROWABLE_HEAP_I32()[(((tm) + (12)) >>> 2) >>> 0],
+  tm_mon: GROWABLE_HEAP_I32()[(((tm) + (16)) >>> 2) >>> 0],
+  tm_year: GROWABLE_HEAP_I32()[(((tm) + (20)) >>> 2) >>> 0],
+  tm_wday: GROWABLE_HEAP_I32()[(((tm) + (24)) >>> 2) >>> 0],
+  tm_yday: GROWABLE_HEAP_I32()[(((tm) + (28)) >>> 2) >>> 0],
+  tm_isdst: GROWABLE_HEAP_I32()[(((tm) + (32)) >>> 2) >>> 0],
+  tm_gmtoff: GROWABLE_HEAP_I32()[(((tm) + (36)) >>> 2) >>> 0],
   tm_zone: tm_zone ? UTF8ToString(tm_zone) : ""
  };
  var pattern = UTF8ToString(format);
@@ -8199,10 +8280,10 @@ var convertJsFunctionToWasm = (func, sig) => {
  }
  var typeSectionBody = [ 1 ];
  generateFuncType(sig, typeSectionBody);
- var bytes = [ 0, 97, 115, 109,  1, 0, 0, 0,  1 ];
+ var bytes = [ 0, 97, 115, 109, 1, 0, 0, 0, 1 ];
  uleb128Encode(typeSectionBody.length, bytes);
  bytes.push.apply(bytes, typeSectionBody);
- bytes.push(2, 7,  1, 1, 101, 1, 102, 0, 0, 7, 5,  1, 1, 102, 0, 0);
+ bytes.push(2, 7, 1, 1, 101, 1, 102, 0, 0, 7, 5, 1, 1, 102, 0, 0);
  var module = new WebAssembly.Module(new Uint8Array(bytes));
  var instance = new WebAssembly.Instance(module, {
   "e": {
@@ -9107,11 +9188,11 @@ Module["TTY"] = TTY;
 
 Module["LZ4"] = LZ4;
 
-var missingLibrarySymbols = [ "writeI53ToI64", "writeI53ToI64Clamped", "writeI53ToI64Signaling", "writeI53ToU64Clamped", "writeI53ToU64Signaling", "readI53FromU64", "convertI32PairToI53", "convertI32PairToI53Checked", "convertU32PairToI53", "growMemory", "getCallstack", "emscriptenLog", "convertPCtoSourceLocation", "readEmAsmArgs", "jstoi_s", "listenOnce", "autoResumeAudioContext", "dynCallLegacy", "getDynCaller", "dynCall", "asmjsMangle", "handleAllocatorInit", "HandleAllocator", "getNativeTypeSize", "STACK_SIZE", "STACK_ALIGN", "POINTER_SIZE", "ASSERTIONS", "getCFunc", "ccall", "cwrap", "reallyNegative", "unSign", "strLen", "reSign", "formatString", "intArrayToString", "AsciiToString", "UTF16ToString", "stringToUTF16", "lengthBytesUTF16", "UTF32ToString", "stringToUTF32", "lengthBytesUTF32", "registerKeyEventCallback", "maybeCStringToJsString", "findEventTarget", "findCanvasEventTarget", "getBoundingClientRect", "fillMouseEventData", "registerMouseEventCallback", "registerWheelEventCallback", "registerUiEventCallback", "registerFocusEventCallback", "fillDeviceOrientationEventData", "registerDeviceOrientationEventCallback", "fillDeviceMotionEventData", "registerDeviceMotionEventCallback", "screenOrientation", "fillOrientationChangeEventData", "registerOrientationChangeEventCallback", "fillFullscreenChangeEventData", "registerFullscreenChangeEventCallback", "JSEvents_requestFullscreen", "JSEvents_resizeCanvasForFullscreen", "registerRestoreOldStyle", "hideEverythingExceptGivenElement", "restoreHiddenElements", "setLetterbox", "softFullscreenResizeWebGLRenderTarget", "doRequestFullscreen", "fillPointerlockChangeEventData", "registerPointerlockChangeEventCallback", "registerPointerlockErrorEventCallback", "requestPointerLock", "fillVisibilityChangeEventData", "registerVisibilityChangeEventCallback", "registerTouchEventCallback", "fillGamepadEventData", "registerGamepadEventCallback", "registerBeforeUnloadEventCallback", "fillBatteryEventData", "battery", "registerBatteryEventCallback", "setCanvasElementSizeCallingThread", "setCanvasElementSizeMainThread", "setCanvasElementSize", "getCanvasSizeCallingThread", "getCanvasSizeMainThread", "getCanvasElementSize", "jsStackTrace", "stackTrace", "checkWasiClock", "wasiRightsToMuslOFlags", "wasiOFlagsToMuslOFlags", "createDyncallWrapper", "setImmediateWrapped", "clearImmediateWrapped", "polyfillSetImmediate", "getPromise", "makePromise", "idsToPromises", "makePromiseCallback", "ExceptionInfo", "findMatchingCatch", "setMainLoop", "FS_mkdirTree", "_setNetworkCallback", "heapObjectForWebGLType", "heapAccessShiftForWebGLHeap", "webgl_enable_ANGLE_instanced_arrays", "webgl_enable_OES_vertex_array_object", "webgl_enable_WEBGL_draw_buffers", "webgl_enable_WEBGL_multi_draw", "emscriptenWebGLGet", "computeUnpackAlignedImageSize", "colorChannelsInGlTextureFormat", "emscriptenWebGLGetTexPixelData", "__glGenObject", "emscriptenWebGLGetUniform", "webglGetUniformLocation", "webglPrepareUniformLocationsBeforeFirstUse", "webglGetLeftBracePos", "emscriptenWebGLGetVertexAttrib", "__glGetActiveAttribOrUniform", "writeGLArray", "emscripten_webgl_destroy_context_before_on_calling_thread", "registerWebGlEventCallback", "SDL_unicode", "SDL_ttfContext", "SDL_audio", "ALLOC_NORMAL", "ALLOC_STACK", "allocate", "writeStringToMemory", "writeAsciiToMemory", "xterm_pty_old_newselect" ];
+var missingLibrarySymbols = [ "writeI53ToI64", "writeI53ToI64Clamped", "writeI53ToI64Signaling", "writeI53ToU64Clamped", "writeI53ToU64Signaling", "readI53FromU64", "convertI32PairToI53", "convertI32PairToI53Checked", "convertU32PairToI53", "getCallstack", "emscriptenLog", "convertPCtoSourceLocation", "readEmAsmArgs", "jstoi_s", "listenOnce", "autoResumeAudioContext", "dynCallLegacy", "getDynCaller", "dynCall", "asmjsMangle", "handleAllocatorInit", "HandleAllocator", "getNativeTypeSize", "STACK_SIZE", "STACK_ALIGN", "POINTER_SIZE", "ASSERTIONS", "getCFunc", "ccall", "cwrap", "reallyNegative", "unSign", "strLen", "reSign", "formatString", "intArrayToString", "AsciiToString", "UTF16ToString", "stringToUTF16", "lengthBytesUTF16", "UTF32ToString", "stringToUTF32", "lengthBytesUTF32", "registerKeyEventCallback", "maybeCStringToJsString", "findEventTarget", "findCanvasEventTarget", "getBoundingClientRect", "fillMouseEventData", "registerMouseEventCallback", "registerWheelEventCallback", "registerUiEventCallback", "registerFocusEventCallback", "fillDeviceOrientationEventData", "registerDeviceOrientationEventCallback", "fillDeviceMotionEventData", "registerDeviceMotionEventCallback", "screenOrientation", "fillOrientationChangeEventData", "registerOrientationChangeEventCallback", "fillFullscreenChangeEventData", "registerFullscreenChangeEventCallback", "JSEvents_requestFullscreen", "JSEvents_resizeCanvasForFullscreen", "registerRestoreOldStyle", "hideEverythingExceptGivenElement", "restoreHiddenElements", "setLetterbox", "softFullscreenResizeWebGLRenderTarget", "doRequestFullscreen", "fillPointerlockChangeEventData", "registerPointerlockChangeEventCallback", "registerPointerlockErrorEventCallback", "requestPointerLock", "fillVisibilityChangeEventData", "registerVisibilityChangeEventCallback", "registerTouchEventCallback", "fillGamepadEventData", "registerGamepadEventCallback", "registerBeforeUnloadEventCallback", "fillBatteryEventData", "battery", "registerBatteryEventCallback", "setCanvasElementSizeCallingThread", "setCanvasElementSizeMainThread", "setCanvasElementSize", "getCanvasSizeCallingThread", "getCanvasSizeMainThread", "getCanvasElementSize", "jsStackTrace", "stackTrace", "checkWasiClock", "wasiRightsToMuslOFlags", "wasiOFlagsToMuslOFlags", "createDyncallWrapper", "setImmediateWrapped", "clearImmediateWrapped", "polyfillSetImmediate", "getPromise", "makePromise", "idsToPromises", "makePromiseCallback", "ExceptionInfo", "findMatchingCatch", "setMainLoop", "FS_mkdirTree", "_setNetworkCallback", "heapObjectForWebGLType", "heapAccessShiftForWebGLHeap", "webgl_enable_ANGLE_instanced_arrays", "webgl_enable_OES_vertex_array_object", "webgl_enable_WEBGL_draw_buffers", "webgl_enable_WEBGL_multi_draw", "emscriptenWebGLGet", "computeUnpackAlignedImageSize", "colorChannelsInGlTextureFormat", "emscriptenWebGLGetTexPixelData", "__glGenObject", "emscriptenWebGLGetUniform", "webglGetUniformLocation", "webglPrepareUniformLocationsBeforeFirstUse", "webglGetLeftBracePos", "emscriptenWebGLGetVertexAttrib", "__glGetActiveAttribOrUniform", "writeGLArray", "emscripten_webgl_destroy_context_before_on_calling_thread", "registerWebGlEventCallback", "SDL_unicode", "SDL_ttfContext", "SDL_audio", "ALLOC_NORMAL", "ALLOC_STACK", "allocate", "writeStringToMemory", "writeAsciiToMemory", "xterm_pty_old_newselect" ];
 
 missingLibrarySymbols.forEach(missingLibrarySymbol);
 
-var unexportedSymbols = [ "run", "addOnPreRun", "addOnInit", "addOnPreMain", "addOnExit", "addOnPostRun", "FS_createFolder", "FS_createLink", "FS_readFile", "out", "err", "callMain", "abort", "wasmExports", "stackAlloc", "stackSave", "stackRestore", "writeStackCookie", "checkStackCookie", "readI53FromI64", "MAX_INT53", "MIN_INT53", "bigintToI53Checked", "ptrToString", "zeroMemory", "exitJS", "getHeapMax", "abortOnCannotGrowMemory", "ENV", "MONTH_DAYS_REGULAR", "MONTH_DAYS_LEAP", "MONTH_DAYS_REGULAR_CUMULATIVE", "MONTH_DAYS_LEAP_CUMULATIVE", "isLeapYear", "ydayFromDate", "arraySum", "addDays", "ERRNO_CODES", "ERRNO_MESSAGES", "setErrNo", "inetPton4", "inetNtop4", "inetPton6", "inetNtop6", "readSockaddr", "writeSockaddr", "DNS", "getHostByName", "Protocols", "Sockets", "initRandomFill", "randomFill", "timers", "warnOnce", "UNWIND_CACHE", "readEmAsmArgsArray", "jstoi_q", "getExecutableName", "handleException", "runtimeKeepalivePush", "runtimeKeepalivePop", "callUserCallback", "maybeExit", "asyncLoad", "alignMemory", "mmapAlloc", "wasmTable", "noExitRuntime", "uleb128Encode", "sigToWasmTypes", "generateFuncType", "convertJsFunctionToWasm", "freeTableIndexes", "functionsInTableMap", "getEmptyTableSlot", "updateTableMap", "getFunctionAddress", "setValue", "getValue", "PATH", "PATH_FS", "UTF8Decoder", "UTF8ArrayToString", "UTF8ToString", "stringToUTF8Array", "stringToUTF8", "lengthBytesUTF8", "intArrayFromString", "stringToAscii", "UTF16Decoder", "stringToNewUTF8", "stringToUTF8OnStack", "writeArrayToMemory", "JSEvents", "specialHTMLTargets", "currentFullscreenStrategy", "restoreOldWindowedStyle", "demangle", "demangleAll", "getEnvStrings", "doReadv", "doWritev", "safeSetTimeout", "promiseMap", "uncaughtExceptionCount", "exceptionLast", "exceptionCaught", "Browser", "wget", "SYSCALLS", "getSocketFromFD", "getSocketAddress", "preloadPlugins", "FS_modeStringToFlags", "FS_getMode", "MEMFS", "PIPEFS", "SOCKFS", "tempFixedLengthArray", "miniTempWebGLFloatBuffers", "miniTempWebGLIntBuffers", "GL", "emscripten_webgl_power_preferences", "AL", "GLUT", "EGL", "GLEW", "IDBStore", "runAndAbortIfError", "Asyncify", "Fibers", "SDL", "SDL_gfx", "allocateUTF8", "allocateUTF8OnStack", "PThread", "terminateWorker", "killThread", "cleanupThread", "registerTLSInit", "cancelThread", "spawnThread", "exitOnMainThread", "proxyToMainThread", "proxiedJSCallArgs", "invokeEntryPoint", "checkMailbox", "xterm_pty_old_fd_read", "xterm_pty_old_poll", "PTY_signalNameToCode", "PTY", "PTY_pollTimeout", "PTY_askToWaitAgain", "PTY_waitForReadableWithCallback", "PTY_handleSleepWithAtomic", "PTY_waitForReadableWithAtomicImpl", "PTY_atomicIndex", "PTY_waitForReadableWithAtomic", "PTY_handleSleep", "PTY_waitForReadable", "PTY_wrapPoll" ];
+var unexportedSymbols = [ "run", "addOnPreRun", "addOnInit", "addOnPreMain", "addOnExit", "addOnPostRun", "FS_createFolder", "FS_createLink", "FS_readFile", "out", "err", "callMain", "abort", "wasmExports", "stackAlloc", "stackSave", "stackRestore", "GROWABLE_HEAP_I8", "GROWABLE_HEAP_U8", "GROWABLE_HEAP_I16", "GROWABLE_HEAP_U16", "GROWABLE_HEAP_I32", "GROWABLE_HEAP_U32", "GROWABLE_HEAP_F32", "GROWABLE_HEAP_F64", "writeStackCookie", "checkStackCookie", "readI53FromI64", "MAX_INT53", "MIN_INT53", "bigintToI53Checked", "ptrToString", "zeroMemory", "exitJS", "getHeapMax", "growMemory", "ENV", "MONTH_DAYS_REGULAR", "MONTH_DAYS_LEAP", "MONTH_DAYS_REGULAR_CUMULATIVE", "MONTH_DAYS_LEAP_CUMULATIVE", "isLeapYear", "ydayFromDate", "arraySum", "addDays", "ERRNO_CODES", "ERRNO_MESSAGES", "setErrNo", "inetPton4", "inetNtop4", "inetPton6", "inetNtop6", "readSockaddr", "writeSockaddr", "DNS", "getHostByName", "Protocols", "Sockets", "initRandomFill", "randomFill", "timers", "warnOnce", "UNWIND_CACHE", "readEmAsmArgsArray", "jstoi_q", "getExecutableName", "handleException", "runtimeKeepalivePush", "runtimeKeepalivePop", "callUserCallback", "maybeExit", "asyncLoad", "alignMemory", "mmapAlloc", "wasmTable", "noExitRuntime", "uleb128Encode", "sigToWasmTypes", "generateFuncType", "convertJsFunctionToWasm", "freeTableIndexes", "functionsInTableMap", "getEmptyTableSlot", "updateTableMap", "getFunctionAddress", "setValue", "getValue", "PATH", "PATH_FS", "UTF8Decoder", "UTF8ArrayToString", "UTF8ToString", "stringToUTF8Array", "stringToUTF8", "lengthBytesUTF8", "intArrayFromString", "stringToAscii", "UTF16Decoder", "stringToNewUTF8", "stringToUTF8OnStack", "writeArrayToMemory", "JSEvents", "specialHTMLTargets", "currentFullscreenStrategy", "restoreOldWindowedStyle", "demangle", "demangleAll", "getEnvStrings", "doReadv", "doWritev", "safeSetTimeout", "promiseMap", "uncaughtExceptionCount", "exceptionLast", "exceptionCaught", "Browser", "wget", "SYSCALLS", "getSocketFromFD", "getSocketAddress", "preloadPlugins", "FS_modeStringToFlags", "FS_getMode", "MEMFS", "PIPEFS", "SOCKFS", "tempFixedLengthArray", "miniTempWebGLFloatBuffers", "miniTempWebGLIntBuffers", "GL", "emscripten_webgl_power_preferences", "AL", "GLUT", "EGL", "GLEW", "IDBStore", "runAndAbortIfError", "Asyncify", "Fibers", "SDL", "SDL_gfx", "allocateUTF8", "allocateUTF8OnStack", "PThread", "terminateWorker", "killThread", "cleanupThread", "registerTLSInit", "cancelThread", "spawnThread", "exitOnMainThread", "proxyToMainThread", "proxiedJSCallArgs", "invokeEntryPoint", "checkMailbox", "xterm_pty_old_fd_read", "xterm_pty_old_poll", "PTY_signalNameToCode", "PTY", "PTY_pollTimeout", "PTY_askToWaitAgain", "PTY_waitForReadableWithCallback", "PTY_handleSleepWithAtomic", "PTY_waitForReadableWithAtomicImpl", "PTY_atomicIndex", "PTY_waitForReadableWithAtomic", "PTY_handleSleep", "PTY_waitForReadable", "PTY_wrapPoll" ];
 
 unexportedSymbols.forEach(unexportedRuntimeSymbol);
 
@@ -9132,10 +9213,10 @@ function callMain(args = []) {
  var argv = stackAlloc((argc + 1) * 4);
  var argv_ptr = argv;
  args.forEach(arg => {
-  HEAPU32[((argv_ptr) >>> 2) >>> 0] = stringToUTF8OnStack(arg);
+  GROWABLE_HEAP_U32()[((argv_ptr) >>> 2) >>> 0] = stringToUTF8OnStack(arg);
   argv_ptr += 4;
  });
- HEAPU32[((argv_ptr) >>> 2) >>> 0] = 0;
+ GROWABLE_HEAP_U32()[((argv_ptr) >>> 2) >>> 0] = 0;
  try {
   var ret = entryFunction(argc, argv);
   exitJS(ret, /* implicit = */ true);
