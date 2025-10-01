@@ -428,7 +428,7 @@ if (ENVIRONMENT_IS_PTHREAD) {
   wasmMemory = Module["wasmMemory"];
  } else {
   wasmMemory = new WebAssembly.Memory({
-   "initial": INITIAL_MEMORY / 65536,
+   "initial": 32768 / 65536,
    "maximum": 4294967296 / 65536,
    "shared": true
   });
