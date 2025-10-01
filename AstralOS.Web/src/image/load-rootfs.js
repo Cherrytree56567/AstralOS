@@ -111,8 +111,9 @@ Module['FS_createPath']("/", "tmp", true, true);
         fetched = await fetchPromise;
       }
       processPackageData(fetched);
-Module.FS.mkdir ( /writableh ) const varsData = Module.FS.readFile ( /tmp/AstralOS.qcow2 , { encoding: binary } ) Module.FS.writeFile ( /writableh/AstralOS.qcow2 , varsData, { encoding: binary } ) 
-
+      Module.FS.mkdir("/writableh");
+      const varsData = Module.FS.readFile("/tmp/AstralOS.qcow2", { encoding: "binary" }); 
+      Module.FS.writeFile("/writableh/AstralOS.qcow2", varsData, { encoding: "binary" });
     }
     if (Module['calledRun']) {
       runWithFS(Module);
