@@ -27,9 +27,6 @@
 .w-\[65vw\] {
   width: 65vw;
 }
-.w-\[714px\] {
-  width: 714px;
-}
 .grow {
   flex-grow: 1;
 }
@@ -1245,6 +1242,17 @@ body {
   border-radius: 5px;
   text-align: left;
   padding: 15px;
+}
+code {
+  color: var(--catppuccin-color-text) !important;
+}
+.tc {
+  width: 717px;
+}
+@supports (-moz-appearance: none) {
+  .tc {
+    width: 704px;
+  }
 }
 @property --tw-rotate-x {
   syntax: "*";
