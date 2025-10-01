@@ -71,3 +71,11 @@ Today I was working on the bootloader thing from yesterday. I wanted to fix my m
 ![GPTPartition](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/GPTPartition.png?raw=true)
 
 **Total time spent: 9h 17m**
+
+# September 30th - October 1st: Fixed bugs in the Web Demo
+
+The web demo thing was hard to patch, because the build system had a lot of errors. I was finally able to patch it, even if it wouldn't last long. The main thing I needed to patch was the `tcg.c` file which had a define that defined how much memory it had for some type of buffer. I was able to raise the limit but I still needed to fix the build system. meson complained that it couldn't run the wasm files, so I just changed the `exe_wrapper` to `true` so that whatever it was passed, it would never fail. This worked, but then chrome complained about some error it couldn't display because I didn't add the assertions flag. But once I did, it gave me the error which told me to enable LZ4 support which I did. Then I fixed a bunch of UI stuff. I definitely worked more than 1h, but that is what Wakatime Tracked.
+
+![Web](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/Web.png?raw=true)
+
+**Total time spent: 1h 44m**
