@@ -56,12 +56,13 @@ I fixed a few errors that I had before which were really really difficult to deb
 
 **Total time spent: 6h 35m**
 
-# September 27-28th: XX
+# September 27-28th: Bootloader Revamp
 
+I haven't finished revamping the bootloader yet. But here is what I have so far. I decided to revamp it because it was mainly someone else's code and was horribly formatted.
 
-![AHCIController2](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/AHCIController2.png?raw=true)
+![AllocPages](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/AllocPages.png?raw=true)
 
-**Total time spent: Xh Xm**
+**Total time spent: 10h 10m**
 
 # September 29th: Added GPT Partitioning
 
@@ -69,4 +70,4 @@ Today I was working on the bootloader thing from yesterday. I wanted to fix my m
 
 ![GPTPartition](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/GPTPartition.png?raw=true)
 
-**Total time spent: 6h 47m**
+**Total time spent: 9h 17m**

@@ -356,7 +356,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
         char* buffer = (char*)buf_virt;
 
-        for (uint64_t lba = 0; lba < sectorCount; lba++) {
+        for (uint64_t lba = 0; lba < 5; lba++) {
             memset((void*)buf_virt, 0, sectorSize);
             if (bldev->ReadSector(lba, (void*)buf_phys))  {
                 ks->basicConsole.Print(((String)"Partition Buffer LBA" + to_string(lba) + ": ").c_str());
