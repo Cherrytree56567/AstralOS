@@ -11,8 +11,15 @@
         <link href="https://fonts.googleapis.com/css2?family=SUSE+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.1.0/css/xterm.css">
         <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="Particles.css">
     </head>
-    <body class="bg-ctp-crust flex flex-col">
+    <body class="bg-ctp-crust flex flex-col m-[0px]">
+        <div id="particles" class="particles-container absolute top-0 left-0 w-full h-full -z-10"></div>
+        <div class="navbar relative bg-ctp-crust h-[50px] w-full flex items-center pl-[50px]">
+            <a class="text-ctp-text no-underline font-bold" href="https://cherrytree56567.github.io/AstralOS">AstralOS</a>
+
+            
+        </div>
         <div class="container flex flex-col items-center justify-center text-center w-[65vw] mb-[1rem]">
             <br>
             <h1 class="text-ctp-text text-[3rem] mb-[1rem]">Astral OS</h1>
@@ -36,6 +43,8 @@
         <script src="./image/load-uefi.js"></script>
         <script src="./image/load-rom.js"></script>
         <script src="./image/dist/stack.js"></script>
+        <script src="https://unpkg.com/ogl@0.0.32/dist/ogl.umd.js"></script>
+        <script src="./Particles.js"></script>
         <script type="module">
             import 'https://unpkg.com/xterm@5.3.0/lib/xterm.js';
             import 'https://unpkg.com/xterm-pty/index.js';
