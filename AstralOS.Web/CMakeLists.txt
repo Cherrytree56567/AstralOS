@@ -24,6 +24,7 @@ add_custom_target(build
     COMMAND ./emsdk/emsdk_env.sh && ./emsdk/upstream/emscripten/tools/file_packager.py load-rootfs.data --lz4 --preload tmp > load-rootfs.js
     COMMAND mv -f load-rootfs.data src/image
     COMMAND mv -f load-rootfs.js src/image
+    COMMAND sed -i '114i Module.FS.mkdir("/writableh");\nconst varsData = Module.FS.readFile("/tmp/AstralOS.qcow2", { encoding: "binary" });\nModule.FS.writeFile("/writableh/AstralOS.qcow2", varsData, { encoding: "binary" });' src/image/load-rootfs.js
     COMMAND npm run build
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Building Website"
