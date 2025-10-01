@@ -68,3 +68,17 @@ body {
   text-align: left;
   padding: 15px;
 }
+
+code {
+  color: var(--catppuccin-color-text) !important;
+}
+
+.tc {
+    width: 717px;
+}
+
+@supports (-moz-appearance: none) {
+    .tc {
+        width: 704px;
+    }
+}
