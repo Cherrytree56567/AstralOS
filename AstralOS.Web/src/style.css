@@ -1202,13 +1202,13 @@ body {
 }
 #terminal {
   background-color: var(--catppuccin-color-base) !important;
-  width: 55vw;
-  height: 44vh;
+  width: 720px;
+  height: 408px;
 }
 .xterm-viewport {
   background-color: var(--catppuccin-color-base) !important;
-  width: 55vw;
-  height: 44vh;
+  width: 720px;
+  height: 408px;
 }
 .xterm-screen {
   background-color: var(--catppuccin-color-base) !important;
@@ -1227,10 +1227,6 @@ body {
 }
 .xterm-fg-7 {
   color: var(--catppuccin-color-subtext1) !important;
-}
-.xterm-screen {
-  width: 55vw;
-  height: 44vh;
 }
 .xterm-fg-15 {
   color: var(--catppuccin-color-text) !important;
