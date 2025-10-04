@@ -256,7 +256,9 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     */
     kernelServices.driverMan.Initialize();
     kernelServices.driverMan.DetectDevices(devices);
-    kernelServices.driverMan.DetectDrivers();
+    for (size_t i = 0; i < 2; i++) {
+        kernelServices.driverMan.DetectDrivers(i);
+    }
 
     /*
      * AHCI Driver Test
@@ -366,6 +368,19 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
                 ks->basicConsole.Println("Failed Reading Sector");
             }
         }
+    }
+
+    BaseDriver* FSDriver = kernelServices.driverMan.GetDevice(DriverType::Filesystem);
+    if (FSDriver) {
+        kernelServices.basicConsole.Println(((String)"Found FS Driver: " + FSDriver->DriverName()).c_str());
+        FilesystemDevice* bldev = static_cast<FilesystemDevice*>(FSDriver);
+
+        for (size_t i = 0; i < 3; i++) {
+            if (!bldev->GetParentLayer()->SetPartition(i)) continue;
+            if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
+            bldev->Support();
+        }
+        
     }
 
     while (true) {
