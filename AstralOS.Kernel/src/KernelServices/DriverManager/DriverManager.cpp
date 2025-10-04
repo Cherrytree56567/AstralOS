@@ -99,9 +99,13 @@ void DriverManager::DetectDevices(Array<DeviceKey>& devices) {
  * a function that points back to the last
  * layer.
 */
-void DriverManager::DetectDrivers() {
+void DriverManager::DetectDrivers(size_t layer) {
     for (size_t i = 0; i < (DeviceDrivers.size()); i++) {
         BaseDriver* dev = DeviceDrivers.get(i);
+        if (layer != 0) {
+            if (dev->GetDriverType() != Partition) continue;
+            if (dev->GetDriverType() != Filesystem) continue;
+        }
         DeviceKey devKey;
         devKey.bars[0] = ((uint64_t)dev >> 32); // HIGH: 0x12345678XXXXXXXX
         devKey.bars[1] = ((uint64_t)dev & 0xFFFFFFFF); // LOW: 0xXXXXXXXXABCDEF00
@@ -113,7 +117,9 @@ void DriverManager::DetectDrivers() {
                 BaseDriver* device = factory->CreateDevice();
                 device->Init(ds, devKey);
                 DeviceDrivers.push_back(device);
-                break;
+                if (layer == 0) {
+                    break;
+                }
             }
         }
     }

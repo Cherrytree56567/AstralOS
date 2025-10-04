@@ -5,6 +5,10 @@
 #include "PCI.h"
 #else 
 #include "../PCI/PCI.h"
+#include "../File/File.h"
+#endif
+#ifdef FILE
+#include "File.h"
 #endif
 
 struct DriverServices;
@@ -12,7 +16,8 @@ struct DriverServices;
 enum DriverType {
     BaseDev,
     BlockDev,
-    Partition
+    Partition,
+    Filesystem
 };
 
 enum LayerType {
@@ -76,7 +81,7 @@ public:
     virtual void Init(DriverServices& ds, DeviceKey& devKey) override = 0;
     virtual bool ReadSector(uint64_t lba, void* buffer) = 0;
     virtual bool WriteSector(uint64_t lba, void* buffer) = 0;
-    virtual bool SetParition(uint8_t partition) = 0;
+    virtual bool SetPartition(uint8_t partition) = 0;
 
     virtual uint64_t SectorCount() const = 0;
     virtual uint32_t SectorSize() const = 0;
@@ -97,6 +102,47 @@ public:
     virtual ~PartitionDriverFactory() {}
     virtual bool Supports(const DeviceKey& devKey) = 0;
     virtual PartitionDevice* CreateDevice() = 0;
+    virtual LayerType GetLayerType() override { return SOFTWARE; }
+};
+
+class FilesystemDevice : public BaseDriver {
+public:
+    virtual void Init(DriverServices& ds, DeviceKey& devKey) override = 0;
+    virtual bool Support() = 0;
+    virtual FsNode* Mount() = 0;
+    virtual bool Unmount() = 0;
+
+    virtual FsNode* ListDir(FsNode* node) = 0;
+    virtual FsNode* FindDir(FsNode* node, const char* name) = 0;
+    virtual FsNode* CreateDir(FsNode* parent, const char* name) = 0;
+    virtual bool Remove(FsNode* node) = 0;
+
+    virtual File* Open(FsNode* node, uint32_t flags) = 0;
+    virtual bool Close(File* file) = 0;
+    virtual int64_t Read(File* file, void* buffer, uint64_t size) = 0;
+    virtual int64_t Write(File* file, void* buffer, uint64_t size) = 0;
+
+    virtual bool Stat(FsNode* node, FsNode* out) = 0;
+    virtual bool Chmod(FsNode* node, uint32_t mode) = 0;
+    virtual bool Chown(FsNode* node, uint32_t uid, uint32_t gid) = 0;
+    virtual bool Utimes(FsNode* node, uint64_t atime, uint64_t mtime, uint64_t ctime) = 0;
+
+    virtual uint8_t GetClass() override = 0;
+    virtual uint8_t GetSubClass() override = 0;
+    virtual uint8_t GetProgIF() override = 0;
+    virtual const char* name() const override = 0;
+    virtual const char* DriverName() const override = 0;
+    virtual PartitionDevice* GetParentLayer() override = 0;
+    virtual DriverType GetDriverType() override {
+        return Filesystem;
+    }
+};
+
+class FilesystemDriverFactory : public BaseDriverFactory {
+public:
+    virtual ~FilesystemDriverFactory() {}
+    virtual bool Supports(const DeviceKey& devKey) = 0;
+    virtual FilesystemDevice* CreateDevice() = 0;
     virtual LayerType GetLayerType() override { return SOFTWARE; }
 };
 

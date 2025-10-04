@@ -12,7 +12,7 @@ public:
     void Initialize();
     void RegisterDriver(BaseDriverFactory* factory);
     void DetectDevices(Array<DeviceKey>& devices);
-    void DetectDrivers();
+    void DetectDrivers(size_t layer);
     BaseDriver* GetDevice(uint8_t _class, uint8_t subclass, uint8_t progIF);
     BaseDriver* GetDevice(DriverType drvT);
     const Array<BaseDriver*>& GetDevices() const;
