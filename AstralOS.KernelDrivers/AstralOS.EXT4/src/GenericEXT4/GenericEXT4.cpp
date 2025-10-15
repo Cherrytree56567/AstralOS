@@ -126,7 +126,22 @@ FsNode* GenericEXT4Device::Mount() {
 
     FsNode node; 
 
-    
+    /*
+     * The root inode number is always 2
+    */
+    uint64_t InodeBlockGroup = (2 - 1) / superblock->InodesPerBlockGroup;
+    uint64_t InodeIndex = (2 - 1) % superblock->InodesPerBlockGroup;
+
+    uint64_t BlockSize = 1024 << superblock->BlockSize;
+
+    uint64_t BlockGroupDescLBA = 1;
+
+    if (BlockSize == 1024) {
+        BlockGroupDescLBA = 2;
+    }
+
+    uint64_t BlockGroupDescOff = BlockGroupDescLBA * BlockSize;
+
     pdev->SetMount(EXT4MountID);
     pdev->SetMountNode(&node);
 }
