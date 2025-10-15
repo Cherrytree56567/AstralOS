@@ -71,11 +71,13 @@ void GenericEXT4Device::Init(DriverServices& ds, DeviceKey& dKey) {
 }
 
 /*
- * 
+ * First we need to check if the SectorCount is over 0x3
+ * and if the SectorSize isn't 0. Then we get the LBA and
+ * the LBASize. Then we can efficiently read the Super
+ * Block and check the signature.
 */
 bool GenericEXT4Device::Support() {
-    _ds->Println(to_hstridng(pdev->SectorSize()));
-    if (pdev->SectorCount() == 0 || pdev->SectorSize() == 0) {
+    if (pdev->SectorCount() < 0x3 || pdev->SectorSize() == 0) {
         return false;
     }
     /*
@@ -87,15 +89,13 @@ bool GenericEXT4Device::Support() {
         LBA = 1;
     }
 
-    uint32_t LBASize = (1024 + pdev->SectorSize()) / pdev->SectorSize();
+    uint32_t LBASize = (1024 + pdev->SectorSize() - 1) / pdev->SectorSize();
 
     if (pdev->SectorCount() == 0) return false;
 
     void* buf = _ds->RequestPage();
     uint64_t bufPhys = (uint64_t)buf;
     uint64_t bufVirt = bufPhys + 0xFFFFFFFF00000000;
-
-    _ds->Print(to_hstridng(bufVirt));
 
     _ds->MapMemory((void*)bufVirt, (void*)bufPhys, false);
     memset((void*)bufVirt, 0, 4096);
@@ -123,6 +123,12 @@ FsNode* GenericEXT4Device::Mount() {
     if (!Support()) {
         return NULL;
     }
+
+    FsNode node; 
+
+    
+    pdev->SetMount(EXT4MountID);
+    pdev->SetMountNode(&node);
 }
 
 bool GenericEXT4Device::Unmount() {

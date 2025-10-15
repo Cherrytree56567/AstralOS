@@ -3,12 +3,10 @@
 #include <cstddef>
 #ifdef DRIVER
 #include "PCI.h"
+#include "File.h"
 #else 
 #include "../PCI/PCI.h"
 #include "../File/File.h"
-#endif
-#ifdef FILE
-#include "File.h"
 #endif
 
 struct DriverServices;
@@ -24,6 +22,10 @@ enum LayerType {
     OTHER = 0,
     PCIE = 1,
     SOFTWARE = 2
+};
+
+enum MountFSID {
+    EXT4MountID = 0xE474
 };
 
 class BaseDriver {
@@ -95,6 +97,8 @@ public:
     virtual DriverType GetDriverType() override {
         return Partition;
     }
+    virtual bool SetMount(uint64_t FSID) = 0;
+    virtual bool SetMountNode(FsNode* Node) = 0;
 };
 
 class PartitionDriverFactory : public BaseDriverFactory {
