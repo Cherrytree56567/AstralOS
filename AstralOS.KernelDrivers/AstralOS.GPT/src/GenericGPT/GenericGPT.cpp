@@ -141,6 +141,8 @@ void GenericGPTDevice::Init(DriverServices& ds, DeviceKey& dKey) {
 
                 Partitions[PartitionCount] = *aape;
                 PartitionCount++;
+                //                                           0xASTRALOS
+                PartitionMountID[PartitionCount] = (uint64_t)0xA574A105;
             }
         }
     }
@@ -150,7 +152,9 @@ bool GenericGPTDevice::ReadSector(uint64_t lba, void* buffer) {
     uint64_t start = Partitions[CurrentPartition].StartingLBA;
     uint64_t end = Partitions[CurrentPartition].EndingLBA;
 
-    if (lba > (end - start)) {
+    if ((start + lba) > ((end - start) + 1)) {
+        _ds->Print(to_hstridng((start + lba)));
+        _ds->Print(to_hstridng((end - start)));
         return false;
     }
 
@@ -168,7 +172,7 @@ bool GenericGPTDevice::WriteSector(uint64_t lba, void* buffer) {
     return bldev->WriteSector(start + lba, buffer);
 }
 
-bool GenericGPTDevice::SetParition(uint8_t partition) {
+bool GenericGPTDevice::SetPartition(uint8_t partition) {
     if (partition > PartitionCount) {
         return false;
     }
@@ -198,6 +202,20 @@ uint8_t GenericGPTDevice::GetSubClass() {
 
 uint8_t GenericGPTDevice::GetProgIF() {
     return 0x0;
+}
+
+bool GenericGPTDevice::SetMount(uint64_t FSID) {
+    if (PartitionMountID[CurrentPartition] != 0x0) {
+        return false;
+    }
+
+    PartitionMountID[CurrentPartition] = FSID;
+    return true;
+}
+
+bool GenericGPTDevice::SetMountNode(FsNode* Node) {
+    PartitionFsNode[CurrentPartition] = Node;
+    return true;
 }
 
 const char* GenericGPTDevice::name() const {

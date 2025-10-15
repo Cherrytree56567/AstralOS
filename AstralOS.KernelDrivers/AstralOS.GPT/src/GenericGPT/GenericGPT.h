@@ -1,5 +1,6 @@
 #pragma once
 #define DRIVER
+#define FILE
 #include "../PCI.h"
 #include "../DriverServices.h"
 #include <cstdint>
@@ -58,9 +59,9 @@ public:
 class GenericGPTDevice : public PartitionDevice {
 public:
     virtual void Init(DriverServices& ds, DeviceKey& devKey) override;
-    virtual bool ReadSector(uint64_t lba, void* buffer);
-    virtual bool WriteSector(uint64_t lba, void* buffer);
-    virtual bool SetParition(uint8_t partition);
+    virtual bool ReadSector(uint64_t lba, void* buffer) override;
+    virtual bool WriteSector(uint64_t lba, void* buffer) override;
+    virtual bool SetPartition(uint8_t partition) override;
 
     virtual uint64_t SectorCount() const;
     virtual uint32_t SectorSize() const;
@@ -71,6 +72,8 @@ public:
     virtual const char* name() const override;
     virtual const char* DriverName() const override;
     virtual BaseDriver* GetParentLayer() override;
+    virtual bool SetMount(uint64_t FSID) override;
+    virtual bool SetMountNode(FsNode* Node) override;
 private:
 	BlockDevice* bldev;
 	DriverServices* _ds = nullptr;
@@ -81,4 +84,6 @@ private:
     PartitionEntry* Partitions;
     uint64_t PartitionCount = 0;
     uint8_t CurrentPartition = 0;
+    uint64_t PartitionMountID[128];
+    FsNode* PartitionFsNode[128];
 };
