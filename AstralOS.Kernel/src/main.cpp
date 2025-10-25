@@ -378,7 +378,9 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
         for (size_t i = 0; i < 3; i++) {
             if (!bldev->GetParentLayer()->SetPartition(i)) continue;
             if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
-            bldev->Support();
+            if (bldev->Support()) {
+                bldev->Mount();
+            }
         }
         
     }

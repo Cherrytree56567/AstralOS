@@ -223,7 +223,7 @@ struct BlockGroupDescriptor {
     uint32_t LowAddrInodeBitmap; // Low 32bits of block address of inode usage bitmap. 
     uint32_t LowAddrInodeTable; // Low 32bits of starting block address of inode table. 
     uint16_t LowUnallocBlocks; // Low 16bits of number of unallocated blocks in group. 
-    uint16_t LowUnallocInodes; // Low 16bits of number of unallocated blocks in group. 
+    uint16_t LowUnallocInodes; // Low 16bits of number of unallocated inodes in group. 
     uint16_t LowDirs; // Low 16bits of number of directories in group. 
     uint16_t Features; // Block group features present. 
     uint32_t LowAddrSnapshot; // Low 32-bits of block address of snapshot exclude bitmap. 
