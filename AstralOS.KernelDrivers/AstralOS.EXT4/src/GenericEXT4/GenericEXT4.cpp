@@ -114,7 +114,9 @@ bool GenericEXT4Device::Support() {
     _ds->Println(to_hstridng(superblock->MagicSignature));
 
     if (superblock->MagicSignature == 0xEF53) {
-        return true;
+        if (superblock->RequiredFeatures & RequiredFeatures::FileExtent) {
+            return true;
+        }
     }
     return false;
 }
@@ -124,7 +126,9 @@ FsNode* GenericEXT4Device::Mount() {
         return NULL;
     }
 
-    FsNode node; 
+    FsNode* node = (FsNode*)_ds->malloc(sizeof(FsNode));
+    if (!node) return nullptr;
+    memset(node, 0, sizeof(FsNode));
 
     /*
      * The root inode number is always 2
@@ -132,18 +136,102 @@ FsNode* GenericEXT4Device::Mount() {
     uint64_t InodeBlockGroup = (2 - 1) / superblock->InodesPerBlockGroup;
     uint64_t InodeIndex = (2 - 1) % superblock->InodesPerBlockGroup;
 
-    uint64_t BlockSize = 1024 << superblock->BlockSize;
+    uint64_t BlockSize = 1024ull << superblock->BlockSize;
 
-    uint64_t BlockGroupDescLBA = 1;
+    uint64_t SectorsBlock = BlockSize / pdev->SectorSize();
 
+    uint64_t BlockGroupDescLBA;
     if (BlockSize == 1024) {
-        BlockGroupDescLBA = 2;
+        BlockGroupDescLBA = 2 * SectorsBlock;
+    } else {
+        BlockGroupDescLBA = 1 * SectorsBlock;
     }
 
-    uint64_t BlockGroupDescOff = BlockGroupDescLBA * BlockSize;
+    uint64_t GroupDescSize = (superblock->GroupDescriptorBytes) ? superblock->GroupDescriptorBytes : 32;
+
+    uint64_t BlockGroupDescOff = InodeBlockGroup * GroupDescSize;
+
+    uint64_t DescLBA = BlockGroupDescLBA + (BlockGroupDescOff / pdev->SectorSize());
+    uint64_t DescOff = BlockGroupDescOff % pdev->SectorSize();
+
+    void* buf = _ds->RequestPage();
+    uint64_t bufPhys = (uint64_t)buf;
+    uint64_t bufVirt = bufPhys + 0xFFFFFFFF00000000;
+
+    _ds->MapMemory((void*)bufVirt, (void*)bufPhys, false);
+    memset((void*)bufVirt, 0, 4096);
+
+    uint64_t sectors_in_block = BlockSize / pdev->SectorSize();
+    for (uint64_t i = 0; i < sectors_in_block; i++) {
+        if (!pdev->ReadSector(DescLBA + i, (void*)(bufPhys + (i * pdev->SectorSize())))) {
+            _ds->Println("Failed to read block group descriptor");
+            return nullptr;
+        }
+    }
+
+    BlockGroupDescriptor* GroupDesc = (BlockGroupDescriptor*)(bufVirt + DescOff);
+    uint64_t InodeTableBlock = ((uint64_t)GroupDesc->HighAddrInodeTable << 32) | (uint64_t)GroupDesc->LowAddrInodeTable;
+    uint64_t InodeTableLBA = InodeTableBlock * (BlockSize / pdev->SectorSize());
+    uint64_t InodeOffset = InodeIndex * superblock->InodeSize;
+    uint64_t InodeSize = superblock->InodeSize;
+
+    uint64_t InodeSectors = (InodeSize + pdev->SectorSize() - 1) / pdev->SectorSize();
+    for (uint64_t i = 0; i < InodeSectors; i++) {
+        uint64_t LBA = InodeTableLBA + i;
+        uint64_t OffsetBuf = i * pdev->SectorSize();
+        if (!pdev->ReadSector(LBA, (void*)(bufPhys + OffsetBuf))) {
+            _ds->Println("Failed to read root inode");
+            return nullptr;
+        }
+    }
+    Inode root_inode = *(Inode*)(bufVirt + (InodeOffset % pdev->SectorSize()));
+
+    node->nodeId = 2;
+
+    if (root_inode.meta.Type == 1) {
+        node->type = FsNodeType::Directory;
+    } else if (root_inode.meta.Type == 0) {
+        node->type = FsNodeType::File;
+    } else if (root_inode.meta.Type == 2) {
+        node->type = FsNodeType::Symlink;
+    } else {
+        node->type = FsNodeType::Unknown;
+    }
+
+    node->name = _ds->strdup("/");
+    node->size = (uint64_t)root_inode.UpperFileSize << 32 | root_inode.LowerSize;
+    node->blocks = root_inode.DiskSectorCount;
+
+    /*
+     * These lines (200-211) are GPT Automated Code.
+    */
+    uint16_t perms = 0;
+    if (root_inode.meta.userRead) perms |= 0b100000000;
+    if (root_inode.meta.userWrite) perms |= 0b010000000;
+    if (root_inode.meta.userExec) perms |= 0b001000000;
+
+    if (root_inode.meta.groupRead) perms |= 0b000100000;
+    if (root_inode.meta.groupWrite) perms |= 0b000010000;
+    if (root_inode.meta.groupExec) perms |= 0b000001000;
+
+    if (root_inode.meta.otherRead) perms |= 0b000000100;
+    if (root_inode.meta.otherWrite) perms |= 0b000000010;
+    if (root_inode.meta.otherExec) perms |= 0b000000001;
+
+    node->mode = perms;
+    node->uid = root_inode.UserID;
+    node->gid = root_inode.GroupID;
+
+    node->atime = root_inode.LastAccess;
+    node->mtime = root_inode.LastModification;
+    node->ctime = root_inode.Creation;
 
     pdev->SetMount(EXT4MountID);
-    pdev->SetMountNode(&node);
+    pdev->SetMountNode(node);
+
+    _ds->Println("Mounted EXT4 Filesystem!");
+
+    return node;
 }
 
 bool GenericEXT4Device::Unmount() {

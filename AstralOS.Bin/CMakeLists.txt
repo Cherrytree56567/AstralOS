@@ -30,10 +30,10 @@ add_custom_target(build
     COMMAND cd initrd && find . | cpio -o --format=newc > ../bin/initramfs.efi
     COMMAND cd bin && qemu-img create -f qcow2 ${QCOW2_FILE} ${QCOW2_SIZE}
     COMMAND cd bin && sudo modprobe nbd && sudo qemu-nbd --connect=/dev/nbd0 ${QCOW2_FILE} && sleep 2
-    COMMAND cd bin && sudo parted /dev/nbd0 --script mklabel gpt mkpart primary fat32 1MB ${EFI_SIZE} set 1 esp on mkpart primary ext2 ${EFI_SIZE} 100%
+    COMMAND cd bin && sudo parted /dev/nbd0 --script mklabel gpt mkpart primary fat32 1MB ${EFI_SIZE} set 1 esp on mkpart primary ext4 ${EFI_SIZE} 100%
     COMMAND cd bin && sudo kpartx -a /dev/nbd0 && sleep 2
     COMMAND cd bin && sudo mkfs.vfat -F32 /dev/mapper/nbd0p1
-    COMMAND cd bin && sudo mkfs.ext2 /dev/mapper/nbd0p2
+    COMMAND cd bin && sudo mkfs.ext4 /dev/mapper/nbd0p2
     COMMAND cd bin && sudo mkdir -p ${MOUNT_POINT1} ${MOUNT_POINT2}
     COMMAND cd bin && sudo mount /dev/mapper/nbd0p1 ${MOUNT_POINT1} && sudo mount /dev/mapper/nbd0p2 ${MOUNT_POINT2}
     COMMAND cd bin && sudo cp -r ../../AstralOS.Bootloader/bin/* ${MOUNT_POINT1}/

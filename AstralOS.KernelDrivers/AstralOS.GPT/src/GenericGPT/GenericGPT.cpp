@@ -153,8 +153,6 @@ bool GenericGPTDevice::ReadSector(uint64_t lba, void* buffer) {
     uint64_t end = Partitions[CurrentPartition].EndingLBA;
 
     if ((start + lba) > ((end - start) + 1)) {
-        _ds->Print(to_hstridng((start + lba)));
-        _ds->Print(to_hstridng((end - start)));
         return false;
     }
 
@@ -205,7 +203,7 @@ uint8_t GenericGPTDevice::GetProgIF() {
 }
 
 bool GenericGPTDevice::SetMount(uint64_t FSID) {
-    if (PartitionMountID[CurrentPartition] != 0x0) {
+    if (PartitionMountID[CurrentPartition] != 0xA574A105) {
         return false;
     }
 
