@@ -126,6 +126,10 @@ FsNode* GenericEXT4Device::Mount() {
         return NULL;
     }
 
+    if (isMounted) {
+        return NULL;
+    }
+
     FsNode* node = (FsNode*)_ds->malloc(sizeof(FsNode));
     if (!node) return nullptr;
     memset(node, 0, sizeof(FsNode));
@@ -187,12 +191,14 @@ FsNode* GenericEXT4Device::Mount() {
     Inode root_inode = *(Inode*)(bufVirt + (InodeOffset % pdev->SectorSize()));
 
     node->nodeId = 2;
+    uint16_t raw = *(uint16_t*)&root_inode.meta;
+    _ds->Print(to_hstridng(raw));
 
-    if (root_inode.meta.Type == 1) {
+    if (root_inode.meta.Type == 0x4) {
         node->type = FsNodeType::Directory;
-    } else if (root_inode.meta.Type == 0) {
+    } else if (root_inode.meta.Type == 0x8) {
         node->type = FsNodeType::File;
-    } else if (root_inode.meta.Type == 2) {
+    } else if (root_inode.meta.Type == 0xA) {
         node->type = FsNodeType::Symlink;
     } else {
         node->type = FsNodeType::Unknown;
@@ -229,17 +235,186 @@ FsNode* GenericEXT4Device::Mount() {
     pdev->SetMount(EXT4MountID);
     pdev->SetMountNode(node);
 
+    isMounted = true;
+
     _ds->Println("Mounted EXT4 Filesystem!");
 
     return node;
 }
 
-bool GenericEXT4Device::Unmount() {
-    
+Inode* GenericEXT4Device::ReadInode(uint64_t node) {
+    uint64_t InodeBlockGroup = (node - 1) / superblock->InodesPerBlockGroup;
+    uint64_t InodeIndex = (node - 1) % superblock->InodesPerBlockGroup;
+
+    uint64_t BlockSize = 1024ull << superblock->BlockSize;
+
+    uint64_t SectorsBlock = BlockSize / pdev->SectorSize();
+
+    uint64_t BlockGroupDescLBA;
+    if (BlockSize == 1024) {
+        BlockGroupDescLBA = 2 * SectorsBlock;
+    } else {
+        BlockGroupDescLBA = 1 * SectorsBlock;
+    }
+
+    uint64_t GroupDescSize = (superblock->GroupDescriptorBytes) ? superblock->GroupDescriptorBytes : 32;
+
+    uint64_t BlockGroupDescOff = InodeBlockGroup * GroupDescSize;
+
+    uint64_t DescLBA = BlockGroupDescLBA + (BlockGroupDescOff / pdev->SectorSize());
+    uint64_t DescOff = BlockGroupDescOff % pdev->SectorSize();
+
+    void* buf = _ds->RequestPage();
+    uint64_t bufPhys = (uint64_t)buf;
+    uint64_t bufVirt = bufPhys + 0xFFFFFFFF00000000;
+
+    _ds->MapMemory((void*)bufVirt, (void*)bufPhys, false);
+    memset((void*)bufVirt, 0, 4096);
+
+    uint64_t sectors_in_block = BlockSize / pdev->SectorSize();
+    for (uint64_t i = 0; i < sectors_in_block; i++) {
+        if (!pdev->ReadSector(DescLBA + i, (void*)(bufPhys + (i * pdev->SectorSize())))) {
+            _ds->Println("Failed to read block group descriptor");
+            return nullptr;
+        }
+    }
+
+    BlockGroupDescriptor* GroupDesc = (BlockGroupDescriptor*)(bufVirt + DescOff);
+
+    uint64_t InodeTableBlock = ((uint64_t)GroupDesc->HighAddrInodeTable << 32) | (uint64_t)GroupDesc->LowAddrInodeTable;
+    uint64_t InodeTableLBA = InodeTableBlock * (BlockSize / pdev->SectorSize());
+    uint64_t InodeOffset = InodeIndex * superblock->InodeSize;
+    uint64_t InodeSize = superblock->InodeSize;
+
+    uint64_t InodeSectors = (InodeSize + pdev->SectorSize() - 1) / pdev->SectorSize();
+    for (uint64_t i = 0; i < InodeSectors; i++) {
+        uint64_t LBA = InodeTableLBA + i;
+        uint64_t OffsetBuf = i * pdev->SectorSize();
+        if (!pdev->ReadSector(LBA, (void*)(bufPhys + OffsetBuf))) {
+            _ds->Println("Failed to read root inode");
+            return nullptr;
+        }
+    }
+    return (Inode*)(bufVirt + (InodeOffset % pdev->SectorSize()));
 }
 
-FsNode* GenericEXT4Device::ListDir(FsNode* node) {
-    
+bool GenericEXT4Device::Unmount() {
+    if (!isMounted) {
+        return false;
+    }
+    if (pdev->SetMount(0xA574A105)) { // Unmounted Code
+        return false;
+    }
+
+    FsNode fsn;
+    if (pdev->SetMountNode(&fsn)) {
+        return false;
+    }
+    return true;
+}
+
+FsNode** GenericEXT4Device::ListDir(FsNode* node, size_t* outCount) {
+    if (!isMounted) {
+        return nullptr;
+    }
+    if (node->type != FsNodeType::Directory) {
+        return nullptr;
+    }
+
+    Inode dir_inode = *ReadInode(node->nodeId);
+
+    FsNode** nodes = nullptr;
+    size_t count = 0;
+    size_t capacity = 0;
+
+    uint64_t blockSize = 1024ull << superblock->BlockSize;
+    void* buf = _ds->RequestPage();
+    uint64_t bufPhys = (uint64_t)buf;
+    uint64_t bufVirt = bufPhys + 0xFFFFFFFF00000000;
+
+    _ds->MapMemory((void*)bufVirt, (void*)bufPhys, false);
+
+    for (uint64_t i = 0; i < 15; i++) {
+        if (dir_inode.DBP[i] == 0) continue;
+        memset((void*)bufVirt, 0, 4096);
+        uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
+
+        for (uint64_t s = 0; s < sectorsPerBlock; s++) {
+            uint64_t lba = dir_inode.DBP[i] * sectorsPerBlock + s;
+            if (!pdev->ReadSector(lba, (void*)((uint64_t)bufPhys + s * pdev->SectorSize()))) {
+                _ds->Println("Failed to read sector");
+                return nullptr;
+            }
+        }
+
+        uint64_t offset = 0;
+        while (offset < blockSize) {
+            DirectoryEntry* entry = (DirectoryEntry*)(bufVirt + offset);
+            if (entry->Inode == 0) break;
+            if (entry->TotalSize < sizeof(DirectoryEntry)) break;
+            if (entry->Type != 0x2) break;
+
+            char nameBuf[256] = {0};
+
+            if (entry->NameLen == 0 || entry->NameLen >= sizeof(nameBuf)) break;
+
+            memcpy(nameBuf, entry->Name, entry->NameLen);
+            nameBuf[entry->NameLen] = '\0';
+
+            if (count >= capacity) {
+                size_t newCap = capacity == 0 ? 4 : capacity * 2;
+                FsNode** tmp = (FsNode**)_ds->malloc(newCap * sizeof(FsNode*));
+                if (!tmp) break;
+                if (nodes) {
+                    memcpy(tmp, nodes, count * sizeof(FsNode*));
+                    _ds->free(nodes);
+                }
+                nodes = tmp;
+                capacity = newCap;
+            }
+
+            FsNode* child = (FsNode*)_ds->malloc(sizeof(FsNode));
+            if (!child) break;
+            memset(child, 0, sizeof(FsNode));
+            child->nodeId = entry->Inode;
+            child->type = FsNodeType::Directory;
+            child->name = _ds->strdup(nameBuf);
+
+            Inode* childInode = ReadInode(entry->Inode);
+            if (childInode) {
+                child->size = childInode->LowerSize | ((uint64_t)childInode->UpperFileSize << 32);
+                child->blocks = childInode->DiskSectorCount;
+
+                uint16_t perms = 0;
+                if (childInode->meta.userRead) perms |= 0b100000000;
+                if (childInode->meta.userWrite) perms |= 0b010000000;
+                if (childInode->meta.userExec) perms |= 0b001000000;
+
+                if (childInode->meta.groupRead) perms |= 0b000100000;
+                if (childInode->meta.groupWrite) perms |= 0b000010000;
+                if (childInode->meta.groupExec) perms |= 0b000001000;
+
+                if (childInode->meta.otherRead) perms |= 0b000000100;
+                if (childInode->meta.otherWrite) perms |= 0b000000010;
+                if (childInode->meta.otherExec) perms |= 0b000000001;
+
+                child->mode = perms;
+                child->uid  = childInode->UserID;
+                child->gid  = childInode->GroupID;
+
+                child->atime = childInode->LastAccess;
+                child->mtime = childInode->LastModification;
+                child->ctime = childInode->Creation;
+            }
+
+            nodes[count++] = child;
+
+            offset += entry->TotalSize;
+        }
+    }
+
+    *outCount = count;
+    return nodes;
 }
 
 FsNode* GenericEXT4Device::FindDir(FsNode* node, const char* name) {

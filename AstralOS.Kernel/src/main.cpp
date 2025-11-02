@@ -379,7 +379,60 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
             if (!bldev->GetParentLayer()->SetPartition(i)) continue;
             if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
             if (bldev->Support()) {
-                bldev->Mount();
+                FsNode* fsN = bldev->Mount();
+
+                size_t count = 0;
+                FsNode** nodes = bldev->ListDir(fsN, &count);
+
+                /*
+                 * I couldn't be bothered to make a whole
+                 * for loop to print everything, so I just
+                 * asked GPT. At least it works tho, unlike
+                 * Windows 11 25H2.
+                */
+                for (size_t i = 0; i < count; i++) {
+                    FsNode* node = nodes[i];
+                    if (!node) continue;
+
+                    kernelServices.basicConsole.Print("Node ID: ");
+                    kernelServices.basicConsole.Println(to_hstring(node->nodeId));
+
+                    kernelServices.basicConsole.Print("Name: ");
+                    kernelServices.basicConsole.Println(node->name ? node->name : "(null)");
+
+                    kernelServices.basicConsole.Print("Type: ");
+                    switch (node->type) {
+                        case FsNodeType::File: kernelServices.basicConsole.Println("File"); break;
+                        case FsNodeType::Directory: kernelServices.basicConsole.Println("Directory"); break;
+                        default: kernelServices.basicConsole.Println("Unknown"); break;
+                    }
+
+                    kernelServices.basicConsole.Print("Size: ");
+                    kernelServices.basicConsole.Println(to_hstring(node->size));
+
+                    kernelServices.basicConsole.Print("Blocks: ");
+                    kernelServices.basicConsole.Println(to_hstring(node->blocks));
+
+                    kernelServices.basicConsole.Print("Mode: ");
+                    kernelServices.basicConsole.Println(to_hstring(node->mode));
+
+                    kernelServices.basicConsole.Print("UID: ");
+                    kernelServices.basicConsole.Println(to_hstring(node->uid));
+
+                    kernelServices.basicConsole.Print("GID: ");
+                    kernelServices.basicConsole.Println(to_hstring(node->gid));
+
+                    kernelServices.basicConsole.Print("ATime: ");
+                    kernelServices.basicConsole.Println(to_hstring(node->atime));
+
+                    kernelServices.basicConsole.Print("MTime: ");
+                    kernelServices.basicConsole.Println(to_hstring(node->mtime));
+
+                    kernelServices.basicConsole.Print("CTime: ");
+                    kernelServices.basicConsole.Println(to_hstring(node->ctime));
+
+                    kernelServices.basicConsole.Println("-------------------------");
+                }
             }
         }
         

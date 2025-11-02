@@ -152,7 +152,7 @@ struct EXT4_Superblock {
     uint16_t EncodingFlags; // Filename charset encoding flags. 
     uint8_t Padding[380]; // Padding.
     uint32_t Checksum; // Checksum of the superblock. 
-};
+} __attribute__((packed));
 
 enum RequiredFeatures {
     Compression = 0x0001, // Compression is used. 
@@ -216,7 +216,7 @@ struct FlexBlockGroupInfo {
     uint64_t Atomic64FreeClusters; // Atomic 64 bit free clusters.
     uint32_t AtomicFreeInodes; // Atomic free inodes. 
     uint32_t AtomicUsedDirs; // Atomic used directories. 
-};
+} __attribute__((packed));
 
 struct BlockGroupDescriptor {
     uint32_t LowAddrBlockBitmap; // Low 32bits of block address of block usage bitmap. 
@@ -246,7 +246,7 @@ struct BlockGroupDescriptor {
     uint16_t HighChkBlockBitmap; // High 16-bits of checksum of the block usage bitmap.
     uint16_t HighChkInodeBitmap; // High 16-bits of checksum of the inode usage bitmap
     uint32_t Reserved; // Reserved as of Linux 5.9rc3. 
-};
+} __attribute__((packed));
 
 enum BlockGroupFlags {
     InodeUnused = 0x0001, // Block group's inode bitmap/table is unused.
@@ -261,24 +261,23 @@ struct OSVal2 {
     uint16_t HighUserID; // High 16 bits of 32-bit User ID 
     uint16_t HighGroupID; // High 16 bits of 32-bit Group ID
     uint32_t Christmas; // Reserved on Linux, Christmas in ASCII
-};
+} __attribute__((packed));
 
 struct Metadata {
-    uint16_t Type : 3;
-    uint16_t userRead : 1;
-    uint16_t userWrite : 1;
-    uint16_t userExec : 1;
-    uint16_t groupRead : 1;
-    uint16_t groupWrite : 1;
-    uint16_t groupExec : 1;
-    uint16_t otherRead : 1;
-    uint16_t otherWrite : 1;
     uint16_t otherExec : 1;
+    uint16_t otherWrite : 1;
+    uint16_t otherRead : 1;
+    uint16_t groupExec : 1;
+    uint16_t groupWrite : 1;
+    uint16_t groupRead : 1;
+    uint16_t userExec : 1;
+    uint16_t userWrite : 1;
+    uint16_t userRead : 1;
     uint16_t stickyBit : 1;
-    uint16_t setUserID : 1;
     uint16_t setGroupID : 1;
-    uint16_t reserved : 2;
-};
+    uint16_t setUserID : 1;
+    uint16_t Type : 4;
+} __attribute__((packed));
 
 struct Inode {
     Metadata meta; // Type and Permissions
@@ -293,27 +292,13 @@ struct Inode {
     uint32_t DiskSectorCount; // Count of disk sectors (not Ext2 blocks) in use by this inode, not counting the actual inode structure nor directory entries linking to the inode. 
     uint32_t Flags; // Flags
     uint32_t OSVal1; // Operating System Specific value #1
-    uint32_t DBP0; // Direct Block Pointer 0
-    uint32_t DBP1; // Direct Block Pointer 1
-    uint32_t DBP2; // Direct Block Pointer 2
-    uint32_t DBP3; // Direct Block Pointer 3
-    uint32_t DBP4; // Direct Block Pointer 4
-    uint32_t DBP5; // Direct Block Pointer 5
-    uint32_t DBP6; // Direct Block Pointer 6
-    uint32_t DBP7; // Direct Block Pointer 7
-    uint32_t DBP8; // Direct Block Pointer 8
-    uint32_t DBP9; // Direct Block Pointer 9
-    uint32_t DBP10; // Direct Block Pointer 10
-    uint32_t DBP11; // Direct Block Pointer 11
-    uint32_t SinglyIndirectBP; // Singly Indirect Block Pointer (Points to a block that is a list of block pointers to data) 
-    uint32_t DoubleIndirectBP; // Doubly Indirect Block Pointer (Points to a block that is a list of block pointers to Singly Indirect Blocks) 
-    uint32_t TriplyIndirectBP; // Triply Indirect Block Pointer (Points to a block that is a list of block pointers to Doubly Indirect Blocks) 
+    uint32_t DBP[15]; // Direct Block Pointer
     uint32_t Generation; // Generation number (Primarily used for NFS) 
     uint32_t ExtendedAttributeBlock; // In Ext2 version 0, this field is reserved. In version >= 1, Extended attribute block (File ACL). 
     uint32_t UpperFileSize; // In Ext2 version 0, this field is reserved. In version >= 1, Upper 32 bits of file size (if feature bit set) if it's a file, Directory ACL if it's a directory 
     uint32_t FragmentBlock; // Block address of fragment 
     OSVal2 osval2; // Operating System Specific Value #2
-};
+} __attribute__((packed));
 
 namespace InodeTypeEnum {
     enum InodeType {
@@ -362,7 +347,7 @@ struct DirectoryEntry {
     uint8_t NameLen; // Name Length least-significant 8 bits 
     uint8_t Type; // Type indicator (only if the feature bit for "directory entries have file type byte" is set, else this is the most-significant 8 bits of the Name Length) 
     char Name[]; // Size is NameLen, Name characters 
-};
+} __attribute__((packed));
 
 enum DirectoryEntryType {
     DETUnknown = 0,
@@ -385,13 +370,13 @@ struct MMP {
     uint16_t Padding; // Padding. 
     uint8_t Padding1[904]; // Padding. 
     uint32_t Checksum; // Checksum (crc32c(UUID+MMP Block number)) 
-};
+} __attribute__((packed));
 
 struct Journal {
     uint32_t Signature; // Magic signature (0xc03b3998) 
     uint32_t BlockType; // Block Type
     uint32_t Transaction; // Journal transaction for this block.
-};
+} __attribute__((packed));
 
 struct JournalSuperBlock {
     Journal header; // Journal header
@@ -414,7 +399,7 @@ struct JournalSuperBlock {
     uint8_t Padding1[168]; // Padding. 
     uint32_t Checksum; // Checksum of the journal superblock. 
     uint8_t Users[16 * 48]; // From Kernel.ORG. ids of all file systems sharing the log. e2fsprogs/Linux don’t allow shared external journals, but I imagine Lustre (or ocfs2?), which use the jbd2 code, might.
-};
+} __attribute__((packed));
 
 class GenericEXT4 : public FilesystemDriverFactory {
 public:
@@ -430,7 +415,7 @@ public:
     virtual FsNode* Mount() override;
     virtual bool Unmount() override;
 
-    virtual FsNode* ListDir(FsNode* node) override;
+    virtual FsNode** ListDir(FsNode* node, size_t* outCount) override;
     virtual FsNode* FindDir(FsNode* node, const char* name) override;
     virtual FsNode* CreateDir(FsNode* parent, const char* name) override;
     virtual bool Remove(FsNode* node) override;
@@ -452,9 +437,12 @@ public:
     virtual const char* DriverName() const override;
     virtual PartitionDevice* GetParentLayer() override;
 private:
+    Inode* ReadInode(uint64_t node);
+
 	PartitionDevice* pdev;
 	DriverServices* _ds = nullptr;
     DeviceKey devKey;
 
     EXT4_Superblock* superblock;
+    bool isMounted;
 };

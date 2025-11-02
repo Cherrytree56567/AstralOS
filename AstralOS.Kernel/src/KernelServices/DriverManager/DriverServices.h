@@ -116,7 +116,7 @@ public:
     virtual FsNode* Mount() = 0;
     virtual bool Unmount() = 0;
 
-    virtual FsNode* ListDir(FsNode* node) = 0;
+    virtual FsNode** ListDir(FsNode* node, size_t* outCount) = 0;
     virtual FsNode* FindDir(FsNode* node, const char* name) = 0;
     virtual FsNode* CreateDir(FsNode* parent, const char* name) = 0;
     virtual bool Remove(FsNode* node) = 0;
