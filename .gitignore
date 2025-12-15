@@ -19,3 +19,6 @@ CMakePresets.json
 emsdk
 **/node_modules/
 node_modules
+*.o
+*.efi
+*.elf
