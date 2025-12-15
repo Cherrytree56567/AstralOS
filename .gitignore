@@ -20,5 +20,6 @@ emsdk
 **/node_modules/
 node_modules
 *.o
-*.efi
+**/initramfs.efi
+**/BOOTX64.EFI
 *.elf
