@@ -26,6 +26,7 @@ add_custom_target(build
     COMMAND mv -f load-rootfs.js src/image
     COMMAND sed -i '114i Module.FS.mkdir("/writableh"); const varsData = Module.FS.readFile("/tmp/AstralOS.qcow2", { encoding: "binary" }); Module.FS.writeFile("/writableh/AstralOS.qcow2", varsData, { encoding: "binary" });' src/image/load-rootfs.js
     COMMAND npm run build
+    COMMAND cp dist AstralOS
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Building Website"
 )
