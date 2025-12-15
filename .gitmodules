@@ -1,3 +1,0 @@
-[submodule "AstralOS.Bootloader/gnu-efi"]
-	path = AstralOS.Bootloader/gnu-efi
-	url = https://github.com/ncroxon/gnu-efi.git
