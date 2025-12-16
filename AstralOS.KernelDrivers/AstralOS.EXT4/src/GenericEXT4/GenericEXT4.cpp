@@ -352,7 +352,7 @@ FsNode** GenericEXT4Device::ListDir(FsNode* node, size_t* outCount) {
             DirectoryEntry* entry = (DirectoryEntry*)(bufVirt + offset);
             if (entry->Inode == 0) break;
             if (entry->TotalSize < sizeof(DirectoryEntry)) break;
-            if (entry->Type != 0x2) break;
+            if (entry->Type != 0x2 && entry->Type != 0x1) break;
 
             char nameBuf[256] = {0};
 
@@ -377,7 +377,16 @@ FsNode** GenericEXT4Device::ListDir(FsNode* node, size_t* outCount) {
             if (!child) break;
             memset(child, 0, sizeof(FsNode));
             child->nodeId = entry->Inode;
-            child->type = FsNodeType::Directory;
+            switch (entry->Type) {
+                case 0x1:
+                    child->type = FsNodeType::File;
+                    break;
+                case 0x2:
+                    child->type = FsNodeType::Directory;
+                    break;
+                default:
+                    break;
+            }
             child->name = _ds->strdup(nameBuf);
 
             Inode* childInode = ReadInode(entry->Inode);
@@ -417,8 +426,136 @@ FsNode** GenericEXT4Device::ListDir(FsNode* node, size_t* outCount) {
     return nodes;
 }
 
+size_t strlen(const char *str) {
+    size_t count = 0;
+    while (str[count] != '\0') {
+        count++;
+    }
+    return count;
+}
+
+char* strchr(const char* s, int c) {
+    while (*s) {
+        if (*s == (char)c)
+            return (char*)s;
+        s++;
+    }
+
+    if (c == '\0')
+        return (char*)s;
+
+    return NULL;
+}
+
+char* strtok(char* str, const char* delim) {
+    static char* next = NULL;
+
+    if (str)
+        next = str;
+
+    if (!next)
+        return NULL;
+        
+    char* start = next;
+    while (*start && strchr(delim, *start))
+        start++;
+
+    if (*start == '\0') {
+        next = NULL;
+        return NULL;
+    }
+
+    char* end = start;
+    while (*end && !strchr(delim, *end))
+        end++;
+
+    if (*end) {
+        *end = '\0';
+        next = end + 1;
+    } else {
+        next = NULL;
+    }
+
+    return start;
+}
+
+int strcmp(const char* a, const char* b) {
+    while (*a && (*a == *b)) {
+        a++;
+        b++;
+    }
+    return (unsigned char)*a - (unsigned char)*b;
+}
+
+/*
+ * Found on Stack Overflow:
+ * https://stackoverflow.com/questions/9210528/split-string-with-delimiters-in-c
+*/
+char** str_split(DriverServices* _ds, char* a_str, const char a_delim, size_t* size) {
+    char** result    = 0;
+    size_t count     = 0;
+    char* tmp        = a_str;
+    char* last_comma = 0;
+    char delim[2];
+    delim[0] = a_delim;
+    delim[1] = 0;
+
+    /* Count how many elements will be extracted. */
+    while (*tmp)
+    {
+        if (a_delim == *tmp)
+        {
+            count++;
+            last_comma = tmp;
+        }
+        tmp++;
+    }
+
+    /* Add space for trailing token. */
+    count += last_comma < (a_str + strlen(a_str) - 1);
+
+    /* Add space for terminating null string so caller
+       knows where the list of returned strings ends. */
+    count++;
+
+    result = (char**)_ds->malloc(sizeof(char*) * count);
+
+    if (result)
+    {
+        size_t idx  = 0;
+        char* token = strtok(a_str, delim);
+
+        while (token)
+        {
+            *(result + idx++) = _ds->strdup(token);
+            token = strtok(0, delim);
+        }
+        *(result + idx) = 0;
+    }
+    size = &count;
+
+    return result;
+}
+
 FsNode* GenericEXT4Device::FindDir(FsNode* node, const char* name) {
-    
+    size_t count = 0;
+    FsNode** contents = ListDir(node, &count);
+
+    for (int x = 0; x < count; x++) {
+        if (strcmp(contents[x]->name, name) == 0) {
+            return contents[x];
+        }
+
+        if (strcmp(contents[x]->name, ".") == 0) continue;
+        if (strcmp(contents[x]->name, "..") == 0) continue;
+
+        if (contents[x]->type == FsNodeType::Directory) {
+            FsNode* fsn = FindDir(contents[x], name);
+            if (fsn) return fsn;
+        }
+    }
+    _ds->free(contents);
+    return NULL;
 }
 
 FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {

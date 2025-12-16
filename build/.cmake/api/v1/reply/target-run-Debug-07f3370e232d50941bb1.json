@@ -23,12 +23,6 @@
 			}
 		]
 	},
-	"dependencies" : 
-	[
-		{
-			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
-		}
-	],
 	"id" : "run::@6890427a1f51a3e7e1df",
 	"name" : "run",
 	"paths" : 
@@ -64,7 +58,7 @@
 		{
 			"backtrace" : 0,
 			"isGenerated" : true,
-			"path" : "build/CMakeFiles/91319d75bf617c9f458e41ee8e4b7dd9/run.rule",
+			"path" : "build/CMakeFiles/run.rule",
 			"sourceGroupIndex" : 1
 		}
 	],

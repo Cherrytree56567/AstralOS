@@ -387,8 +387,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
                 /*
                  * I couldn't be bothered to make a whole
                  * for loop to print everything, so I just
-                 * asked GPT. At least it works tho, unlike
-                 * Windows 11 25H2.
+                 * asked GPT.
                 */
                 for (size_t i = 0; i < count; i++) {
                     FsNode* node = nodes[i];
@@ -432,6 +431,13 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
                     kernelServices.basicConsole.Println(to_hstring(node->ctime));
 
                     kernelServices.basicConsole.Println("-------------------------");
+                }
+
+                FsNode* fself = bldev->FindDir(fsN, "kernel.elf");
+                if (fself) {
+                    kernelServices.basicConsole.Println(fself->name);
+                } else {
+                    kernelServices.basicConsole.Println("Not Found: kernel.elf");
                 }
             }
         }
