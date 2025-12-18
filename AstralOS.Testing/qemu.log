@@ -5,20 +5,20 @@ EDK II
 UEFI v2.70 (EDK II, 0x00010000)
 [1m[33m[40mMapping table[0m[37m[40m
 [1m[33m[40m      FS0:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40mHD0a65535a1:;BLK1:
-          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(1,GPT,B171A8C9-B0FD-4C80-ABD4-23A77F5AF570,0x800,0x2F000)
+          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(1,GPT,D8739A82-8B83-40F8-A91B-445BE1C9171A,0x800,0x2F000)
 [1m[33m[40m     BLK0:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
           PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)
 [1m[33m[40m     BLK3:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
           PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x2,0xFFFF,0x0)
 [1m[33m[40m     BLK2:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
-          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(2,GPT,1B77AF15-288B-46DA-848D-CD979E1BDB64,0x2F800,0x13D0000)
-[15;01HPress [1m[37m[40mESC[0m[37m[40m in 5 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 4 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.
+          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(2,GPT,71287035-EC01-40F4-9392-73385E8BDA79,0x2F800,0x13D0000)
+[15;01HPress [1m[37m[40mESC[0m[37m[40m in 5 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.
 [16;01H[1m[33m[40mShell> [0m[37m[40m[16;08Hf[16;09H[16;09Hs[16;10H[16;10H0[16;11H[16;11H:[16;12H[16;12H
-[17;01H[1m[33m[40mFS0:\> [0m[37m[40m[17;08Hc[17;09H[17;09Hd[17;10H[17;10H [17;11H[17;11He[17;12H[17;12Hf[17;13H[17;13Hi[17;14H[17;14H/[17;15H[17;15Hb[17;16H[17;16Hb[17;17H[17;17Ho[17;18H[17;17H [17;17H[17;16H [17;16H[17;16Ho[17;17H[17;17Ho[17;18H[17;18Ht[17;19H[17;19H
+[17;01H[1m[33m[40mFS0:\> [0m[37m[40m[17;08Hc[17;09H[17;09Hd[17;10H[17;10H [17;11H[17;11He[17;12H[17;12Hf[17;13H[17;13Hi[17;14H[17;14H/[17;15H[17;15Hb[17;16H[17;16Ho[17;17H[17;17Ho[17;18H[17;18Ht[17;19H[17;19H
 [18;01H[1m[33m[40mFS0:\efi\boot\> [0m[37m[40m[18;17HBOOTX64.EFI[18;28H[18;28H
 Found ACPI 2.0 RSDP at: 0x3FB7E014
 Volume label is ''
-Offset: 0x1000Addr: 0x1000Offset: 0x11000Addr: 0x11000Offset: 0x30000Addr: 0x30000Offset: 0x36000Addr: 0x36000initramfs loaded at 0x3E38C018 (135168 bytes)
+Offset: 0x1000Addr: 0x1000Offset: 0x11000Addr: 0x11000Offset: 0x30000Addr: 0x30000Offset: 0x36000Addr: 0x36000initramfs loaded at 0x3E38A018 (143360 bytes)
 GOP located
 ss
 Handles freed
@@ -77,7 +77,7 @@ Drive Buffer LBA5044: .          
 Drive Buffer LBA5045: MZ
 Drive Buffer LBA5046: 
 Drive Buffer LBA5042: EFI        
-Drive Buffer LBA5043: Hello World!
+Drive Buffer LBA5043: .          
 Drive Buffer LBA5044: .          
 Found Partition Driver: Generic GPT Driver
 Model: 
@@ -93,29 +93,30 @@ FS Signature: 0x0
 FS Signature: 0xEF53
 FS Signature: 0xEF53
 0x41EDMounted EXT4 Filesystem!
+Free Inodes Found: 0x1FB5
 Node ID: 0x2
 Name: .
 Type: Directory
-Size: 0x1000
-Blocks: 0x8
+Size: 0x2000
+Blocks: 0x10
 Mode: 0x1ED
 UID: 0x0
 GID: 0x0
-ATime: 0x69414557
-MTime: 0x69414558
-CTime: 0x69414558
+ATime: 0x6943C554
+MTime: 0x6943C554
+CTime: 0x6943C6D9
 -------------------------
 Node ID: 0x2
 Name: ..
 Type: Directory
-Size: 0x1000
-Blocks: 0x8
+Size: 0x2000
+Blocks: 0x10
 Mode: 0x1ED
 UID: 0x0
 GID: 0x0
-ATime: 0x69414557
-MTime: 0x69414558
-CTime: 0x69414558
+ATime: 0x6943C554
+MTime: 0x6943C554
+CTime: 0x6943C6D9
 -------------------------
 Node ID: 0xB
 Name: lost+found
@@ -125,9 +126,9 @@ Blocks: 0x0
 Mode: 0x0
 UID: 0x0
 GID: 0x0
-ATime: 0x69414557
-MTime: 0x69414557
-CTime: 0x69414557
+ATime: 0x6943C6D8
+MTime: 0x6943C6D8
+CTime: 0x6943C6D8
 -------------------------
 Node ID: 0x1FC01
 Name: AstralOS
@@ -137,18 +138,22 @@ Blocks: 0x8
 Mode: 0x1ED
 UID: 0x0
 GID: 0x0
-ATime: 0x69414558
-MTime: 0x69414558
-CTime: 0x69414558
+ATime: 0x6943C6D9
+MTime: 0x6943C6D9
+CTime: 0x6943C6D9
 -------------------------
-.
-..
-lost+found
-AstralOS
-.
-..
-System64
-.
-..
-kernel.elf
-kernel.elf
+Node ID: 0xC
+Name: TestDir
+Type: Directory
+Size: 0x2000
+Blocks: 0x10
+Mode: 0x1ED
+UID: 0x0
+GID: 0x0
+ATime: 0x6943C554
+MTime: 0x6943C554
+CTime: 0x6943C6D9
+-------------------------
+Found: kernel.elf
+Key press!
+Key press!

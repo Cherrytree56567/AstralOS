@@ -260,7 +260,7 @@ struct OSVal2 {
     uint16_t EasterEgg; // Reserved On Linux, but an easter egg on AstralOS
     uint16_t HighUserID; // High 16 bits of 32-bit User ID 
     uint16_t HighGroupID; // High 16 bits of 32-bit Group ID
-    uint32_t Christmas; // Reserved on Linux, Christmas in ASCII
+    uint32_t EasterEggChristmas; // Reserved on Linux, Christmas in ASCII
 } __attribute__((packed));
 
 struct Metadata {
@@ -438,11 +438,15 @@ public:
     virtual PartitionDevice* GetParentLayer() override;
 private:
     Inode* ReadInode(uint64_t node);
+    uint32_t AllocateInode();
+    uint32_t AllocateBlock();
+    BlockGroupDescriptor* ReadGroupDesc(uint32_t group);
 
 	PartitionDevice* pdev;
 	DriverServices* _ds = nullptr;
     DeviceKey devKey;
 
     EXT4_Superblock* superblock;
+    BlockGroupDescriptor** GroupDescs;
     bool isMounted;
 };

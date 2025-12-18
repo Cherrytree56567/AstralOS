@@ -319,9 +319,10 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
          * re copies the qcow2 file), it will show
          * `Hello Wo.rld` instead of the boot dir.
         */
+        /*
         if (!bldev->WriteSector(5043, (void*)buf_phys))  {
-            ks->basicConsole.Println("Failed Reading Sector");
-        }
+            ks->basicConsole.Println("Failed Writing Sector");
+        }*/
 
         for (uint64_t lba = 5042; lba < 5045; lba++) {
             memset((void*)buf_virt, 0, sectorSize);
@@ -382,6 +383,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
                 FsNode* fsN = bldev->Mount();
 
                 size_t count = 0;
+                FsNode* TestDir = bldev->CreateDir(fsN, "TestDir");
                 FsNode** nodes = bldev->ListDir(fsN, &count);
 
                 /*
@@ -435,6 +437,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
                 FsNode* fself = bldev->FindDir(fsN, "kernel.elf");
                 if (fself) {
+                    kernelServices.basicConsole.Print("Found: ");
                     kernelServices.basicConsole.Println(fself->name);
                 } else {
                     kernelServices.basicConsole.Println("Not Found: kernel.elf");

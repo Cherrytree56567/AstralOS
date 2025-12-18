@@ -87,3 +87,11 @@ I thought the demo was a bit too simple, so I added this cool react bits backgro
 ![Web1](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/Web1.png?raw=true)
 
 **Total time spent: 1h 50m 11s**
+
+# December 17th: Added Find Dir Func
+
+Currently I've been working on the EXT4 Driver, one function at a time. Im still working on the CreateDir function, but here is the FindDir (Find in Directory) function I made.
+
+![Web1](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/Web1.png?raw=true)
+
+**Total time spent: 2h**
