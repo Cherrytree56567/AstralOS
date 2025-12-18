@@ -92,6 +92,14 @@ I thought the demo was a bit too simple, so I added this cool react bits backgro
 
 Currently I've been working on the EXT4 Driver, one function at a time. Im still working on the CreateDir function, but here is the FindDir (Find in Directory) function I made.
 
-![Web1](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/Web1.png?raw=true)
+![FindDir](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/FindDir.png?raw=true)
 
 **Total time spent: 2h**
+
+# December 18th: Added Create Dir Func - Part 1
+
+Ive gotten the Create Dir Func to work but it is very very buggy and Ill probably fix it tmrw. You can't even boot the image after it modifies the fs once.
+
+![CreateDir](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/CreateDir.png?raw=true)
+
+**Total time spent: 2h 6m**
