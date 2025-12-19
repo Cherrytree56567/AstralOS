@@ -103,3 +103,11 @@ Ive gotten the Create Dir Func to work but it is very very buggy and Ill probabl
 ![CreateDir](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/CreateDir.png?raw=true)
 
 **Total time spent: 2h 6m**
+
+# December 19th: CreateDir Func is Cooked
+
+tbh I can't even bother to get this function working, and there is barely any info online or in the OSDev Wiki to understand how to create a dir in EXT4. Right now, it just creates a dir, but if you go inside, there are 2 of the dirs you just created and all the dirs in the parent.
+
+![CreateDir2](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/CreateDir2.png?raw=true)
+
+**Total time spent: 2h 26m**

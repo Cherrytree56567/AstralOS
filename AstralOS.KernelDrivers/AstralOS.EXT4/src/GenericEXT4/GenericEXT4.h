@@ -438,6 +438,7 @@ public:
     virtual PartitionDevice* GetParentLayer() override;
 private:
     Inode* ReadInode(uint64_t node);
+    void WriteInode(uint32_t inodeNum, Inode* ind);
     uint32_t AllocateInode();
     uint32_t AllocateBlock();
     BlockGroupDescriptor* ReadGroupDesc(uint32_t group);
