@@ -43,7 +43,7 @@ struct EXT4_Superblock {
     uint32_t ReservedBlocks; // Number of reserved Blocks
     uint32_t UnallocBlocks; // Total Number of Unallocated Blocks
     uint32_t UnallocInodes; // Total Number of Unallocated Inodes
-    uint32_t SuperblockBlock; // Block number of the block containing the superblock
+    uint32_t FirstDataBlock; // Block number of the block containing the superblock
     uint32_t BlockSize; // Block size is 1024 << BlockSize
     uint32_t FragmentSize; // Fragment size is 1024 << FragmentSize
     uint32_t BlocksPerBlockGroup; // Number of blocks in each block group 
@@ -439,7 +439,7 @@ public:
 private:
     Inode* ReadInode(uint64_t node);
     void WriteInode(uint32_t inodeNum, Inode* ind);
-    uint32_t AllocateInode();
+    uint32_t AllocateInode(FsNode* parent);
     uint32_t AllocateBlock();
     BlockGroupDescriptor* ReadGroupDesc(uint32_t group);
 

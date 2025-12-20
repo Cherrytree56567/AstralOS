@@ -19,6 +19,18 @@ const char* to_hstridng(uint64_t value) {
     return ptr;
 }
 
+int memcmp(const void* a, const void* b, size_t n) {
+    const unsigned char* p1 = (const unsigned char*)a;
+    const unsigned char* p2 = (const unsigned char*)b;
+
+    for (size_t i = 0; i < n; i++) {
+        if (p1[i] != p2[i])
+            return (int)p1[i] - (int)p2[i];
+    }
+
+    return 0;
+}
+
 constexpr uint64_t ceil(uint64_t a, uint64_t b) {
     return (a + b - 1) / b;
 }
@@ -564,241 +576,12 @@ FsNode* GenericEXT4Device::FindDir(FsNode* node, const char* name) {
  * 11. Create and Pass the FsNode*
 */
 FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
-    if (!parent || parent->type != FsNodeType::Directory) {
-        return nullptr;
-    }
-
-    uint32_t inodeNum = AllocateInode();
-    if (!inodeNum) {
-        _ds->Println("Failed to Allocate Inode");
-        return nullptr;
-    }
-
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
-    uint64_t sectorSize = pdev->SectorSize();
-    uint64_t sectorsPerBlock = blockSize / sectorSize;
-
-    uint32_t now = 0x6943C554; // TODO: currentTime();
-
-    Inode newInode;
-    memset(&newInode, 0, sizeof(Inode));
-    newInode.meta.Type = 0x4;
-    newInode.meta.userRead = 1;
-    newInode.meta.userWrite = 1;
-    newInode.meta.userExec = 1;
-
-    newInode.meta.groupRead = 1;
-    newInode.meta.groupWrite = 0;
-    newInode.meta.groupExec = 1;
-
-    newInode.meta.otherRead = 1;
-    newInode.meta.otherWrite = 0;
-    newInode.meta.otherExec = 1;
-    newInode.UserID = 0;
-    newInode.GroupID = 0;
-
-    newInode.Creation = now;
-    newInode.LastAccess = now;
-    newInode.LastModification = now;
-    newInode.Deletion = 0;
-
-    newInode.HardLinksCount = 2;
-
-    uint32_t dirBlock = AllocateBlock();
-    if (!dirBlock) {
-        _ds->Print("Failed to Allocate Block");
-        return nullptr;
-    }
-
-    newInode.UpperFileSize = 0;
-    newInode.DBP[0] = dirBlock;
-    newInode.LowerSize = blockSize;
-    newInode.DiskSectorCount = sectorsPerBlock;
-
-    newInode.Flags = 0;
-    OSVal2 osv;
-    osv.EasterEgg = 0xA574A105;
-    osv.EasterEggChristmas = 0xC671573A5;
-    osv.FragSize = 1024ull << superblock->FragmentSize;
-    osv.FragNum = 0; // Not Used
-    osv.HighGroupID = 0;
-    osv.HighUserID = 0;
-    newInode.osval2 = osv;
-    newInode.Generation = 0;
-    newInode.ExtendedAttributeBlock = 0;
-
-    WriteInode(inodeNum, &newInode);
-
-    void* bufPhys = _ds->RequestPage();
-    uint64_t bufVirt = (uint64_t)bufPhys + 0xFFFFFFFF00000000;
-    _ds->MapMemory((void*)bufVirt, bufPhys, false);
-    memset((void*)bufVirt, 0, 4096);
-
-    DirectoryEntry* curr = (DirectoryEntry*)bufVirt;
-    curr->Inode = inodeNum;
-    curr->TotalSize = (uint16_t)((8 + 1 + 3) & ~3);
-    curr->NameLen = 1;
-    curr->Type = 2;
-    curr->Name[0] = '.';
-
-    DirectoryEntry* par = (DirectoryEntry*)((uint8_t*)bufVirt + curr->TotalSize);
-    par->Inode = parent->nodeId;
-    par->TotalSize = blockSize - curr->TotalSize;
-    par->NameLen = 2;
-    par->Type = 2;
-    par->Name[0] = '.';
-    par->Name[1] = '.';
-    _ds->Print("s");
-
-    uint64_t dirLBA = dirBlock * sectorsPerBlock;
-    for (uint64_t i = 0; i < sectorsPerBlock; i++) {
-        if (!pdev->WriteSector(dirLBA + i, (void*)((uint8_t*)bufPhys + i * sectorSize))) {
-            _ds->Println("Failed to write directory block");
-            return nullptr;
-        }
-    }
-
-    Inode parentInode = *ReadInode(parent->nodeId);
-    parentInode.HardLinksCount++;
-    parentInode.LastAccess = parentInode.LastModification = now;
-    parentInode.LastModification = now;
-
-    _ds->Print("s");
-    bool inserted = false;
-/* TEMP FIX
-    for (int i = 0; i < 12 && !inserted; i++) {
-        uint32_t block = parentInode.DBP[i];
-        if (!block) continue;
-
-        uint64_t LBA = block * sectorsPerBlock;
-        memset((void*)bufVirt, 0, blockSize);
-
-        for (uint64_t s = 0; s < sectorsPerBlock; s++) {
-            if (!pdev->ReadSector(LBA + s, (uint8_t*)bufPhys + s * sectorSize)) {
-                _ds->Println("Failed to Read Sector");
-            }
-        }
-
-        uint64_t offset = 0;
-        while (offset < blockSize) {
-            DirectoryEntry* entry = (DirectoryEntry*)((uint8_t*)bufVirt + offset);
-            if (!entry->TotalSize) break;
-
-            uint16_t actualSize = (uint16_t)((8 + entry->NameLen + 3) & ~3);
-            uint16_t neededSize = (uint16_t)((8 + strlen(name) + 3) & ~3);
-
-            if (entry->TotalSize >= actualSize + neededSize) {
-                DirectoryEntry* next = (DirectoryEntry*)((uint8_t*)entry + actualSize);
-                next->Inode = inodeNum;
-                next->NameLen = strlen(name);
-                next->Type = 2;
-                memcpy(next->Name, name, next->NameLen);
-                _ds->Print("a");
-                next->TotalSize = entry->TotalSize - actualSize;
-                entry->TotalSize = actualSize;
-                _ds->Print("b");
-
-                for (uint64_t s = 0; s < sectorsPerBlock; s++) {
-                    if (!pdev->WriteSector(LBA + s, (uint8_t*)bufPhys + s * sectorSize)) {
-                        _ds->Println("Failed to Write Sector");
-                        break;
-                    }
-                }
-
-                inserted = true;
-                break;
-            }
-            offset += entry->TotalSize;
-        }
-    }
-    _ds->Print("s");*/
-
-    if (!inserted) {
-        uint32_t newBlock = AllocateBlock();
-        if (!newBlock) {
-            _ds->Println("Failed to Allocate Block");
-            return nullptr;
-        }
-
-        int slot = -1;
-        for (int i = 0; i < 12; i++) {
-            if (!parentInode.DBP[i]) { 
-                slot = i; 
-                break; 
-            }
-        }
-
-        if (slot < 0) {
-            _ds->Println("Failed to Insert");
-            return nullptr;
-        }
-
-        parentInode.DBP[slot] = newBlock;
-        parentInode.LowerSize += blockSize;
-        parentInode.DiskSectorCount += sectorsPerBlock;
-
-        memset((void*)bufVirt, 0, blockSize);
-        DirectoryEntry* entry = (DirectoryEntry*)bufVirt;
-        entry->Inode = inodeNum;
-        entry->NameLen = strlen(name);
-        entry->Type = 2;
-        memcpy(entry->Name, name, entry->NameLen);
-        entry->TotalSize = blockSize;
-
-        uint64_t LBA = newBlock * sectorsPerBlock;
-        for (uint64_t s = 0; s < sectorsPerBlock; s++) {
-            if (!pdev->WriteSector(LBA + s, (uint8_t*)bufPhys + s * sectorSize)) {
-                _ds->Println("Failed to Write Sector");
-            }
-        }
-    }
-
-    WriteInode(parent->nodeId, &parentInode);
-    _ds->Print("s");
-
-    FsNode* fsN = (FsNode*)_ds->malloc(sizeof(FsNode));
-    if (!fsN) return nullptr;
-    memset(fsN, 0, sizeof(FsNode));
-    fsN->type = FsNodeType::Directory;
-    fsN->name = _ds->strdup(name);
-    fsN->nodeId = inodeNum;
-
-    fsN->size = ((uint64_t)newInode.UpperFileSize << 32) | newInode.LowerSize;
-    fsN->blocks = newInode.DiskSectorCount;
-
-    uint32_t mode = 0;
-    if (newInode.meta.userRead) mode |= 0400;
-    if (newInode.meta.userWrite) mode |= 0200;
-    if (newInode.meta.userExec) mode |= 0100;
-    if (newInode.meta.groupRead) mode |= 0040;
-    if (newInode.meta.groupWrite) mode |= 0020;
-    if (newInode.meta.groupExec) mode |= 0010;
-    if (newInode.meta.otherRead) mode |= 0004;
-    if (newInode.meta.otherWrite) mode |= 0002;
-    if (newInode.meta.otherExec) mode |= 0001;
-    if (newInode.meta.setUserID) mode |= 04000;
-    if (newInode.meta.setGroupID) mode |= 02000;
-    if (newInode.meta.stickyBit) mode |= 01000;
-
-    switch (newInode.meta.Type) {
-        case 0x4: mode |= 0040000; break;
-        default: break;
-    }
-    _ds->Print("s");
-
-    fsN->mode = mode;
-    fsN->uid = 0;
-    fsN->gid = 0;
-
-    fsN->atime = newInode.LastAccess;
-    fsN->mtime = newInode.LastModification;
-    fsN->ctime = newInode.Creation;
-
-    return fsN;
+    uint32_t newInode = AllocateInode(parent);
+    _ds->Print("NewIndGroupDescFirstInode ");
+    _ds->Println(to_hstridng(newInode));
 }
 
 bool GenericEXT4Device::Remove(FsNode* node) {
-    
 }
 
 File* GenericEXT4Device::Open(FsNode* node, uint32_t flags) {
@@ -919,70 +702,76 @@ BlockGroupDescriptor* GenericEXT4Device::ReadGroupDesc(uint32_t group) {
  * and finally return the Inode
  * num.
 */
-uint32_t GenericEXT4Device::AllocateInode() {
-    uint32_t groupCount = (superblock->TotalInodes + superblock->InodesPerBlockGroup - 1) / superblock->InodesPerBlockGroup;
+uint32_t GenericEXT4Device::AllocateInode(FsNode* parent) {
+    /*
+     * First we need to calculate the Parent's Block Group and Index
+     * so that we can get our Group Descriptor.
+     * 
+     * Then we can get our FlexSize and FirstFlex bc we are using Flex
+     * Block Groups
+    */
+    uint32_t ParentBlockGroup = (parent->nodeId - 1) / superblock->InodesPerBlockGroup;
 
-    for (uint32_t group = 0; group < groupCount; group++) {
-        uint32_t freeInodes = ((uint32_t)GroupDescs[group]->HighFreeInodes << 16) | (uint32_t)GroupDescs[group]->LowFreeInodes;
-        if (freeInodes == 0) continue;
+    uint32_t FlexSize = 1u << superblock->GroupsPerFlex;
+    uint32_t FirstFlex = ParentBlockGroup - (ParentBlockGroup % FlexSize);
 
-        _ds->Print("Free Inodes Found: ");
-        _ds->Println(to_hstridng(freeInodes));
+    BlockGroupDescriptor* bgd = GroupDescs[FirstFlex];
 
-        uint64_t inodeBitmapBlock = ((uint64_t)GroupDescs[group]->HighAddrInodeBitmap << 32) | GroupDescs[group]->LowAddrInodeBitmap;
-        uint64_t inodeBitmapSize = (superblock->InodesPerBlockGroup + 7) / 8; // bytes
-        uint64_t sectorSize = pdev->SectorSize();
-        uint64_t sectorsNeeded = (inodeBitmapSize + sectorSize - 1) / sectorSize;
+    /*
+     * Then we can allocate a page to use for the
+     * rest of our func.
+     * 
+     * To re-use it, we can just memset it again.
+    */
+    void* bufPhys = _ds->RequestPage();
+    uint64_t bufVirt = (uint64_t)bufPhys + 0xFFFFFFFF00000000;
+    _ds->MapMemory((void*)bufVirt, bufPhys, false);
+    memset((void*)bufVirt, 0, 4096);
 
-        void* bufPhys = _ds->RequestPage();
-        uint64_t bufVirt = (uint64_t)bufPhys + 0xFFFFFFFF00000000;
-        _ds->MapMemory((void*)bufVirt, bufPhys, false);
-        memset((void*)bufVirt, 0, 4096);
+    uint64_t blockSize = 1024ull << superblock->BlockSize;
+    uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
 
-        for (uint64_t i = 0; i < sectorsNeeded; i++) {
-            uint64_t lba = inodeBitmapBlock * (1024ull << superblock->BlockSize) / sectorSize + i;
-            if (!pdev->ReadSector(lba, (void*)((uint8_t*)bufVirt + i * sectorSize))) {
-                _ds->Print("Inode bitmap read failed");
-                return 0;
-            }
+    uint64_t inodeBitmapBlock = ((uint64_t)bgd->HighAddrInodeBitmap << 32) | bgd->LowAddrInodeBitmap;
+    uint64_t inodeBitmapLBA = inodeBitmapBlock * sectorsPerBlock;
+
+    /*
+     * Now we can read our Inode Bitmap
+    */
+    for (uint64_t i = 0; i < sectorsPerBlock; i++) {
+        if (!pdev->ReadSector(inodeBitmapLBA + i, (uint8_t*)bufPhys + i * pdev->SectorSize())) {
+            _ds->Println("Failed to read inode bitmap");
         }
-
-        uint8_t* bitmap = (uint8_t*)bufVirt;
-        bool found = false;
-        uint32_t inodeIndex = superblock->FirstInode;
-
-        for (; inodeIndex < superblock->InodesPerBlockGroup; inodeIndex++) {
-            if (!(bitmap[inodeIndex / 8] & (1 << (inodeIndex % 8)))) {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) continue;
-
-        bitmap[inodeIndex / 8] |= (1 << (inodeIndex % 8));
-
-        for (uint64_t i = 0; i < sectorsNeeded; i++) {
-            uint64_t lba = inodeBitmapBlock * (1024ull << superblock->BlockSize) / sectorSize + i;
-            if (!pdev->WriteSector(lba, (void*)((uint8_t*)bufVirt + i * sectorSize))) {
-                _ds->Print("Inode bitmap write failed");
-                return 0;
-            }
-        }
-
-        if (GroupDescs[group]->LowFreeInodes > 0) {
-            GroupDescs[group]->LowFreeInodes--;
-        } else if (GroupDescs[group]->HighFreeInodes > 0) {
-            GroupDescs[group]->HighFreeInodes--;
-            GroupDescs[group]->LowFreeInodes = 0xFFFF;
-        }
-
-        superblock->UnallocInodes--;
-
-        return group * superblock->InodesPerBlockGroup + inodeIndex + 1;
     }
 
-    return 0;
+    uint8_t* bitmap = (uint8_t*)bufVirt;
+
+    uint32_t FlexInodeOff = (ParentBlockGroup - FirstFlex) * superblock->InodesPerBlockGroup;
+    uint32_t First = (FirstFlex == 0) ? (superblock->FirstInode - 1) : 0;
+    uint32_t newInode = 0xFFFFFFFF;
+
+    /*
+     * Now we can scan for a Free Inode
+     * using our Inode Bitmap.
+    */
+    for (uint32_t i = FlexInodeOff; i < FlexInodeOff + superblock->InodesPerBlockGroup; i++) {
+        if (i < First) continue;
+
+        uint32_t byte = i >> 3;
+        uint8_t bit = i & 7;
+
+        if (!(bitmap[byte] & (1 << bit))) {
+            bitmap[byte] |= (1 << bit);
+            newInode = i;
+            break;
+        }
+    }
+
+    if (newInode == 0xFFFFFFFF) {
+        _ds->Println("No free inode");
+        return 0;
+    }
+
+    return newInode + 1;
 }
 
 /*
