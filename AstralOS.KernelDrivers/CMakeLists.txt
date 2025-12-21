@@ -31,6 +31,7 @@ add_custom_target(_clean
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.IDE && cmake . && cmake --build . --target _clean
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.GPT && cmake . && cmake --build . --target _clean
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.EXT4 && cmake . && cmake --build . --target _clean
+    COMMAND cd ${CMAKE_SOURCE_DIR} && mkdir -p bin && mkdir -p bin/Drivers
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Cleaning all drivers"
 )

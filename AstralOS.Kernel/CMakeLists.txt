@@ -71,6 +71,7 @@ add_custom_target(build
 
 add_custom_target(_clean
 	COMMAND rm -rf ${BIN_DIR} && rm -rf ${OBJ_DIR}
+    COMMAND mkdir -p ${BIN_DIR} && mkdir -p ${OBJ_DIR} && mkdir -p ${BIN_DIR}/AstralOS && mkdir -p ${BIN_DIR}/AstralOS/System64
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Cleaning Kernel"
 )

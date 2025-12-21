@@ -19,6 +19,13 @@ const char* to_hstridng(uint64_t value) {
     return ptr;
 }
 
+static bool isPower(uint32_t n, uint32_t base) {
+    if (n < 1) return false;
+    while (n % base == 0)
+        n /= base;
+    return n == 1;
+}
+
 int memcmp(const void* a, const void* b, size_t n) {
     const unsigned char* p1 = (const unsigned char*)a;
     const unsigned char* p2 = (const unsigned char*)b;
@@ -165,6 +172,7 @@ FsNode* GenericEXT4Device::Mount() {
     GroupDescs = (BlockGroupDescriptor**)_ds->malloc(BlockGroupCount * sizeof(BlockGroupDescriptor*));
     if (!GroupDescs) return nullptr;
     memset(GroupDescs, 0, BlockGroupCount * sizeof(BlockGroupDescriptor*));
+    _ds->Print("s");
 
     for (uint32_t group = 0; group < BlockGroupCount; group++) {
         BlockGroupDescriptor* BlockGroupDesc = ReadGroupDesc(group);
@@ -577,8 +585,11 @@ FsNode* GenericEXT4Device::FindDir(FsNode* node, const char* name) {
 */
 FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
     uint32_t newInode = AllocateInode(parent);
-    _ds->Print("NewIndGroupDescFirstInode ");
+    _ds->Print("New Inode: ");
     _ds->Println(to_hstridng(newInode));
+    uint32_t newBlock = AllocateBlock(parent);
+    _ds->Print("New Block: ");
+    _ds->Println(to_hstridng(newBlock));
 }
 
 bool GenericEXT4Device::Remove(FsNode* node) {
@@ -740,6 +751,7 @@ uint32_t GenericEXT4Device::AllocateInode(FsNode* parent) {
     for (uint64_t i = 0; i < sectorsPerBlock; i++) {
         if (!pdev->ReadSector(inodeBitmapLBA + i, (uint8_t*)bufPhys + i * pdev->SectorSize())) {
             _ds->Println("Failed to read inode bitmap");
+            return 0;
         }
     }
 
@@ -774,80 +786,138 @@ uint32_t GenericEXT4Device::AllocateInode(FsNode* parent) {
     return newInode + 1;
 }
 
+bool GenericEXT4Device::HasSuperblockBKP(uint32_t group) {
+    if (group == 0 || group == 1) return true;
+    if (!(superblock->ReqFeaturesRO & SparseSuperBlocks)) return true;
+
+    if (isPower(group, 3)) return true;
+    if (isPower(group, 5)) return true;
+    if (isPower(group, 7)) return true;
+
+    return false;
+}
+
 /*
  * To Allocate a Block we must first find a free Block.
  * To do this, we can iterate through all the blocks
  * and check if it has free blocks.
  * If it does, then we can mark it as used and use it.
 */
-uint32_t GenericEXT4Device::AllocateBlock() {
-    uint64_t totalBlocks = ((uint64_t)superblock->HighBlocks << 32) | superblock->TotalBlocks;
-    for (uint32_t i = 0; i < ceil(totalBlocks, superblock->BlocksPerBlockGroup); i++) {
-        uint32_t freeBlocks = ((uint32_t)GroupDescs[i]->HighUnallocBlocks << 16) | GroupDescs[i]->LowUnallocBlocks;
-        if (freeBlocks == 0) {
-            continue;
-        }
+uint32_t GenericEXT4Device::AllocateBlock(FsNode* parent) {
+    /*
+     * First we must find the Parent's Block Group
+    */
+    uint32_t parentBlockGroup = (parent->nodeId - 1) / superblock->InodesPerBlockGroup;
 
-        uint64_t blockBitmapBlock = ((uint64_t)GroupDescs[i]->HighAddrBlockBitmap << 32) | GroupDescs[i]->LowAddrBlockBitmap;
-        uint64_t blockBitmapSize = superblock->BlocksPerBlockGroup / 8;
-        uint64_t sectorSize = pdev->SectorSize();
-        uint64_t sectorsNeeded = ceil(blockBitmapSize, sectorSize);
-        uint64_t blockSize = 1024ull << superblock->BlockSize;
-        uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
-        uint64_t blockBitmapLBA = blockBitmapBlock * sectorsPerBlock;
+    /*
+     * Get some Flex Stuff
+    */
+    uint32_t flexSize = 1u << superblock->GroupsPerFlex;
+    uint32_t firstFlexGroup = parentBlockGroup - (parentBlockGroup % flexSize);
+    uint32_t endFlexGroup = firstFlexGroup + flexSize;
 
-        void* bufPhys = _ds->RequestPage();
-        uint64_t bufVirt = (uint64_t)bufPhys + 0xFFFFFFFF00000000;
+    uint64_t blockSize = 1024ull << superblock->BlockSize;
+    uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
 
-        _ds->MapMemory((void*)bufVirt, bufPhys, false);
-        memset((void*)bufVirt, 0, 4096);
+    void* bufPhys = _ds->RequestPage();
+    uint64_t bufVirt = (uint64_t)bufPhys + 0xFFFFFFFF00000000;
+    _ds->MapMemory((void*)bufVirt, bufPhys, false);
+    memset((void*)bufVirt, 0, 4096);
 
-        for (uint64_t x = 0; x < sectorsNeeded; x++) {
-            if (!pdev->ReadSector(blockBitmapLBA + x, (void*)((uint8_t*)bufPhys + x * sectorSize))) {
-                _ds->Println("Block bitmap read failed");
-                return 0;
-            }
-        }
+    for (uint32_t BlockGroup = firstFlexGroup; BlockGroup < endFlexGroup; BlockGroup++) {
+        BlockGroupDescriptor* GroupDesc = GroupDescs[BlockGroup];
 
-        uint8_t* bitmap = (uint8_t*)bufVirt;
-        uint32_t blockIndex = 0;
+        uint32_t freeBlocks = ((uint32_t)GroupDesc->HighUnallocBlocks << 16) | GroupDesc->LowUnallocBlocks;
 
-        uint32_t firstDataBlock = (superblock->BlockSize == 0) ? 1 : 0;
-        for (int x = firstDataBlock; x < superblock->BlocksPerBlockGroup; x++) {
-            blockIndex = x;
-            if (!(bitmap[x / 8] & (1 << (x % 8)))) {
-                break;
-            }
-        }
+        uint64_t inodeTableStart = ((uint64_t)GroupDesc->HighAddrInodeTable << 32) | GroupDesc->LowAddrInodeTable;
+        uint64_t inodeTableBlocks = (superblock->InodesPerBlockGroup * superblock->InodeSize + blockSize - 1) / blockSize;
 
-        if (blockIndex == superblock->BlocksPerBlockGroup) {
-            continue;
-        }
+        if (freeBlocks == 0) continue;
+        if (GroupDesc->Features & BlockUnused) continue;
 
         /*
-         * Mark it as used
+         * Let's read our Block Bitmap
         */
-        bitmap[blockIndex / 8] |= (1 << (blockIndex % 8));
+        uint64_t BitmapBlock = ((uint64_t)GroupDesc->HighAddrBlockBitmap << 32) | GroupDesc->LowAddrBlockBitmap;
+        uint64_t BitmapLBA = BitmapBlock * sectorsPerBlock;
 
-        for (uint64_t x = 0; x < sectorsNeeded; x++) {
-            if (!pdev->WriteSector(blockBitmapLBA + x, (void*)((uint8_t*)bufPhys + x * sectorSize))) {
-                _ds->Println("Block bitmap write failed");
-                return 0;
+        uint64_t inodeBitmapBlock = ((uint64_t)GroupDesc->HighAddrInodeBitmap << 32) | GroupDesc->LowAddrInodeBitmap;
+
+        memset((void*)bufVirt, 0, 4096);
+
+        for (uint64_t i = 0; i < sectorsPerBlock; i++) {
+            pdev->ReadSector(BitmapLBA + i, (uint8_t*)bufPhys + i * pdev->SectorSize());
+        }
+
+        uint8_t* Bitmap = (uint8_t*)bufVirt;
+        uint32_t BlocksPerGroup = superblock->BlocksPerBlockGroup;
+
+        for (uint32_t i = 0; i < BlocksPerGroup; i++) {
+            uint64_t GlobalBlock = (uint64_t)BlockGroup * BlocksPerGroup + i;
+
+            /*
+             * We need to check if it is an important block
+             * bc we don't want to override the Backup Superblock
+             * or any of the bitmaps
+            */
+            if (HasSuperblockBKP(BlockGroup)) {
+                uint32_t blocks = 0;
+                uint32_t blockSize = 1024u << superblock->BlockSize;
+
+                uint32_t flexSize = 1u << superblock->GroupsPerFlex;
+                uint32_t firstFlexGroup = BlockGroup - (BlockGroup % flexSize);
+
+                if (BlockGroup != firstFlexGroup) return 0;
+
+                bool isSparse = superblock->ReqFeaturesRO & SparseSuperBlocks;
+
+                if (BlockGroup == 0 || isSparse) {
+                    blocks += 1;
+                }
+
+                uint32_t GroupsCount = (superblock->TotalBlocks + superblock->BlocksPerBlockGroup - 1) / superblock->BlocksPerBlockGroup;
+                uint32_t GDTBytes = GroupsCount * superblock->GroupDescriptorBytes;
+                uint32_t GDTBlocks = (GDTBytes + blockSize - 1) / blockSize;
+                blocks += GDTBlocks;
+
+                blocks += 1;
+                blocks += 1;
+
+                uint64_t InodeTableBlocks = (uint64_t(superblock->InodesPerBlockGroup) * superblock->InodeSize + blockSize - 1) / blockSize;
+                blocks += InodeTableBlocks * flexSize;
+
+                if (i < blocks) {
+                    continue;
+                }
             }
-        }
 
-        if (GroupDescs[i]->LowUnallocBlocks > 0) {
-            GroupDescs[i]->LowUnallocBlocks--;
-        } else if (GroupDescs[i]->HighUnallocBlocks > 0) {
-            GroupDescs[i]->HighUnallocBlocks--;
-            GroupDescs[i]->LowUnallocBlocks = 0xFFFF;
-        }
-        superblock->UnallocBlocks--;
+            if (GlobalBlock == BitmapBlock) {
+                continue;
+            }
 
-        return i * superblock->BlocksPerBlockGroup + blockIndex;
+            if (GlobalBlock == inodeBitmapBlock) {
+                continue;
+            }
+            
+            if (GlobalBlock >= inodeTableStart && GlobalBlock < inodeTableStart + inodeTableBlocks) {
+                continue;
+            }
+
+            /*
+             * Now we can check if it is in use
+            */
+            uint32_t byte_index = i / 8;
+            uint8_t bit_index = i % 8;
+
+            if (Bitmap[byte_index] & (1 << bit_index)) {
+                continue;
+            }
+
+            Bitmap[byte_index] |= (1 << bit_index);
+
+            return GlobalBlock;
+        }
     }
-
-    _ds->Print("Failed to Allocate Block!");
     return 0;
 }
 

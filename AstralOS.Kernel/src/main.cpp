@@ -256,6 +256,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     */
     kernelServices.driverMan.Initialize();
     kernelServices.driverMan.DetectDevices(devices);
+    kernelServices.basicConsole.Println("Initialized Drivers");
     for (size_t i = 0; i < 2; i++) {
         kernelServices.driverMan.DetectDrivers(i);
     }

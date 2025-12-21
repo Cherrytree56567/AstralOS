@@ -36,6 +36,7 @@ add_custom_target(build
 
 add_custom_target(_clean
     COMMAND rm -rf ${BIN_DIR}
+    COMMAND cd ${BUILD_DIR} && make && mkdir -p src && cd src && mkdir -p out && cd ../../
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Buiding Bootloader"
 )

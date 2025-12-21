@@ -1,0 +1,139 @@
+[2J[01;01H[=3h[2J[01;01H[0m[35m[40m[0m[37m[40mBdsDxe: failed to load Boot0001 "UEFI QEMU DVD-ROM QM00005 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x2,0xFFFF,0x0): Not Found
+BdsDxe: loading Boot0002 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)
+BdsDxe: starting Boot0002 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)
+Found ACPI 2.0 RSDP at: 0x3FB7E014
+Volume label is ''
+Offset: 0x1000Addr: 0x1000Offset: 0x11000Addr: 0x11000Offset: 0x30000Addr: 0x30000Offset: 0x36000Addr: 0x36000initramfs loaded at 0x3E4E3018 (139264 bytes)
+GOP located
+ss
+Handles freed
+Buffer freed
+nn
+Failed to GGet memory map: Buffer Too Small
+Boot Info Framebuffer Addr: Current Addr: 0xFFFFFFFF0000D621
+RSDP Addr: 0xFFFFFFFF3FB7E014
+RSDP Signature: RSD PTR BOCHS t–∑?$
+RSDP OEM ID: BOCHS t–∑?$
+RSDP Revision: 0x2
+ACPI XSDT Addr: 0xFFFFFFFF3FB7D0E8
+XSDT Length: 0x54
+XSDT Signature: XSDTT
+XSDT OEM ID: BOCHS BXPC    
+XSDT Entries: 0x6
+Interrupts Initialized.
+APIC is Supported.
+IOAPIC initialized, all IRQs masked.
+APIC is Enabled.
+MADT Address: 0xFFFFFFFF3FB78000
+MADT Processor Local APIC: 0xFFFFFFFF3FB7802C
+MADT I/O APIC: 0xFFFFFFFF3FB78034
+Allocated 32 bytes at 0xFFFF880000000020
+Allocated 64 bytes at 
+0xFFFF880000000060
+Freed 32-byte block
+Allocated 16 bytes at 0xFFFF880000000020
+Freed remaining blocks
+Array Size Test: 
+99, 98, 90, hi
+MCFG<
+PCIe Exists
+Bridge, Host
+Display Controller, VGA
+Bridge, ISA
+Mass Storage Controller, Serial ATA, ACHI 1.0
+Serial Bus Controller, SMBus
+Waiting for 1s...Done!
+Driver Loaded!
+Reg D
+IDE Driver Loaded!
+Bar 5: 0xFFFFFFFFC1010000
+AHCI Version: 1.0
+No CD present in drive
+Generic AHCI Initialized!
+Initialized Drivers
+Initialized Generic EXT4 Driver
+Found Driver: Generic AHCI Driver
+Drive 0x0 is present
+Model: QEMU HARDDISK                           
+Sector Size: 512
+Sector Count: 20971520
+Drive Buffer LBA5042: EFI        
+Drive Buffer LBA5043: .          
+Drive Buffer LBA5044: .          
+Drive Buffer LBA5045: MZê
+Drive Buffer LBA5046: .dynamic
+Drive Buffer LBA5042: EFI        
+Drive Buffer LBA5043: .          
+Drive Buffer LBA5044: .          
+Found Partition Driver: Generic GPT Driver
+Model: 
+Sector Size: 512
+Sector Count: 192512
+Partition Buffer LBA0: ÎXêmkfs.fat
+Partition Buffer LBA1: RRaA
+Partition Buffer LBA2: 
+Partition Buffer LBA3: 
+Partition Buffer LBA4: 
+Found FS Driver: Generic EXT4 Driver
+FS Signature: 0x0
+FS Signature: 0xEF53
+FS Signature: 0xEF53
+s0x41EDMounted EXT4 Filesystem!
+Node ID: 0x2
+Name: .
+Type: Directory
+Size: 0x1000
+Blocks: 0x8
+Mode: 0x1ED
+UID: 0x0
+GID: 0x0
+ATime: 0x69478DC4
+MTime: 0x69478DC5
+CTime: 0x69478DC5
+-------------------------
+Node ID: 0x2
+Name: ..
+Type: Directory
+Size: 0x1000
+Blocks: 0x8
+Mode: 0x1ED
+UID: 0x0
+GID: 0x0
+ATime: 0x69478DC4
+MTime: 0x69478DC5
+CTime: 0x69478DC5
+-------------------------
+Node ID: 0xB
+Name: lost+found
+Type: Directory
+Size: 0x0
+Blocks: 0x0
+Mode: 0x0
+UID: 0x0
+GID: 0x0
+ATime: 0x69478DC4
+MTime: 0x69478DC4
+CTime: 0x69478DC4
+-------------------------
+Node ID: 0x1FC01
+Name: AstralOS
+Type: Directory
+Size: 0x1000
+Blocks: 0x8
+Mode: 0x1ED
+UID: 0x0
+GID: 0x0
+ATime: 0x69478DC5
+MTime: 0x69478DC5
+CTime: 0x69478DC5
+-------------------------
+Found: kernel.elf
+New Inode: 0xC
+ssabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbNew Block: 0x23E9
+=== EXCEPTION ===
+Vector: 0x6
+Error Code: 0x0
+RIP: 0x8
+CS: 0x246
+RFLAGS: 0xFFFFFFFF00033E40
+=================

@@ -440,8 +440,9 @@ private:
     Inode* ReadInode(uint64_t node);
     void WriteInode(uint32_t inodeNum, Inode* ind);
     uint32_t AllocateInode(FsNode* parent);
-    uint32_t AllocateBlock();
+    uint32_t AllocateBlock(FsNode* parent);
     BlockGroupDescriptor* ReadGroupDesc(uint32_t group);
+    bool HasSuperblockBKP(uint32_t group);
 
 	PartitionDevice* pdev;
 	DriverServices* _ds = nullptr;

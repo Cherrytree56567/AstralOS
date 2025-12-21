@@ -49,7 +49,9 @@ add_custom_target(build
 )
 
 add_custom_target(_clean
-	COMMAND rm -R bin
+	COMMAND rm -rf bin
+    COMMAND mkdir -p initrd
+    COMMAND mkdir -p bin
 	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 	COMMENT "Cleaning Binaries"
 )

@@ -70,7 +70,8 @@ add_custom_target(build
 )
 
 add_custom_target(_clean
-	COMMAND rm -rf ${BIN_DIR} && rm -rf ${OBJ_DIR}
+	COMMAND rm -rf ${OBJ_DIR}
+    COMMAND mkdir -p ${OBJ_DIR} && mkdir -p ${BIN_DIR}/Drivers/com.astralos.ext4
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Cleaning Driver"
 )
