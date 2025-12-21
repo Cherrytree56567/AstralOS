@@ -4,6 +4,7 @@
 #include "../PCI.h"
 #include "../DriverServices.h"
 #include <cstdint>
+#include "../crc32c.h"
 
 /*
  * This struct is inspired by the OSDev Wiki:
@@ -459,6 +460,8 @@ private:
     uint32_t AllocateBlock(FsNode* parent);
     BlockGroupDescriptor* ReadGroupDesc(uint32_t group);
     bool HasSuperblockBKP(uint32_t group);
+    void UpdateSuperblockField(void* fieldPtr, size_t fieldSize, bool chksum);
+    void UpdateGroupDesc(uint32_t group, BlockGroupDescriptor* GroupDesc);
 
 	PartitionDevice* pdev;
 	DriverServices* _ds = nullptr;
