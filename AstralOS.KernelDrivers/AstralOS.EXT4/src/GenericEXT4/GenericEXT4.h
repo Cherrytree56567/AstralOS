@@ -338,7 +338,8 @@ enum InodeFlags {
     FreezeTime = 0x00000080, // Last accessed time should not updated 
     HashIndexedDir = 0x00010000, // Hash indexed directory 
     AFSDir = 0x00020000, // AFS directory 
-    JournalFileData = 0x00040000 // Journal file data 
+    JournalFileData = 0x00040000, // Journal file data 
+    Extents = 0x00080000 // Inode uses extents
 };
 
 struct DirectoryEntry {
@@ -370,6 +371,21 @@ struct MMP {
     uint16_t Padding; // Padding. 
     uint8_t Padding1[904]; // Padding. 
     uint32_t Checksum; // Checksum (crc32c(UUID+MMP Block number)) 
+} __attribute__((packed));
+
+struct ExtentHeader {
+    uint16_t magic; // 0xF30A
+    uint16_t entries;
+    uint16_t max;
+    uint16_t depth;
+    uint32_t generation;
+} __attribute__((packed));
+
+struct Extent {
+    uint32_t block;
+    uint16_t len;
+    uint16_t startHigh;
+    uint32_t startLow;
 } __attribute__((packed));
 
 struct Journal {

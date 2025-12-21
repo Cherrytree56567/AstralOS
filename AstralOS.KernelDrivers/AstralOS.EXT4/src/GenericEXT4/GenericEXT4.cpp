@@ -145,7 +145,7 @@ bool GenericEXT4Device::Support() {
     _ds->Println(to_hstridng(superblock->MagicSignature));
 
     if (superblock->MagicSignature == 0xEF53) {
-        if (superblock->RequiredFeatures & RequiredFeatures::FileExtent) {
+        if (superblock->RequiredFeatures & RequiredFeatures::BITS64) {
             return true;
         }
     }
@@ -584,12 +584,228 @@ FsNode* GenericEXT4Device::FindDir(FsNode* node, const char* name) {
  * 11. Create and Pass the FsNode*
 */
 FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
-    uint32_t newInode = AllocateInode(parent);
+    uint64_t blockSize = 1024ull << superblock->BlockSize;
+    uint64_t sectorSize = pdev->SectorSize();
+    uint64_t sectorsInBlock = blockSize / pdev->SectorSize();
+
+    uint32_t InodeNum = AllocateInode(parent);
     _ds->Print("New Inode: ");
-    _ds->Println(to_hstridng(newInode));
+    _ds->Println(to_hstridng(InodeNum));
+
     uint32_t newBlock = AllocateBlock(parent);
     _ds->Print("New Block: ");
     _ds->Println(to_hstridng(newBlock));
+
+    void* buf = _ds->RequestPage();
+    uint64_t bufPhys = (uint64_t)buf;
+    uint64_t bufVirt = bufPhys + 0xFFFFFFFF00000000;
+    _ds->MapMemory((void*)bufVirt, (void*)bufPhys, false);
+    memset((void*)bufVirt, 0, 4096);
+
+    Inode newInode;
+    memset(&newInode, 0, sizeof(Inode));
+    newInode.meta.userRead = 1;
+    newInode.meta.userWrite = 1;
+    newInode.meta.userExec = 1;
+    newInode.meta.groupRead = 1;
+    newInode.meta.groupWrite = 1;
+    newInode.meta.groupExec = 1;
+    newInode.meta.otherRead = 1;
+    newInode.meta.otherWrite = 0;
+    newInode.meta.otherExec = 0;
+    newInode.meta.setGroupID = 0;
+    newInode.meta.Type = InodeTypeEnum::Directory;
+
+    newInode.UserID = 0;
+    newInode.GroupID = 0;
+
+    uint32_t now = 0x694792D3; // TODO: CurrentTime();
+    newInode.LastAccess = now;
+    newInode.LastModification = now;
+    newInode.Creation = now;
+    newInode.Deletion = 0;
+
+    newInode.HardLinksCount = 2;
+    newInode.DiskSectorCount = blockSize / 512;
+    newInode.Flags = 0;
+    newInode.OSVal1 = 0;
+
+    OSVal2 osv;
+    osv.FragNum = 0;
+    osv.FragSize = 0;
+    osv.EasterEgg = 0xA574A105; // AstralOS
+    osv.HighUserID = 0;
+    osv.HighGroupID = 0;
+    osv.EasterEggChristmas = 0xC541573A5; // Christmas
+
+    newInode.osval2 = osv;
+
+    newInode.Generation = 0;
+    newInode.ExtendedAttributeBlock = 0;
+    newInode.FragmentBlock = 0;
+    newInode.UpperFileSize = 0;
+
+    newInode.LowerSize = blockSize;
+
+    /*
+     * Our Ext4 FS can use a feature called Extents,
+     * where a dir is basically a file with its contents
+     * being a list of subdirs and files.
+    */
+    if (superblock->RequiredFeatures & RequiredFeatures::FileExtent) {
+        _ds->Println("FS Requires Extents");
+
+        ExtentHeader* extHdr = (ExtentHeader*)newInode.DBP;
+        extHdr->magic = 0xF30A;
+        extHdr->entries = 1;
+        extHdr->max = (blockSize - sizeof(ExtentHeader)) / sizeof(Extent);
+        extHdr->depth = 0;
+        extHdr->generation = newInode.Generation;
+
+        Extent* ext = (Extent*)(newInode.DBP + sizeof(ExtentHeader));
+        ext->block = 0;
+        ext->len = 1;
+        ext->startLow = newBlock & 0xFFFFFFFF;
+        ext->startHigh = (newBlock >> 32) & 0xFFFF;
+
+        newInode.Flags |= Extents;
+    } else {
+        newInode.DBP[0] = newBlock;
+    }
+
+    WriteInode(InodeNum, &newInode);
+
+    DirectoryEntry* dot = (DirectoryEntry*)bufVirt;
+    dot->Inode = InodeNum;
+    dot->Name[0] = '.';
+    dot->NameLen = 1;
+    dot->Type = DETDirectory;
+    dot->TotalSize = ((8 + dot->NameLen) + 3) & ~3u;
+    
+    DirectoryEntry* dotdot = (DirectoryEntry*)(bufVirt + dot->TotalSize);
+    dotdot->Inode = parent->nodeId;
+    dotdot->Name[0] = '.';
+    dotdot->Name[1] = '.';
+    dotdot->NameLen = 2;
+    dotdot->Type = DETDirectory;
+    dotdot->TotalSize = blockSize - dot->TotalSize;
+
+    uint64_t blockLBA = newBlock * (blockSize / pdev->SectorSize());
+    for (uint64_t i = 0; i < sectorsInBlock; i++) {
+        if (!pdev->WriteSector(blockLBA + i, (void*)((uint8_t*)bufPhys + i * pdev->SectorSize()))) {
+            _ds->Println("Failed to write directory block");
+            return nullptr;
+        }
+    }
+
+    Inode* parentInode = ReadInode(parent->nodeId);
+    if (!parentInode) {
+        _ds->Println("Failed to read parent inode");
+        return nullptr;
+    }
+
+    parentInode->HardLinksCount++;
+    parentInode->LastModification = now;
+    parentInode->LastAccess = now;
+    parentInode->LowerSize += blockSize;
+
+    if ((parentInode->Flags & Extents) != 0) {
+        _ds->Println("Parent Inode Uses Extents");
+        ExtentHeader* extHdr = (ExtentHeader*)parentInode->DBP;
+        if (extHdr->magic != 0xF30A) { 
+            _ds->Println("Parent Inode has Bad Extent Header");
+            return nullptr;
+        }
+
+        Extent* LastExtent = (Extent*)((uint8_t*)parentInode->DBP + sizeof(ExtentHeader) + (extHdr->entries - 1) * sizeof(Extent));
+        uint32_t lastBlock = LastExtent->block + LastExtent->len - 1;
+
+        for (uint64_t i = 0; i < sectorsInBlock; i++) {
+            if (!pdev->ReadSector(lastBlock * sectorsInBlock + i, (void*)((uint8_t*)bufPhys + i * pdev->SectorSize()))) {
+                _ds->Println("Failed to read sector");
+            }
+        }
+
+        bool Inserted = false;
+
+        DirectoryEntry* entry = (DirectoryEntry*)bufVirt;
+        while ((uint64_t)entry < (bufVirt + blockSize)) {
+            uint16_t rec_len = entry->TotalSize;
+            if (rec_len == 0) break;
+            entry = (DirectoryEntry*)((uint8_t*)entry + rec_len);
+            Inserted = true;
+            break;
+        }
+        if (!Inserted) {
+            uint32_t newParentBlock = AllocateBlock(parent);
+            _ds->Print("Allocated New Parent Block: ");
+            _ds->Println(to_hstridng(newParentBlock));
+
+            Extent* newExt = (Extent*)((uint8_t*)LastExtent + sizeof(Extent));
+            newExt->block = LastExtent->block + 1;
+            newExt->len = 1;
+            newExt->startLow = newParentBlock & 0xFFFFFFFF;
+            newExt->startHigh = (newParentBlock >> 32) & 0xFFFF;
+
+            extHdr->entries++;
+
+            parentInode->DiskSectorCount += sectorsInBlock;
+            parentInode->LowerSize += blockSize;
+
+            lastBlock = newExt->block + newExt->len - 1;
+        }
+
+        DirectoryEntry* newEntry = entry;
+        newEntry->Inode = InodeNum;
+        newEntry->NameLen = strlen(name);
+        newEntry->Type = DETDirectory;
+        memcpy(newEntry->Name, name, newEntry->NameLen);
+        newEntry->TotalSize = ((8 + newEntry->NameLen) + 3) & ~3u;
+
+        for (uint64_t i = 0; i < sectorsInBlock; i++) {
+            pdev->WriteSector(lastBlock * sectorsInBlock + i, (void*)((uint8_t*)bufPhys + i * pdev->SectorSize()));
+        }
+    }
+
+    WriteInode(parent->nodeId, parentInode);
+
+    FsNode* fsN = (FsNode*)_ds->malloc(sizeof(FsNode));
+    memset(fsN, 0, sizeof(FsNode));
+    fsN->type = FsNodeType::Directory;
+    fsN->name = _ds->strdup(name);
+    fsN->nodeId = InodeNum;
+
+    fsN->size = ((uint64_t)newInode.UpperFileSize << 32) | newInode.LowerSize;
+    fsN->blocks = newInode.DiskSectorCount;
+
+    uint32_t mode = 0;
+    if (newInode.meta.userRead) mode |= 0400;
+    if (newInode.meta.userWrite) mode |= 0200;
+    if (newInode.meta.userExec) mode |= 0100;
+    if (newInode.meta.groupRead) mode |= 0040;
+    if (newInode.meta.groupWrite) mode |= 0020;
+    if (newInode.meta.groupExec) mode |= 0010;
+    if (newInode.meta.otherRead) mode |= 0004;
+    if (newInode.meta.otherWrite) mode |= 0002;
+    if (newInode.meta.otherExec) mode |= 0001;
+    if (newInode.meta.setUserID) mode |= 04000;
+    if (newInode.meta.setGroupID) mode |= 02000;
+    if (newInode.meta.stickyBit) mode |= 01000;
+
+    switch (newInode.meta.Type) {
+        case 0x4: mode |= 0040000; break;
+        default: break;
+    }
+
+    fsN->mode = mode;
+    fsN->uid = 0;
+    fsN->gid = 0;
+
+    fsN->atime = newInode.LastAccess;
+    fsN->mtime = newInode.LastModification;
+    fsN->ctime = newInode.Creation;
+
+    return fsN;
 }
 
 bool GenericEXT4Device::Remove(FsNode* node) {
@@ -783,7 +999,15 @@ uint32_t GenericEXT4Device::AllocateInode(FsNode* parent) {
         return 0;
     }
 
-    return newInode + 1;
+    for (uint64_t i = 0; i < sectorsPerBlock; i++) {
+        if (!pdev->WriteSector(inodeBitmapLBA + i, (uint8_t*)bufPhys + i * pdev->SectorSize())) {
+            _ds->Println("Failed to write inode bitmap");
+            return 0;
+        }
+    }
+
+    uint32_t globalInode = (ParentBlockGroup * superblock->InodesPerBlockGroup) + newInode + 1;
+    return globalInode;
 }
 
 bool GenericEXT4Device::HasSuperblockBKP(uint32_t group) {
@@ -914,6 +1138,10 @@ uint32_t GenericEXT4Device::AllocateBlock(FsNode* parent) {
             }
 
             Bitmap[byte_index] |= (1 << bit_index);
+
+            for (uint64_t i = 0; i < sectorsPerBlock; i++) {
+                pdev->WriteSector(BitmapLBA + i, (uint8_t*)bufPhys + i * pdev->SectorSize());
+            }
 
             return GlobalBlock;
         }

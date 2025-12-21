@@ -384,8 +384,8 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
                 FsNode* fsN = bldev->Mount();
 
                 size_t count = 0;
+                FsNode* Testdir = bldev->CreateDir(fsN, "TestDir");
                 FsNode** nodes = bldev->ListDir(fsN, &count);
-                FsNode* fself = bldev->FindDir(fsN, "kernel.elf");
                 //kernelServices.basicConsole.Print(TestDir->name);
 
                 /*
@@ -437,13 +437,13 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
                     kernelServices.basicConsole.Println("-------------------------");
                 }
 
+                FsNode* fself = bldev->FindDir(fsN, "kernel.elf");
                 if (fself) {
                     kernelServices.basicConsole.Print("Found: ");
                     kernelServices.basicConsole.Println(fself->name);
                 } else {
                     kernelServices.basicConsole.Println("Not Found: kernel.elf");
                 }
-                bldev->CreateDir(fsN, "TestDir");
             }
         }
         
