@@ -191,6 +191,10 @@ void DriverManager::CreateDriverServices() {
         ks->pageTableManager.MapMemory(virtualMemory, physicalMemory, cache);
     };
 
+    ds.UnMapMemory = [](void* virtualMemory) { 
+        ks->pageTableManager.UnmapMemory(virtualMemory);
+    };
+
     ds.malloc = [](size_t size) { 
         return ks->heapAllocator.malloc(size);
     };

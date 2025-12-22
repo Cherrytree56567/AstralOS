@@ -155,6 +155,12 @@ struct EXT4_Superblock {
     uint32_t Checksum; // Checksum of the superblock. 
 } __attribute__((packed));
 
+namespace MountOptions {
+    enum _MountOptions {
+        ReadOnly = 0x0001,
+    };
+}
+
 enum RequiredFeatures {
     Compression = 0x0001, // Compression is used. 
     TypeDirEnt = 0x00002, // Directory entries contain a type field. 
@@ -219,6 +225,17 @@ struct FlexBlockGroupInfo {
     uint32_t AtomicUsedDirs; // Atomic used directories. 
 } __attribute__((packed));
 
+/*
+ * There are 2 types of checksums for the 
+ * Block Group Descriptor in EXT4 and they
+ * are easily confused.
+ * 
+ * The first is the GDT Checksum which is 
+ * the older one that uses CRC16.
+ * 
+ * The second is metadata checksum which is
+ * the newer one that uses CRC32C.
+*/
 struct BlockGroupDescriptor {
     uint32_t LowAddrBlockBitmap; // Low 32bits of block address of block usage bitmap. 
     uint32_t LowAddrInodeBitmap; // Low 32bits of block address of inode usage bitmap. 
@@ -460,8 +477,12 @@ private:
     uint32_t AllocateBlock(FsNode* parent);
     BlockGroupDescriptor* ReadGroupDesc(uint32_t group);
     bool HasSuperblockBKP(uint32_t group);
-    void UpdateSuperblockField(void* fieldPtr, size_t fieldSize, bool chksum);
+    void UpdateSuperblock();
     void UpdateGroupDesc(uint32_t group, BlockGroupDescriptor* GroupDesc);
+    void UpdateBlockBitmapChksum(uint32_t group, BlockGroupDescriptor* GroupDesc);
+    void UpdateInodeBitmapChksum(uint32_t group, BlockGroupDescriptor* GroupDesc);
+    uint8_t* ReadBitmapBlock(BlockGroupDescriptor* GroupDesc);
+    void WriteBitmapBlock(BlockGroupDescriptor* GroupDesc, uint8_t* bitmap);
 
 	PartitionDevice* pdev;
 	DriverServices* _ds = nullptr;
@@ -470,4 +491,5 @@ private:
     EXT4_Superblock* superblock;
     BlockGroupDescriptor** GroupDescs;
     bool isMounted;
+    bool readOnly;
 };

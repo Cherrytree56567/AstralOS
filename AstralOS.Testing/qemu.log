@@ -3,7 +3,7 @@ BdsDxe: loading Boot0002 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1
 BdsDxe: starting Boot0002 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)
 Found ACPI 2.0 RSDP at: 0x3FB7E014
 Volume label is ''
-Offset: 0x1000Addr: 0x1000Offset: 0x11000Addr: 0x11000Offset: 0x30000Addr: 0x30000Offset: 0x36000Addr: 0x36000initramfs loaded at 0x3E4E2018 (143872 bytes)
+Offset: 0x1000Addr: 0x1000Offset: 0x11000Addr: 0x11000Offset: 0x30000Addr: 0x30000Offset: 0x36000Addr: 0x36000initramfs loaded at 0x3E4E1018 (147968 bytes)
 GOP located
 ss
 Handles freed
@@ -78,49 +78,45 @@ Found FS Driver: Generic EXT4 Driver
 FS Signature: 0x0
 FS Signature: 0xEF53
 FS Signature: 0xEF53
-s0x41EDMounted EXT4 Filesystem!
+s0x41EDUpdating Superblock on Disk
+Updated Superblock Checksum: 0x611023F9
+Block Size: 0x1000
+Mounted EXT4 Filesystem!
+Updating Superblock on Disk
+Updated Superblock Checksum: 0x79A6EDB8
+Block Size: 0x1000
 New Inode: 0xC
+Updating Superblock on Disk
+Updated Superblock Checksum: 0xD638313D
+Block Size: 0x1000
 New Block: 0x23E9
 FS Requires Extents
 0x1000inodeTableBlock: 0x423
 Parent Inode Uses Extents
-Allocated New Parent Block: 0x23EA
 0x1000inodeTableBlock: 0x423
-Node ID: 0xC
-Name: TestDir
-Type: Directory
-Size: 0x2000
-Blocks: 0x10
-Mode: 0x1ED
-UID: 0x0
-GID: 0x0
-ATime: 0x694792D3
-MTime: 0x694792D3
-CTime: 0x6947FCA6
--------------------------
 Node ID: 0x2
 Name: .
 Type: Directory
-Size: 0x2000
-Blocks: 0x10
+Size: 0x1000
+Blocks: 0x8
 Mode: 0x1ED
 UID: 0x0
 GID: 0x0
 ATime: 0x694792D3
 MTime: 0x694792D3
-CTime: 0x6947FCA6
+CTime: 0x6948E949
 -------------------------
 Node ID: 0x2
 Name: ..
 Type: Directory
-Size: 0x2000
-Blocks: 0x10
+Size: 0x1000
+Blocks: 0x8
 Mode: 0x1ED
 UID: 0x0
 GID: 0x0
 ATime: 0x694792D3
 MTime: 0x694792D3
-CTime: 0x6947FCA6
+CTime: 0x6948E949
 -------------------------
 Node ID: 0xB
 Name: lost+found
@@ -130,43 +126,31 @@ Blocks: 0x0
 Mode: 0x0
 UID: 0x0
 GID: 0x0
-ATime: 0x6947FCA6
-MTime: 0x6947FCA6
-CTime: 0x6947FCA6
+ATime: 0x6948E949
+MTime: 0x6948E949
+CTime: 0x6948E949
 -------------------------
-Node ID: 0x5F401
-Name: AstralOS
+Node ID: 0xC
+Name: TestDir
 Type: Directory
 Size: 0x1000
 Blocks: 0x8
 Mode: 0x1ED
 UID: 0x0
 GID: 0x0
-ATime: 0x6947FCA6
-MTime: 0x6947FCA6
-CTime: 0x6947FCA6
+ATime: 0x694792D3
+MTime: 0x694792D3
+CTime: 0x6948E949
 -------------------------
 Node ID: 0xC
 Name: TestDir
 Type: Directory
-Size: 0x2000
-Blocks: 0x10
+Size: 0x1000
+Blocks: 0x8
 Mode: 0x1ED
 UID: 0x0
 GID: 0x0
 ATime: 0x694792D3
 MTime: 0x694792D3
-CTime: 0x6947FCA6
--------------------------
-Node ID: 0xC
-Name: TestDir
-Type: Directory
-Size: 0x2000
-Blocks: 0x10
-Mode: 0x1ED
-UID: 0x0
-GID: 0x0
-ATime: 0x694792D3
-MTime: 0x694792D3
-CTime: 0x6947FCA6
+CTime: 0x6948E949
 -------------------------

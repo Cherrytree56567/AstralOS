@@ -166,6 +166,7 @@ struct DriverServices {
     void (*FreePage)(void* address);
     void (*FreePages)(void* address, uint64_t pageCount);
     void (*MapMemory)(void* virtualMemory, void* physicalMemory, bool cache);
+    void (*UnMapMemory)(void* virtualMemory);
     void* (*malloc)(size_t size);
     void (*free)(void* ptr);
     char* (*strdup)(const char* str);
