@@ -273,49 +273,46 @@ enum BlockGroupFlags {
 };
 
 struct OSVal2 {
-    uint8_t FragNum; // Fragment number 
-    uint8_t FragSize; // Fragment size 
-    uint16_t EasterEgg; // Reserved On Linux, but an easter egg on AstralOS
+    uint16_t HighBlocks; // High 16 bits of Blocks
+    uint16_t HighACL; // High 16 bits of ACL
     uint16_t HighUserID; // High 16 bits of 32-bit User ID 
     uint16_t HighGroupID; // High 16 bits of 32-bit Group ID
-    uint32_t EasterEggChristmas; // Reserved on Linux, Christmas in ASCII
+    uint16_t LowChecksum; // Low 16 bits of Checksum
+    uint32_t EasterEgg; // Reserved on Linux
 } __attribute__((packed));
 
-struct Metadata {
-    uint16_t otherExec : 1;
-    uint16_t otherWrite : 1;
-    uint16_t otherRead : 1;
-    uint16_t groupExec : 1;
-    uint16_t groupWrite : 1;
-    uint16_t groupRead : 1;
-    uint16_t userExec : 1;
-    uint16_t userWrite : 1;
-    uint16_t userRead : 1;
-    uint16_t stickyBit : 1;
-    uint16_t setGroupID : 1;
-    uint16_t setUserID : 1;
-    uint16_t Type : 4;
-} __attribute__((packed));
-
+/*
+ * From Incode Gitlab
+ * https://gitlab.incoresemi.com/software/linux/-/blob/0e698dfa282211e414076f9dc7e83c1c288314fd/Documentation/filesystems/ext4/inodes.rst#i-osd2
+*/
 struct Inode {
-    Metadata meta; // Type and Permissions
+    uint16_t mode; // Type and Permissions
     uint16_t UserID; // User ID (Low 16 Bits of the User ID)
-    uint32_t LowerSize; // Lower 32 bits of size in bytes 
+    uint32_t LowSize; // Lower 32 bits of size in bytes 
     uint32_t LastAccess; // Last Access Time (in POSIX time) 
-    uint32_t Creation; // Creation Time (in POSIX time) 
+    uint32_t LastChange; // Last Change Time (in POSIX time) 
     uint32_t LastModification; // Last Modification time (in POSIX time) 
     uint32_t Deletion; // Deletion time (in POSIX time) 
     uint16_t GroupID; // Group ID (Low 16 Bits of the Group ID)
     uint16_t HardLinksCount; // Count of hard links (directory entries) to this inode. When this reaches 0, the data blocks are marked as unallocated. 
-    uint32_t DiskSectorCount; // Count of disk sectors (not Ext2 blocks) in use by this inode, not counting the actual inode structure nor directory entries linking to the inode. 
+    uint32_t LowBlocks; // Lower Blocks Count
     uint32_t Flags; // Flags
     uint32_t OSVal1; // Operating System Specific value #1
     uint32_t DBP[15]; // Direct Block Pointer
     uint32_t Generation; // Generation number (Primarily used for NFS) 
-    uint32_t ExtendedAttributeBlock; // In Ext2 version 0, this field is reserved. In version >= 1, Extended attribute block (File ACL). 
-    uint32_t UpperFileSize; // In Ext2 version 0, this field is reserved. In version >= 1, Upper 32 bits of file size (if feature bit set) if it's a file, Directory ACL if it's a directory 
+    uint32_t LowACL; // In Ext2 version 0, this field is reserved. In version >= 1, Extended attribute block (File ACL). 
+    uint32_t HighSize; // In Ext2 version 0, this field is reserved. In version >= 1, Upper 32 bits of file size (if feature bit set) if it's a file, Directory ACL if it's a directory 
     uint32_t FragmentBlock; // Block address of fragment 
     OSVal2 osval2; // Operating System Specific Value #2
+    uint16_t HighInodeSize; // High 16 bits of file size (if feature bit set)
+    uint16_t ChecksumHigh; // High 16 bits of the Checksum
+    uint32_t HighLastChange; // Extra last change time field? (in POSIX time) 
+    uint32_t HighLastModification; // Extra last modification (in POSIX time) 
+    uint32_t HighLastAccess; // Extra Last Access (in POSIX time) 
+    uint32_t FileCreation; // File Creation (in POSIX time) 
+    uint32_t HighFileCreation; // Extra file creation time bits. This provides sub-second precision.
+    uint32_t HighVersion; // Upper 32-bits for version number.
+    uint32_t ProjectID; // Project ID.
 } __attribute__((packed));
 
 namespace InodeTypeEnum {
@@ -483,6 +480,8 @@ private:
     void UpdateInodeBitmapChksum(uint32_t group, BlockGroupDescriptor* GroupDesc);
     uint8_t* ReadBitmapBlock(BlockGroupDescriptor* GroupDesc);
     void WriteBitmapBlock(BlockGroupDescriptor* GroupDesc, uint8_t* bitmap);
+    uint8_t* ReadBitmapInode(BlockGroupDescriptor* GroupDesc);
+    void WriteBitmapInode(BlockGroupDescriptor* GroupDesc, uint8_t* bitmap);
 
 	PartitionDevice* pdev;
 	DriverServices* _ds = nullptr;

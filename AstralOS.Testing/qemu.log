@@ -1,16 +1,16 @@
-[2J[01;01H[=3h[2J[01;01H[0m[35m[40m[0m[37m[40mBdsDxe: failed to load Boot0001 "UEFI QEMU DVD-ROM QM00005 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x2,0xFFFF,0x0): Not Found
+[2J[01;01H[=3h[2J[01;01H[0m[35m[40m[2J[01;01H[=3h[2J[01;01H[0m[35m[40m[0m[37m[40mBdsDxe: failed to load Boot0001 "UEFI QEMU DVD-ROM QM00005 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x2,0xFFFF,0x0): Not Found
 BdsDxe: loading Boot0002 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)
 BdsDxe: starting Boot0002 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)
 Found ACPI 2.0 RSDP at: 0x3FB7E014
 Volume label is ''
-Offset: 0x1000Addr: 0x1000Offset: 0x11000Addr: 0x11000Offset: 0x30000Addr: 0x30000Offset: 0x36000Addr: 0x36000initramfs loaded at 0x3E4E1018 (147968 bytes)
+Offset: 0x1000Addr: 0x1000Offset: 0x11000Addr: 0x11000Offset: 0x30000Addr: 0x30000Offset: 0x36000Addr: 0x36000initramfs loaded at 0x3E4E0018 (152576 bytes)
 GOP located
 ss
 Handles freed
 Buffer freed
 nn
 Failed to GGet memory map: Buffer Too Small
-Boot Info Framebuffer Addr: Current Addr: 0xFFFFFFFF0000D621
+Boot Info Framebuffer Addr: Current Addr: 0xFFFFFFFF0000D69F
 RSDP Addr: 0xFFFFFFFF3FB7E014
 RSDP Signature: RSD PTR BOCHS tз?$
 RSDP OEM ID: BOCHS tз?$
@@ -78,45 +78,56 @@ Found FS Driver: Generic EXT4 Driver
 FS Signature: 0x0
 FS Signature: 0xEF53
 FS Signature: 0xEF53
-s0x41EDUpdating Superblock on Disk
-Updated Superblock Checksum: 0x611023F9
+sUpdating Superblock on Disk
 Block Size: 0x1000
 Mounted EXT4 Filesystem!
+Reading Inode Bitmap
+Writing Inode Bitmap
 Updating Superblock on Disk
-Updated Superblock Checksum: 0x79A6EDB8
 Block Size: 0x1000
+Group: 0x0
 New Inode: 0xC
+Reading Block Bitmap
+Writing Block Bitmap
 Updating Superblock on Disk
-Updated Superblock Checksum: 0xD638313D
 Block Size: 0x1000
+Group: 0x0
 New Block: 0x23E9
+0xCgroup: 0x1FC0
+inodeTableBlock: 0x423
+Wrote Inode
 FS Requires Extents
-0x1000inodeTableBlock: 0x423
+0xC
+FsN
+FsN
 Parent Inode Uses Extents
-0x1000inodeTableBlock: 0x423
+0x2group: 0x1FC0
+inodeTableBlock: 0x423
+Wrote Inode
+Directory Inode List Dir uses File Extents : Looong Message
 Node ID: 0x2
 Name: .
 Type: Directory
 Size: 0x1000
 Blocks: 0x8
-Mode: 0x1ED
+Mode: 0x41ED
 UID: 0x0
 GID: 0x0
 ATime: 0x694792D3
 MTime: 0x694792D3
-CTime: 0x6948E949
+CTime: 0x694A
 -------------------------
 Node ID: 0x2
 Name: ..
 Type: Directory
 Size: 0x1000
 Blocks: 0x8
-Mode: 0x1ED
+Mode: 0x41ED
 UID: 0x0
 GID: 0x0
 ATime: 0x694792D3
 MTime: 0x694792D3
-CTime: 0x6948E949
+CTime: 0x694A
 -------------------------
 Node ID: 0xB
 Name: lost+found
@@ -126,31 +137,35 @@ Blocks: 0x0
 Mode: 0x0
 UID: 0x0
 GID: 0x0
-ATime: 0x6948E949
-MTime: 0x6948E949
-CTime: 0x6948E949
+ATime: 0x694A65BF
+MTime: 0x694A65BF
+CTime: 0x0
+-------------------------
+Node ID: 0x5F401
+Name: AstralOS
+Type: Directory
+Size: 0x1000
+Blocks: 0x8
+Mode: 0x41ED
+UID: 0x0
+GID: 0x0
+ATime: 0x694A65BF
+MTime: 0x694A65BF
+CTime: 0x849C694A
 -------------------------
 Node ID: 0xC
 Name: TestDir
 Type: Directory
 Size: 0x1000
 Blocks: 0x8
-Mode: 0x1ED
+Mode: 0x41ED
 UID: 0x0
 GID: 0x0
 ATime: 0x694792D3
 MTime: 0x694792D3
-CTime: 0x6948E949
+CTime: 0x694A
 -------------------------
-Node ID: 0xC
-Name: TestDir
-Type: Directory
-Size: 0x1000
-Blocks: 0x8
-Mode: 0x1ED
-UID: 0x0
-GID: 0x0
-ATime: 0x694792D3
-MTime: 0x694792D3
-CTime: 0x6948E949
--------------------------
+Directory Inode List Dir uses File Extents : Looong Message
+Directory Inode List Dir uses File Extents : Looong Message
+Directory Inode List Dir uses File Extents : Looong Message
+Found: kernel.elf

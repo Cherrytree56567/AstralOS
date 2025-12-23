@@ -111,3 +111,11 @@ tbh I can't even bother to get this function working, and there is barely any in
 ![CreateDir2](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/CreateDir2.png?raw=true)
 
 **Total time spent: 2h 26m**
+
+# December 20 - 23rd: Added Checksuming and Fixed Bugs
+
+I was following the OSDev Wiki before, but it only had stuff on EXT2 which was vastly different compared to EXT4. I underestimated how different those two filesystems were which caused a lot of issues. Today (23rd) I discovered that the Inode struct I was using was wrong for EXT4, so I found this nice [Gitlab Page](https://gitlab.incoresemi.com/software/linux/-/blob/0e698dfa282211e414076f9dc7e83c1c288314fd/Documentation/filesystems/ext4/inodes.rst#i-osd2) which explained how EXT4 works and the structs that were involved. Unfortunatly it didn't tell me how to checksum things which was a big issue because `fsck` was complaining about checksums, so I had to look at the Linux Kernel Source. I still havent gotten to checksuming the Group Descriptors. I was able to checksum the superblock though. With the help of `debugfs` using this command `sudo debugfs /dev/nbd0p2` I was able to identify issues with the Inode Table.
+
+![InodeIssues](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/InodeIssues.png?raw=true)
+
+**Total time spent: 16h 58m**
