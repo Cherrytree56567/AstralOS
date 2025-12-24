@@ -93,8 +93,11 @@ Updating Superblock on Disk
 Block Size: 0x1000
 Group: 0x0
 New Block: 0x23E9
-Wrote Inode
+Inode Size: 0x100
 FS Requires Extents
+Inode Creation: 0x694BC909
+Wrote Inode
+Inode Creation: 0x694BC909
 Wrote Inode
 Directory Inode List Dir uses File Extents : Looong Message
 Node ID: 0x2
@@ -105,9 +108,9 @@ Blocks: 0x8
 Mode: 0x41ED
 UID: 0x0
 GID: 0x0
-ATime: 0x64792D3
-MTime: 0x64792D3
-CTime: 0x694B
+ATime: 0xFFAABBCC
+MTime: 0xFFAABBCC
+CTime: 0x694BC909
 -------------------------
 Node ID: 0x2
 Name: ..
@@ -117,9 +120,9 @@ Blocks: 0x8
 Mode: 0x41ED
 UID: 0x0
 GID: 0x0
-ATime: 0x64792D3
-MTime: 0x64792D3
-CTime: 0x694B
+ATime: 0xFFAABBCC
+MTime: 0xFFAABBCC
+CTime: 0x694BC909
 -------------------------
 Node ID: 0xB
 Name: lost+found
@@ -129,8 +132,8 @@ Blocks: 0x0
 Mode: 0x0
 UID: 0x0
 GID: 0x0
-ATime: 0x694B9BE1
-MTime: 0x694B9BE1
+ATime: 0x694BC909
+MTime: 0x694BC909
 CTime: 0x0
 -------------------------
 Node ID: 0x1FC01
@@ -141,9 +144,9 @@ Blocks: 0x8
 Mode: 0x41ED
 UID: 0x0
 GID: 0x0
-ATime: 0x694B9BE1
-MTime: 0x694B9BE1
-CTime: 0xEF5C694B
+ATime: 0x694BC90A
+MTime: 0x694BC90A
+CTime: 0x694BC90A
 -------------------------
 Node ID: 0xC
 Name: TestDir
@@ -153,9 +156,9 @@ Blocks: 0x8
 Mode: 0x41ED
 UID: 0x0
 GID: 0x0
-ATime: 0x64792D3
-MTime: 0x64792D3
-CTime: 0x694B
+ATime: 0xFFAABBCC
+MTime: 0xFFAABBCC
+CTime: 0x694BC909
 -------------------------
 Directory Inode List Dir uses File Extents : Looong Message
 Directory Inode List Dir uses File Extents : Looong Message

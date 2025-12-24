@@ -50,6 +50,24 @@ int strcmp(const char* a, const char* b) {
     return (unsigned char)*a - (unsigned char)*b;
 }
 
+void* memset(void* dest, uint8_t value, size_t num) {
+    uint8_t* ptr = (uint8_t*)dest;
+    for (size_t i = 0; i < num; i++) {
+        ptr[i] = value;
+    }
+    return dest;
+}
+
+void* memcpy(void* dest, const void* src, size_t n) {
+    unsigned char* d = (unsigned char*)dest;
+    const unsigned char* s = (const unsigned char*)src;
+
+    for (size_t i = 0; i < n; ++i)
+        d[i] = s[i];
+
+    return dest;
+}
+
 bool GenericEXT4::Supports(const DeviceKey& devKey) {
     if (devKey.bars[2] == 22) {
         uint64_t dev = ((uint64_t)devKey.bars[0] << 32) | devKey.bars[1];
@@ -70,24 +88,6 @@ FilesystemDevice* GenericEXT4::CreateDevice() {
 
     GenericEXT4Device* device = new(mem) GenericEXT4Device();
     return device;
-}
-
-void* memset(void* dest, uint8_t value, size_t num) {
-    uint8_t* ptr = (uint8_t*)dest;
-    for (size_t i = 0; i < num; i++) {
-        ptr[i] = value;
-    }
-    return dest;
-}
-
-void* memcpy(void* dest, const void* src, size_t n) {
-    unsigned char* d = (unsigned char*)dest;
-    const unsigned char* s = (const unsigned char*)src;
-
-    for (size_t i = 0; i < n; ++i)
-        d[i] = s[i];
-
-    return dest;
 }
 
 void GenericEXT4Device::Init(DriverServices& ds, DeviceKey& dKey) {
@@ -273,40 +273,6 @@ FsNode* GenericEXT4Device::Mount() {
     return node;
 }
 
-Inode* GenericEXT4Device::ReadInode(uint64_t node) {
-    uint64_t InodeBlockGroup = (node - 1) / superblock->InodesPerBlockGroup;
-    uint64_t InodeIndex = (node - 1) % superblock->InodesPerBlockGroup;
-
-    uint64_t BlockSize = 1024ull << superblock->BlockSize;
-
-    uint64_t SectorsBlock = BlockSize / pdev->SectorSize();
-
-    void* buf = _ds->RequestPage();
-    uint64_t bufPhys = (uint64_t)buf;
-    uint64_t bufVirt = bufPhys + 0xFFFFFFFF00000000;
-
-    _ds->MapMemory((void*)bufVirt, (void*)bufPhys, false);
-    memset((void*)bufVirt, 0, 4096);
-
-    BlockGroupDescriptor* GroupDesc = GroupDescs[InodeBlockGroup];
-
-    uint64_t InodeTableBlock = ((uint64_t)GroupDesc->HighAddrInodeTable << 32) | (uint64_t)GroupDesc->LowAddrInodeTable;
-    uint64_t InodeTableLBA = InodeTableBlock * (BlockSize / pdev->SectorSize());
-    uint64_t InodeOffset = InodeIndex * superblock->InodeSize;
-    uint64_t InodeSize = superblock->InodeSize;
-
-    uint64_t InodeSectors = (InodeSize + pdev->SectorSize() - 1) / pdev->SectorSize();
-    for (uint64_t i = 0; i < InodeSectors; i++) {
-        uint64_t LBA = InodeTableLBA + i;
-        uint64_t OffsetBuf = i * pdev->SectorSize();
-        if (!pdev->ReadSector(LBA, (void*)(bufPhys + OffsetBuf))) {
-            _ds->Println("Failed to read root inode");
-            return nullptr;
-        }
-    }
-    return (Inode*)(bufVirt + (InodeOffset % pdev->SectorSize()));
-}
-
 bool GenericEXT4Device::Unmount() {
     if (!isMounted) {
         return false;
@@ -347,7 +313,7 @@ FsNode** GenericEXT4Device::ListDir(FsNode* node, size_t* outCount) {
 
     _ds->MapMemory((void*)bufVirt, (void*)bufPhys, false);
 
-    if (dir_inode.Flags & Extents) {
+    if (dir_inode.Flags & EXT4_EXTENTS_FL) {
         _ds->Println("Directory Inode List Dir uses File Extents : Looong Message");
         ExtentHeader* extHdr = (ExtentHeader*)dir_inode.DBP;
         for (uint32_t i = 0; i < extHdr->entries; i++) {
@@ -708,7 +674,7 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
     newInode.UserID = 0;
     newInode.GroupID = 0;
 
-    uint32_t now = 0x64792D3; // TODO: CurrentTime();
+    uint32_t now = 0xFFAABBCC; // TODO: CurrentTime();
     newInode.LastAccess = now;
     newInode.LastModification = now;
     newInode.LastChange = now;
@@ -719,14 +685,17 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
     newInode.LowBlocks = blockSize / 512;
     newInode.Flags = 0;
     newInode.OSVal1 = 0;
-    for (int i = 1; i < 15; i++) {
+    for (int i = 0; i < 15; i++) {
         newInode.DBP[i] = 0;
     }
+
+    _ds->Print("Inode Size: ");
+    _ds->Println(to_hstridng(superblock->InodeSize));
 
     OSVal2 osv;
     osv.HighBlocks = 0;
     osv.HighACL = 0;
-    osv.EasterEgg = 0xA574A105; // AstralOS
+    osv.EasterEgg = 0; // AstralOS
     osv.HighUserID = 0;
     osv.HighGroupID = 0;
     
@@ -742,7 +711,7 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
     newInode.LowACL = 0;
     newInode.FragmentBlock = 0;
     newInode.HighSize = 0;
-    newInode.HighInodeSize = 0;
+    newInode.HighInodeSize = superblock->InodeSize - 128;
     newInode.HighLastChange = 0;
     newInode.HighLastModification = 0;
     newInode.HighLastAccess = 0;
@@ -751,8 +720,6 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
     newInode.HighFileCreation = 0;
 
     newInode.LowSize = blockSize;
-
-    WriteInode(InodeNum, &newInode);
 
     /*
      * Our Ext4 FS can use a feature called Extents,
@@ -769,15 +736,19 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
         extHdr->depth = 0;
         extHdr->generation = newInode.Generation;
 
-        Extent* ext = (Extent*)((uint8_t*)newInode->DBP + sizeof(ExtentHeader));
+        Extent* ext = (Extent*)((uint8_t*)newInode.DBP + sizeof(ExtentHeader));
         ext->block = 0;
         ext->len = 1;
         ext->startLow = newBlock & 0xFFFFFFFF;
         ext->startHigh = (newBlock >> 32) & 0xFFFF;
+
+        newInode.Flags |= EXT4_EXTENTS_FL;
     } else {
         _ds->Println("FS Does Not Support Extents");
         newInode.DBP[0] = newBlock;
     }
+
+    WriteInode(InodeNum, &newInode);
 
     DirectoryEntry* dot = (DirectoryEntry*)bufVirt;
     dot->Inode = InodeNum;
@@ -829,7 +800,7 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
     parentInode->LastModification = now;
     parentInode->LastAccess = now;
 
-    if ((parentInode->Flags & Extents) != 0) {
+    if ((parentInode->Flags & EXT4_EXTENTS_FL) != 0) {
         ExtentHeader* extHdr = (ExtentHeader*)parentInode->DBP;
         if (extHdr->magic != 0xF30A) { 
             _ds->Println("Parent Inode has Bad Extent Header");
@@ -1040,150 +1011,7 @@ BlockGroupDescriptor* GenericEXT4Device::ReadGroupDesc(uint32_t group) {
     return (BlockGroupDescriptor*)((uint8_t*)bufVirt + descOff);
 }
 
-uint8_t* GenericEXT4Device::ReadBitmapInode(BlockGroupDescriptor* GroupDesc) {
-    _ds->Println("Reading Inode Bitmap");
-    void* bufPhys = _ds->RequestPage();
-    uint64_t bufVirt = (uint64_t)bufPhys + 0xFFFFFFFF00000000;
-    _ds->MapMemory((void*)bufVirt, bufPhys, false);
-    memset((void*)bufVirt, 0, 4096);
 
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
-    uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
-
-    uint64_t inodeBitmapBlock = ((uint64_t)GroupDesc->HighAddrInodeBitmap << 32) | GroupDesc->LowAddrInodeBitmap;
-    uint64_t inodeBitmapLBA = inodeBitmapBlock * sectorsPerBlock;
-
-    /*
-     * Now we can read our Inode Bitmap
-    */
-    for (uint64_t i = 0; i < sectorsPerBlock; i++) {
-        if (!pdev->ReadSector(inodeBitmapLBA + i, (uint8_t*)bufPhys + i * pdev->SectorSize())) {
-            _ds->Println("Failed to read inode bitmap");
-            return 0;
-        }
-    }
-
-    uint8_t* bitmap = (uint8_t*)bufVirt;
-    return bitmap;
-}
-
-void GenericEXT4Device::WriteBitmapInode(BlockGroupDescriptor* GroupDesc, uint8_t* bitmap) {
-    _ds->Println("Writing Inode Bitmap");
-    void* bufPhys = _ds->RequestPage();
-    uint64_t bufVirt = (uint64_t)bufPhys + 0xFFFFFFFF00000000;
-    _ds->MapMemory((void*)bufVirt, bufPhys, false);
-    memset((void*)bufVirt, 0, 4096);
-
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
-    uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
-
-    uint64_t inodeBitmapBlock = ((uint64_t)GroupDesc->HighAddrInodeBitmap << 32) | GroupDesc->LowAddrInodeBitmap;
-    uint64_t inodeBitmapLBA = inodeBitmapBlock * sectorsPerBlock;
-
-    for (uint64_t i = 0; i < sectorsPerBlock; i++) {
-        if (!pdev->ReadSector(inodeBitmapLBA + i, (uint8_t*)bufPhys + i * pdev->SectorSize())) {
-            _ds->Println("Failed to read inode bitmap");
-            return;
-        }
-    }
-    
-    memcpy((void*)bufVirt, bitmap, blockSize);
-
-    for (uint64_t i = 0; i < sectorsPerBlock; i++) {
-        if (!pdev->WriteSector(inodeBitmapLBA + i, (uint8_t*)bufPhys + i * pdev->SectorSize())) {
-            _ds->Println("Failed to write inode bitmap");
-            return;
-        }
-    }
-
-    _ds->UnMapMemory((void*)bufVirt);
-    _ds->FreePage(bufPhys);
-}
-
-/*
- * To Allocate an Inode we need to 
- * first look through all block
- * group descriptors and check if 
- * they have a free Inode. 
- * 
- * Then we can get and Inode Bitmap 
- * Block and size.
- * 
- * Then we can just read the Inode
- * Bitmap Block and mark it used
- * and finally return the Inode
- * num.
-*/
-uint32_t GenericEXT4Device::AllocateInode(FsNode* parent) {
-    /*
-     * First we need to calculate the Parent's Block Group and Index
-     * so that we can get our Group Descriptor.
-     * 
-     * Then we can get our FlexSize and FirstFlex bc we are using Flex
-     * Block Groups
-    */
-    uint32_t ParentBlockGroup = (parent->nodeId - 1) / superblock->InodesPerBlockGroup;
-
-    uint32_t FlexSize = 1u << superblock->GroupsPerFlex;
-    uint32_t FirstFlex = ParentBlockGroup - (ParentBlockGroup % FlexSize);
-
-    BlockGroupDescriptor* GroupDesc = GroupDescs[FirstFlex];
-
-    /*
-     * Then we can allocate a page to use for the
-     * rest of our func.
-     * 
-     * To re-use it, we can just memset it again.
-    */
-    uint8_t* bitmap = ReadBitmapInode(GroupDesc);
-
-    uint32_t FlexInodeOff = (ParentBlockGroup - FirstFlex) * superblock->InodesPerBlockGroup;
-    uint32_t First = (FirstFlex == 0) ? (superblock->FirstInode - 1) : 0;
-    uint32_t newInode = 0xFFFFFFFF;
-
-    /*
-     * Now we can scan for a Free Inode
-     * using our Inode Bitmap.
-    */
-    for (uint32_t i = FlexInodeOff; i < FlexInodeOff + superblock->InodesPerBlockGroup; i++) {
-        if (i < First) continue;
-
-        uint32_t byte = i >> 3;
-        uint8_t bit = i & 7;
-
-        if (!(bitmap[byte] & (1 << bit))) {
-            bitmap[byte] |= (1 << bit);
-            newInode = i;
-            break;
-        }
-    }
-
-    if (newInode == 0xFFFFFFFF) {
-        _ds->Println("No free inode");
-        return 0;
-    }
-
-    WriteBitmapInode(GroupDesc, bitmap);
-    
-    superblock->UnallocInodes--;
-    UpdateSuperblock();
-    GroupDesc->LowUnallocInodes--;
-    UpdateGroupDesc(FirstFlex, GroupDesc);
-
-    uint32_t globalInode = (ParentBlockGroup * superblock->InodesPerBlockGroup) + newInode + 1;
-    return globalInode;
-}
-
-bool GenericEXT4Device::HasSuperblockBKP(uint32_t group) {
-    if (group == 0 || group == 1) return true;
-    if (!(superblock->ReqFeaturesRO & SparseSuperBlocks)) return true;
-
-    if (isPower(group, 3)) return true;
-    if (isPower(group, 5)) return true;
-    if (isPower(group, 7)) return true;
-
-    return false;
-}
 
 uint8_t* GenericEXT4Device::ReadBitmapBlock(BlockGroupDescriptor* GroupDesc) {
     _ds->Println("Reading Block Bitmap");
@@ -1357,22 +1185,6 @@ void GenericEXT4Device::UpdateBlockBitmapChksum(uint32_t group, BlockGroupDescri
     }
 }
 
-void GenericEXT4Device::UpdateInodeBitmapChksum(uint32_t group, BlockGroupDescriptor* GroupDesc) {
-    if (superblock->MetaCheckAlgo == 1) {
-        uint64_t blockSize = 1024ull << superblock->BlockSize;
-
-        uint8_t* bitmap = ReadBitmapInode(GroupDesc);
-
-        uint32_t crc = crc32c_sw(superblock->CheckUUID, bitmap, blockSize);
-
-        GroupDesc->LowChkInodeBitmap = crc & 0xFFFF;
-        if (superblock->RequiredFeatures & BITS64) {
-            _ds->Println("64 Bit Bitmap Checksum");
-            GroupDesc->HighChkInodeBitmap = (crc >> 16) & 0xFFFF;
-        }
-    }
-}
-
 void GenericEXT4Device::UpdateGroupDesc(uint32_t group, BlockGroupDescriptor* GroupDesc) {
     _ds->Print("Group: ");
     _ds->Println(to_hstridng(group));
@@ -1430,121 +1242,7 @@ void GenericEXT4Device::UpdateGroupDesc(uint32_t group, BlockGroupDescriptor* Gr
     }
 }
 
-void GenericEXT4Device::UpdateSuperblock() {
-    _ds->Println("Updating Superblock on Disk");
-    if (superblock->MetaCheckAlgo == 1) {
-        superblock->CheckUUID = crc32c_sw(~0, superblock->FilesystemUUID, sizeof(superblock->FilesystemUUID));
-        superblock->Checksum = 0;
-        superblock->Checksum = crc32c_sw(superblock->CheckUUID, superblock, offsetof(EXT4_Superblock, Checksum));
-        _ds->Print("Updated Superblock Checksum: ");
-        _ds->Println(to_hstridng(superblock->Checksum));
-    }
-    uint32_t sectorSize = pdev->SectorSize();
 
-    uint64_t superblockSize = 1024;
-    uint64_t SuperblockOffset = 1024;
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
-    _ds->Print("Block Size: ");
-    _ds->Println(to_hstridng(blockSize));
-
-    auto writeSuperblock = [&](uint64_t blockNum) {
-        uint64_t LBA = (blockNum * blockSize) / sectorSize;
-        uint64_t Offset = (blockNum * blockSize) % sectorSize;
-        uint64_t sectorsNeeded = (Offset + superblockSize + sectorSize - 1) / sectorSize;
-
-        void* bufPhys = _ds->RequestPage();
-        uint64_t bufVirt = (uint64_t)bufPhys + 0xFFFFFFFF00000000;
-        _ds->MapMemory((void*)bufVirt, bufPhys, false);
-        memset((void*)bufVirt, 0, 4096);
-
-        for (uint64_t i = 0; i < sectorsNeeded; i++) {
-            if (!pdev->ReadSector(LBA + i, (uint8_t*)bufPhys + i * sectorSize)) {
-                _ds->Println("Failed to read superblock backup");
-                return;
-            }
-        }
-
-        memcpy((uint8_t*)bufVirt + Offset, superblock, superblockSize);
-
-        for (uint64_t i = 0; i < sectorsNeeded; i++) {
-            if (!pdev->WriteSector(LBA + i, (uint8_t*)bufPhys + i * sectorSize)) {
-                _ds->Println("Failed to write superblock backup");
-                return;
-            }
-        }
-    };
-
-    writeSuperblock(SuperblockOffset / blockSize);
-
-    if (superblock->ReqFeaturesRO & SparseSuperBlocks != 0) {
-        uint32_t totalBlockGroups = (superblock->TotalBlocks + superblock->BlocksPerBlockGroup - 1) / superblock->BlocksPerBlockGroup;
-        for (uint32_t bg = 0; bg < totalBlockGroups; bg++) {
-            if (bg == 0 || bg == 1 || bg % 3 == 0 || bg % 5 == 0 || bg % 7 == 0) {
-                uint64_t backupBlock = bg * superblock->BlocksPerBlockGroup + superblock->FirstDataBlock;
-                if (backupBlock != SuperblockOffset / blockSize) {
-                    writeSuperblock(backupBlock);
-                }
-            }
-        }
-    } else {
-        _ds->Println("Filesystem does not use sparse superblocks, no backups written");
-    }
-}
-
-/*
- * Before, the CreateDir Func was too cluttered,
- * so now, Im making it less cluttered.
-*/
-void GenericEXT4Device::WriteInode(uint32_t inodeNum, Inode* ind) {
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
-    uint64_t sectorSize = pdev->SectorSize();
-    uint64_t sectorsPerBlock = blockSize / sectorSize;
-
-    uint32_t inodeIndex = inodeNum - 1;
-    uint32_t inodesPerGroup = superblock->InodesPerBlockGroup;
-
-    uint32_t group = inodeIndex / inodesPerGroup;
-    uint32_t indexInGroup = inodeIndex % inodesPerGroup;
-    uint64_t inodeSize = superblock->InodeSize;
-    uint64_t byteOffset = indexInGroup * inodeSize;
-
-    BlockGroupDescriptor* GroupDesc = GroupDescs[group];
-    if (!GroupDesc) {
-        _ds->Println("Group Desc Is Invalid");
-        return;
-    }
-    uint64_t inodeTableBlock = ((uint64_t)GroupDesc->HighAddrInodeTable << 32) | (uint64_t)GroupDesc->LowAddrInodeTable;
-
-    uint64_t blockOffset = byteOffset / blockSize;
-    uint64_t offsetInBlock = byteOffset % blockSize;
-
-    uint64_t LBA = (inodeTableBlock + blockOffset) * sectorsPerBlock;
-
-    void* bufPhys = _ds->RequestPage();
-    uint64_t bufVirt = (uint64_t)bufPhys + 0xFFFFFFFF00000000;
-    _ds->MapMemory((void*)bufVirt, bufPhys, false);
-    memset((void*)bufVirt, 0, 4096);
-
-    for (uint64_t i = 0; i < sectorsPerBlock; i++) {
-        if (!pdev->ReadSector(LBA + i, (uint8_t*)bufPhys + i * sectorSize)) {
-            _ds->Println("Failed to Write Inode");
-            return;
-        }
-    }
-    
-    uint8_t tmp[4096];
-    memset(tmp, 0, inodeSize);
-    memcpy(tmp, ind, sizeof(Inode));
-    memcpy((uint8_t*)bufVirt + offsetInBlock, tmp, inodeSize);
-
-    for (uint64_t i = 0; i < sectorsPerBlock; i++) {
-        if (!pdev->WriteSector(LBA + i, (uint8_t*)bufPhys + i * sectorSize)) {
-            _ds->Println("Failed to Write Inode [Write Sector]");
-            return;
-        }
-    }
-    _ds->Println("Wrote Inode");
-}
 
 /*
  * TODO:

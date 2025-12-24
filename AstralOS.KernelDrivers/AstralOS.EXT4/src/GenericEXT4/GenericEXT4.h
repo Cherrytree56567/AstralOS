@@ -6,6 +6,14 @@
 #include <cstdint>
 #include "../crc32c.h"
 
+const char* to_hstridng(uint64_t value);
+static bool isPower(uint32_t n, uint32_t base);
+int memcmp(const void* a, const void* b, size_t n);
+constexpr uint64_t ceil(uint64_t a, uint64_t b);
+int strcmp(const char* a, const char* b);
+void* memset(void* dest, uint8_t value, size_t num);
+void* memcpy(void* dest, const void* src, size_t n);
+
 /*
  * This struct is inspired by the OSDev Wiki:
  * https://wiki.osdev.org/Ext4
@@ -278,7 +286,7 @@ struct OSVal2 {
     uint16_t HighUserID; // High 16 bits of 32-bit User ID 
     uint16_t HighGroupID; // High 16 bits of 32-bit Group ID
     uint16_t LowChecksum; // Low 16 bits of Checksum
-    uint32_t EasterEgg; // Reserved on Linux
+    uint16_t EasterEgg; // Reserved on Linux
 } __attribute__((packed));
 
 /*
@@ -343,18 +351,37 @@ enum Permission {
 };
 
 enum InodeFlags {
-    SecureDeletion = 0x00000001, // Secure deletion (not used) 
-    DataCopy = 0x00000002, // Keep a copy of data when deleted (not used) 
-    FileComp = 0x00000004, // File compression (not used) 
-    SyncUpdates = 0x00000008, // Synchronous updates—new data is written immediately to disk
-    ImmutableFiles = 0x00000010, // Immutable file (content cannot be changed) 
-    AppendOnly = 0x00000020, // Append only
-    DumpNoInc = 0x00000040, // File is not included in 'dump' command 
-    FreezeTime = 0x00000080, // Last accessed time should not updated 
-    HashIndexedDir = 0x00010000, // Hash indexed directory 
-    AFSDir = 0x00020000, // AFS directory 
-    JournalFileData = 0x00040000, // Journal file data 
-    Extents = 0x00080000 // Inode uses extents
+    EXT4_SECRM_FL = 0x1, // This file requires secure deletion (EXT4_SECRM_FL). (not implemented)
+    EXT4_UNRM_FL = 0x2, // This file should be preserved, should undeletion be desired (EXT4_UNRM_FL). (not implemented)
+    EXT4_COMPR_FL = 0x4, // This file is compressed (EXT4_COMPR_FL). (not implemented)
+    EXT4_SYNC_FL = 0x8, // All writes to the file must be synchronous (EXT4_SYNC_FL).
+    EXT4_IMMUTABLE_FL = 0x10, // File is immutable (EXT4_IMMUTABLE_FL).
+    EXT4_APPEND_FL = 0x20, // File can only be appended (EXT4_APPEND_FL).
+    EXT4_NODUMP_FL = 0x40, // The dump(1) utility should not dump this file (EXT4_NODUMP_FL).
+    EXT4_NOATIME_FL = 0x80, // Do not update access time (EXT4_NOATIME_FL).
+    EXT4_DIRTY_FL = 0x100, // Dirty compressed file (EXT4_DIRTY_FL). (not used)
+    EXT4_COMPRBLK_FL = 0x200, // File has one or more compressed clusters (EXT4_COMPRBLK_FL). (not used)
+    EXT4_NOCOMPR_FL = 0x400, // Do not compress file (EXT4_NOCOMPR_FL). (not used)
+    EXT4_ENCRYPT_FL = 0x800, // Encrypted inode (EXT4_ENCRYPT_FL). This bit value previously was EXT4_ECOMPR_FL (compression error), which was never used.
+    EXT4_INDEX_FL = 0x1000, // Directory has hashed indexes (EXT4_INDEX_FL).
+    EXT4_IMAGIC_FL = 0x2000, // AFS magic directory (EXT4_IMAGIC_FL).
+    EXT4_JOURNAL_DATA_FL = 0x4000, // File data must always be written through the journal (EXT4_JOURNAL_DATA_FL).
+    EXT4_NOTAIL_FL = 0x8000, // File tail should not be merged (EXT4_NOTAIL_FL). (not used by ext4)
+    EXT4_DIRSYNC_FL = 0x10000, // All directory entry data should be written synchronously (see dirsync) (EXT4_DIRSYNC_FL).
+    EXT4_TOPDIR_FL = 0x20000, // Top of directory hierarchy (EXT4_TOPDIR_FL).
+    EXT4_HUGE_FILE_FL = 0x40000, // This is a huge file (EXT4_HUGE_FILE_FL).
+    EXT4_EXTENTS_FL = 0x80000, // Inode uses extents (EXT4_EXTENTS_FL).
+    EXT4_VERITY_FL = 0x100000, // Verity protected file (EXT4_VERITY_FL).
+    EXT4_EA_INODE_FL = 0x200000, // Inode stores a large extended attribute value in its data blocks (EXT4_EA_INODE_FL).
+    EXT4_EOFBLOCKS_FL = 0x400000, // This file has blocks allocated past EOF (EXT4_EOFBLOCKS_FL). (deprecated)
+    EXT4_SNAPFILE_FL = 0x01000000, // Inode is a snapshot (EXT4_SNAPFILE_FL). (not in mainline)
+    EXT4_SNAPFILE_DELETED_FL = 0x04000000, // Snapshot is being deleted (EXT4_SNAPFILE_DELETED_FL). (not in mainline)
+    EXT4_SNAPFILE_SHRUNK_FL = 0x08000000, // Snapshot shrink has completed (EXT4_SNAPFILE_SHRUNK_FL). (not in mainline)
+    EXT4_INLINE_DATA_FL = 0x10000000, // Inode has inline data (EXT4_INLINE_DATA_FL).
+    EXT4_PROJINHERIT_FL = 0x20000000, // Create children with the same project ID (EXT4_PROJINHERIT_FL).
+    EXT4_RESERVED_FL = 0x80000000, // Reserved for ext4 library (EXT4_RESERVED_FL).
+    EXT4_USERVISIBLE_FL = 0x705BDFFF, // User-visible flags.
+    EXT4_USERMOD_FL = 0x604BC0FF, // User-modifiable flags. Note that while EXT4_JOURNAL_DATA_FL and EXT4_EXTENTS_FL can be set with setattr, they are not in the kernel's EXT4_FL_USER_MODIFIABLE mask, since it needs to handle the setting of these flags in a special manner and they are masked out of the set of flags that are saved directly to i_flags.
 };
 
 struct DirectoryEntry {
