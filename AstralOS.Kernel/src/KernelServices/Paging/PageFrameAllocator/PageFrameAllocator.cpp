@@ -181,5 +181,6 @@ void* PageFrameAllocator::RequestPage() {
         return (void*)(index * 4096);
     }
 
+    basicConsole->Println("Failed to RequestPage");
     return NULL;
 }

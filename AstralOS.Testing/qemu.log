@@ -1,21 +1,21 @@
-[2J[01;01H[=3h[2J[01;01H[0m[35m[40m[2J[01;01H[=3h[2J[01;01H[0m[35m[40m[0m[37m[40mBdsDxe: failed to load Boot0001 "UEFI QEMU DVD-ROM QM00005 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x2,0xFFFF,0x0): Not Found
+[2J[01;01H[=3h[2J[01;01H[0m[35m[40m[0m[37m[40mBdsDxe: failed to load Boot0001 "UEFI QEMU DVD-ROM QM00005 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x2,0xFFFF,0x0): Not Found
 BdsDxe: loading Boot0002 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)
 BdsDxe: starting Boot0002 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)
-Found ACPI 2.0 RSDP at: 0x3FB7E014
+Found ACPI 2.0 RSDP at: 0x7FB7E014
 Volume label is ''
-Offset: 0x1000Addr: 0x1000Offset: 0x11000Addr: 0x11000Offset: 0x30000Addr: 0x30000Offset: 0x36000Addr: 0x36000initramfs loaded at 0x3E4E0018 (152576 bytes)
+Offset: 0x1000Addr: 0x1000Offset: 0x11000Addr: 0x11000Offset: 0x30000Addr: 0x30000Offset: 0x36000Addr: 0x36000initramfs loaded at 0x7E4E0018 (152576 bytes)
 GOP located
 ss
 Handles freed
 Buffer freed
 nn
 Failed to GGet memory map: Buffer Too Small
-Boot Info Framebuffer Addr: Current Addr: 0xFFFFFFFF0000D69F
-RSDP Addr: 0xFFFFFFFF3FB7E014
-RSDP Signature: RSD PTR BOCHS tз?$
-RSDP OEM ID: BOCHS tз?$
+Boot Info Framebuffer Addr: Current Addr: 0xFFFFFFFF0000D6C1
+RSDP Addr: 0xFFFFFFFF7FB7E014
+RSDP Signature: RSD PTR �BOCHS tз$
+RSDP OEM ID: BOCHS tз$
 RSDP Revision: 0x2
-ACPI XSDT Addr: 0xFFFFFFFF3FB7D0E8
+ACPI XSDT Addr: 0xFFFFFFFF7FB7D0E8
 XSDT Length: 0x54
 XSDT Signature: XSDTT
 XSDT OEM ID: BOCHS BXPC    
@@ -24,9 +24,9 @@ Interrupts Initialized.
 APIC is Supported.
 IOAPIC initialized, all IRQs masked.
 APIC is Enabled.
-MADT Address: 0xFFFFFFFF3FB78000
-MADT Processor Local APIC: 0xFFFFFFFF3FB7802C
-MADT I/O APIC: 0xFFFFFFFF3FB78034
+MADT Address: 0xFFFFFFFF7FB78000
+MADT Processor Local APIC: 0xFFFFFFFF7FB7802C
+MADT I/O APIC: 0xFFFFFFFF7FB78034
 Allocated 32 bytes at 0xFFFF880000000020
 Allocated 64 bytes at 
 0xFFFF880000000060
@@ -93,16 +93,8 @@ Updating Superblock on Disk
 Block Size: 0x1000
 Group: 0x0
 New Block: 0x23E9
-0xCgroup: 0x1FC0
-inodeTableBlock: 0x423
 Wrote Inode
 FS Requires Extents
-0xC
-FsN
-FsN
-Parent Inode Uses Extents
-0x2group: 0x1FC0
-inodeTableBlock: 0x423
 Wrote Inode
 Directory Inode List Dir uses File Extents : Looong Message
 Node ID: 0x2
@@ -113,9 +105,9 @@ Blocks: 0x8
 Mode: 0x41ED
 UID: 0x0
 GID: 0x0
-ATime: 0x694792D3
-MTime: 0x694792D3
-CTime: 0x694A
+ATime: 0x64792D3
+MTime: 0x64792D3
+CTime: 0x694B
 -------------------------
 Node ID: 0x2
 Name: ..
@@ -125,9 +117,9 @@ Blocks: 0x8
 Mode: 0x41ED
 UID: 0x0
 GID: 0x0
-ATime: 0x694792D3
-MTime: 0x694792D3
-CTime: 0x694A
+ATime: 0x64792D3
+MTime: 0x64792D3
+CTime: 0x694B
 -------------------------
 Node ID: 0xB
 Name: lost+found
@@ -137,11 +129,11 @@ Blocks: 0x0
 Mode: 0x0
 UID: 0x0
 GID: 0x0
-ATime: 0x694A65BF
-MTime: 0x694A65BF
+ATime: 0x694B9BE1
+MTime: 0x694B9BE1
 CTime: 0x0
 -------------------------
-Node ID: 0x5F401
+Node ID: 0x1FC01
 Name: AstralOS
 Type: Directory
 Size: 0x1000
@@ -149,9 +141,9 @@ Blocks: 0x8
 Mode: 0x41ED
 UID: 0x0
 GID: 0x0
-ATime: 0x694A65BF
-MTime: 0x694A65BF
-CTime: 0x849C694A
+ATime: 0x694B9BE1
+MTime: 0x694B9BE1
+CTime: 0xEF5C694B
 -------------------------
 Node ID: 0xC
 Name: TestDir
@@ -161,9 +153,9 @@ Blocks: 0x8
 Mode: 0x41ED
 UID: 0x0
 GID: 0x0
-ATime: 0x694792D3
-MTime: 0x694792D3
-CTime: 0x694A
+ATime: 0x64792D3
+MTime: 0x64792D3
+CTime: 0x694B
 -------------------------
 Directory Inode List Dir uses File Extents : Looong Message
 Directory Inode List Dir uses File Extents : Looong Message

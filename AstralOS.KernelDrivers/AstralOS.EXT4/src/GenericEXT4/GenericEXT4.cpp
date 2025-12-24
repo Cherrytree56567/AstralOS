@@ -701,26 +701,26 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
     _ds->MapMemory((void*)bufVirt, (void*)bufPhys, false);
     memset((void*)bufVirt, 0, 4096);
 
-    Inode* newInode = (Inode*)bufVirt;
-    newInode->mode |= 0x4000;
-    newInode->mode |= 0755;
+    Inode newInode = {0};
+    newInode.mode |= 0x4000;
+    newInode.mode |= 0755;
 
-    newInode->UserID = 0;
-    newInode->GroupID = 0;
+    newInode.UserID = 0;
+    newInode.GroupID = 0;
 
-    uint32_t now = 0x694792D3; // TODO: CurrentTime();
-    newInode->LastAccess = now;
-    newInode->LastModification = now;
-    newInode->LastChange = now;
-    newInode->FileCreation = now;
-    newInode->Deletion = 0;
+    uint32_t now = 0x64792D3; // TODO: CurrentTime();
+    newInode.LastAccess = now;
+    newInode.LastModification = now;
+    newInode.LastChange = now;
+    newInode.FileCreation = now;
+    newInode.Deletion = 0;
 
-    newInode->HardLinksCount = 2;
-    newInode->LowBlocks = blockSize / 512;
-    newInode->Flags = 0;
-    newInode->OSVal1 = 0;
+    newInode.HardLinksCount = 2;
+    newInode.LowBlocks = blockSize / 512;
+    newInode.Flags = 0;
+    newInode.OSVal1 = 0;
     for (int i = 1; i < 15; i++) {
-        newInode->DBP[i] = 0;
+        newInode.DBP[i] = 0;
     }
 
     OSVal2 osv;
@@ -734,24 +734,25 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
      * TODO: Add Inode Checksum
     */
     osv.LowChecksum = 0;
-    newInode->ChecksumHigh = 0;
+    newInode.ChecksumHigh = 0;
 
-    newInode->osval2 = osv;
+    newInode.osval2 = osv;
 
-    newInode->Generation = 0;
-    newInode->LowACL = 0;
-    newInode->FragmentBlock = 0;
-    newInode->HighSize = 0;
-    newInode->HighInodeSize = 0;
-    newInode->HighLastChange = 0;
-    newInode->HighLastModification = 0;
-    newInode->HighLastAccess = 0;
-    newInode->HighVersion = 0;
-    newInode->ProjectID = 0;
-    newInode->HighFileCreation = 0;
+    newInode.Generation = 0;
+    newInode.LowACL = 0;
+    newInode.FragmentBlock = 0;
+    newInode.HighSize = 0;
+    newInode.HighInodeSize = 0;
+    newInode.HighLastChange = 0;
+    newInode.HighLastModification = 0;
+    newInode.HighLastAccess = 0;
+    newInode.HighVersion = 0;
+    newInode.ProjectID = 0;
+    newInode.HighFileCreation = 0;
 
-    newInode->LowSize = blockSize;
-    WriteInode(InodeNum, newInode);
+    newInode.LowSize = blockSize;
+
+    WriteInode(InodeNum, &newInode);
 
     /*
      * Our Ext4 FS can use a feature called Extents,
@@ -761,22 +762,21 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
     if (superblock->RequiredFeatures & RequiredFeatures::FileExtent) {
         _ds->Println("FS Requires Extents");
 
-        ExtentHeader* extHdr = (ExtentHeader*)newInode->DBP;
+        ExtentHeader* extHdr = (ExtentHeader*)newInode.DBP;
         extHdr->magic = 0xF30A;
         extHdr->entries = 1;
         extHdr->max = (15 * 4 - sizeof(ExtentHeader)) / sizeof(Extent);
         extHdr->depth = 0;
-        extHdr->generation = newInode->Generation;
+        extHdr->generation = newInode.Generation;
 
-        Extent* ext = (Extent*)(newInode->DBP + sizeof(ExtentHeader));
+        Extent* ext = (Extent*)((uint8_t*)newInode->DBP + sizeof(ExtentHeader));
         ext->block = 0;
         ext->len = 1;
         ext->startLow = newBlock & 0xFFFFFFFF;
         ext->startHigh = (newBlock >> 32) & 0xFFFF;
     } else {
         _ds->Println("FS Does Not Support Extents");
-        while(1);
-        newInode->DBP[0] = newBlock;
+        newInode.DBP[0] = newBlock;
     }
 
     DirectoryEntry* dot = (DirectoryEntry*)bufVirt;
@@ -802,26 +802,22 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
         }
     }
 
-    _ds->Println(to_hstridng(InodeNum));
-    _ds->Println("FsN");
-
     FsNode* fsN = (FsNode*)_ds->malloc(sizeof(FsNode));
-    _ds->Println("FsN");
     memset(fsN, 0, sizeof(FsNode));
     fsN->type = FsNodeType::Directory;
     fsN->name = _ds->strdup(name);
     fsN->nodeId = InodeNum;
 
-    fsN->size = ((uint64_t)newInode->HighSize << 32) | newInode->LowSize;
-    fsN->blocks = newInode->LowBlocks;
+    fsN->size = ((uint64_t)newInode.HighSize << 32) | newInode.LowSize;
+    fsN->blocks = newInode.LowBlocks;
 
-    fsN->mode = newInode->mode;
-    fsN->uid = newInode->UserID;
-    fsN->gid = newInode->GroupID;
+    fsN->mode = newInode.mode;
+    fsN->uid = newInode.UserID;
+    fsN->gid = newInode.GroupID;
 
-    fsN->atime = newInode->LastAccess;
-    fsN->mtime = newInode->LastModification;
-    fsN->ctime = newInode->FileCreation;
+    fsN->atime = newInode.LastAccess;
+    fsN->mtime = newInode.LastModification;
+    fsN->ctime = newInode.FileCreation;
 
     Inode* parentInode = ReadInode(parent->nodeId);
     if (!parentInode) {
@@ -834,7 +830,6 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
     parentInode->LastAccess = now;
 
     if ((parentInode->Flags & Extents) != 0) {
-        _ds->Println("Parent Inode Uses Extents");
         ExtentHeader* extHdr = (ExtentHeader*)parentInode->DBP;
         if (extHdr->magic != 0xF30A) { 
             _ds->Println("Parent Inode has Bad Extent Header");
@@ -890,8 +885,6 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
 
         if (!Inserted) {
             uint32_t newParentBlock = AllocateBlock(parent);
-            _ds->Print("Allocated New Parent Block: ");
-            _ds->Println(to_hstridng(newParentBlock));
 
             if (extHdr->entries >= extHdr->max) {
                 _ds->Println("No room for new extent in inode (need tree promotion) - aborting");
@@ -1504,7 +1497,6 @@ void GenericEXT4Device::UpdateSuperblock() {
 */
 void GenericEXT4Device::WriteInode(uint32_t inodeNum, Inode* ind) {
     uint64_t blockSize = 1024ull << superblock->BlockSize;
-    _ds->Print(to_hstridng(inodeNum));
     uint64_t sectorSize = pdev->SectorSize();
     uint64_t sectorsPerBlock = blockSize / sectorSize;
 
@@ -1514,7 +1506,7 @@ void GenericEXT4Device::WriteInode(uint32_t inodeNum, Inode* ind) {
     uint32_t group = inodeIndex / inodesPerGroup;
     uint32_t indexInGroup = inodeIndex % inodesPerGroup;
     uint64_t inodeSize = superblock->InodeSize;
-    uint64_t byteOffset = indexInGroup * inodeSize;_ds->Print("group: "); _ds->Println(to_hstridng(inodesPerGroup));
+    uint64_t byteOffset = indexInGroup * inodeSize;
 
     BlockGroupDescriptor* GroupDesc = GroupDescs[group];
     if (!GroupDesc) {
@@ -1522,8 +1514,6 @@ void GenericEXT4Device::WriteInode(uint32_t inodeNum, Inode* ind) {
         return;
     }
     uint64_t inodeTableBlock = ((uint64_t)GroupDesc->HighAddrInodeTable << 32) | (uint64_t)GroupDesc->LowAddrInodeTable;
-_ds->Print("inodeTableBlock: ");
-_ds->Println(to_hstridng(inodeTableBlock));
 
     uint64_t blockOffset = byteOffset / blockSize;
     uint64_t offsetInBlock = byteOffset % blockSize;
@@ -1541,9 +1531,11 @@ _ds->Println(to_hstridng(inodeTableBlock));
             return;
         }
     }
-
-    memset((uint8_t*)bufVirt + offsetInBlock, 0, inodeSize);
-    memcpy((uint8_t*)bufVirt + offsetInBlock, ind, inodeSize);
+    
+    uint8_t tmp[4096];
+    memset(tmp, 0, inodeSize);
+    memcpy(tmp, ind, sizeof(Inode));
+    memcpy((uint8_t*)bufVirt + offsetInBlock, tmp, inodeSize);
 
     for (uint64_t i = 0; i < sectorsPerBlock; i++) {
         if (!pdev->WriteSector(LBA + i, (uint8_t*)bufPhys + i * sectorSize)) {
