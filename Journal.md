@@ -125,7 +125,7 @@ I was following the OSDev Wiki before, but it only had stuff on EXT2 which was v
 The cool easter egg value I was putting into a reserved EXT4 OSVal2 var caused the whole thing to
 fail and caused some weird issues like corrupted creation time and corrupted ExtraBlocks. After I
 fixed that I realised that the InodeType Enums were wrong so I found the correct one from the [Gitlab Page](https://gitlab.incoresemi.com/software/linux/-/blob/0e698dfa282211e414076f9dc7e83c1c288314fd/Documentation/filesystems/ext4/inodes.rst#i-osd2)
-which helped me to enable Extents in my inode. After that I tested it with `debugfs` and it worked!
+which helped me to enable Extents in my inode. After that I tested it with `debugfs` and it worked! Although List Dir Still doesnt work properly.
 
 ![CreateDir3](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/CreateDir3.png?raw=true)
 
