@@ -86,7 +86,7 @@ struct EXT4_Superblock {
     uint32_t OptionalFeatures; // Optional features present. 
     uint32_t RequiredFeatures; // Required features present. 
     uint32_t ReqFeaturesRO; // Features that if not supported the volume must be mounted read-only.
-    uint64_t FilesystemUUID[2]; // File system UUID. 
+    uint8_t FilesystemUUID[16]; // File system UUID. 
     char VolumeName[16]; // Volume name. 
     char LastMountPath[64]; // Path Volume was last mounted to. 
     uint32_t CompressionAlgo; // Compression algorithm used. 
@@ -111,7 +111,7 @@ struct EXT4_Superblock {
     */
     uint32_t HighBlocks; // High 32-bits of the total number of blocks. 
     uint32_t HighReservedBlocks; // High 32-bits of the total number of reserved blocks.
-    uint32_t HighUnalloedBlocks; // High 32-bits of the total number of unallocated blocks.
+    uint32_t HighUnallocdBlocks; // High 32-bits of the total number of unallocated blocks.
     uint16_t MinInodeSize; // Minimum inode size. 
     uint16_t MinInodeResSize; // Minimum inode reservation size. 
     uint32_t MiscFlags; // Misc flags, such as sign of directory hash or development status. 
@@ -392,6 +392,14 @@ struct DirectoryEntry {
     char Name[]; // Size is NameLen, Name characters 
 } __attribute__((packed));
 
+struct DirectoryEntryTail {
+    uint32_t det_reserved_zero1; // Inode number, which must be zero.
+    uint16_t TotalSize; // Length of this directory entry, which must be 12.
+    uint8_t Reserved; // Length of the file name, which must be zero.
+    uint8_t Reserved2; // File type, which must be 0xDE.
+    uint32_t Checksum; // Directory leaf block checksum.
+} __attribute__((packed));
+
 enum DirectoryEntryType {
     DETUnknown = 0,
     DETFile = 1,
@@ -428,6 +436,13 @@ struct Extent {
     uint16_t len;
     uint16_t startHigh;
     uint32_t startLow;
+} __attribute__((packed));
+
+struct ExtentIDX {
+    uint32_t Block;
+    uint32_t LeafLow;
+    uint16_t LeafHigh;
+    uint16_t Unused;
 } __attribute__((packed));
 
 struct Journal {
@@ -509,6 +524,10 @@ private:
     void WriteBitmapBlock(BlockGroupDescriptor* GroupDesc, uint8_t* bitmap);
     uint8_t* ReadBitmapInode(BlockGroupDescriptor* GroupDesc);
     void WriteBitmapInode(BlockGroupDescriptor* GroupDesc, uint8_t* bitmap);
+    uint64_t CountExtents(ExtentHeader* hdr);
+    Extent** GetExtents(Inode* ind, ExtentHeader* hdr, uint64_t& extentsCount);
+    Extent** GetExtentsRecursive(Inode* ind, ExtentHeader* exthdr, uint64_t& extentsCount);
+    FsNode** ParseDirectoryBlock(uint8_t* block, uint64_t& count);
 
 	PartitionDevice* pdev;
 	DriverServices* _ds = nullptr;

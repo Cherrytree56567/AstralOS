@@ -303,83 +303,45 @@ FsNode** GenericEXT4Device::ListDir(FsNode* node, size_t* outCount) {
     Inode dir_inode = *ReadInode(node->nodeId);
 
     FsNode** nodes = nullptr;
-    size_t count = 0;
+    uint64_t count = 0;
     size_t capacity = 0;
 
     uint64_t blockSize = 1024ull << superblock->BlockSize;
     void* buf = _ds->RequestPage();
     uint64_t bufPhys = (uint64_t)buf;
     uint64_t bufVirt = bufPhys + 0xFFFFFFFF00000000;
+    uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
 
     _ds->MapMemory((void*)bufVirt, (void*)bufPhys, false);
 
     if (dir_inode.Flags & EXT4_EXTENTS_FL) {
-        _ds->Println("Directory Inode List Dir uses File Extents : Looong Message");
-        ExtentHeader* extHdr = (ExtentHeader*)dir_inode.DBP;
-        for (uint32_t i = 0; i < extHdr->entries; i++) {
-            Extent* ext = (Extent*)((uint8_t*)dir_inode.DBP + sizeof(ExtentHeader) + i * sizeof(Extent));
-            uint64_t startBlock = ((uint64_t)ext->startHigh << 32) | ext->startLow;
-            uint64_t len = ext->len;
+        ExtentHeader* exthdr = (ExtentHeader*)dir_inode.DBP;
 
-            for (uint64_t b = 0; b < len; b++) {
-                void* bbuf = _ds->RequestPage();
-                uint64_t bbufPhys = (uint64_t)bbuf;
-                uint64_t bbufVirt = bbufPhys + 0xFFFFFFFF00000000;
+        uint64_t extCount = 0;
+        Extent** exts = GetExtents(&dir_inode, exthdr, extCount);
 
-                _ds->MapMemory((void*)bbufVirt, (void*)bbufPhys, false);
-                memset((void*)bbufVirt, 0, 4096);
-                uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
+        for (int i = 0; i < extCount; i++) {
+            Extent* ext = exts[i];
+
+            uint64_t addr = ((uint64_t)ext->startHigh << 32) | ext->startLow;
+
+            uint32_t len = ext->len & 0x7FFF;
+
+            for (uint32_t i = 0; i < len; i++) {
+                memset((void*)bufVirt, 0, 4096);
+                uint64_t block = addr + i;
 
                 for (uint64_t s = 0; s < sectorsPerBlock; s++) {
-                    uint64_t lba = (startBlock + b) * sectorsPerBlock + s;
-                    if (!pdev->ReadSector(lba, (void*)((uint64_t)bbufPhys + s * pdev->SectorSize()))) {
+                    uint64_t lba = block * sectorsPerBlock + s;
+                    if (!pdev->ReadSector(lba, (void*)((uint64_t)bufPhys + s * pdev->SectorSize()))) {
                         _ds->Println("Failed to read sector");
                         return nullptr;
                     }
                 }
-                DirectoryEntry* entry = (DirectoryEntry*)bbufVirt;
-                uint64_t offset = 0;
-                while (offset < blockSize) {
-                    if (entry->Inode == 0) break;
-                    char nameBuf[256] = {0};
 
-                    if (entry->NameLen == 0 || entry->NameLen >= sizeof(nameBuf)) break;
-
-                    memcpy(nameBuf, entry->Name, entry->NameLen);
-                    nameBuf[entry->NameLen] = '\0';
-                    FsNode* child = (FsNode*)_ds->malloc(sizeof(FsNode));
-                    if (!child) break;
-                    memset(child, 0, sizeof(FsNode));
-                    child->nodeId = entry->Inode;
-                    switch (entry->Type) {
-                        case 0x1:
-                            child->type = FsNodeType::File;
-                            break;
-                        case 0x2:
-                            child->type = FsNodeType::Directory;
-                            break;
-                        default:
-                            break;
-                    }
-                    child->name = _ds->strdup(nameBuf);
-
-                    Inode* childInode = ReadInode(entry->Inode);
-                    if (childInode) {
-                        child->size = childInode->LowSize | ((uint64_t)childInode->HighSize << 32);
-                        child->blocks = childInode->LowBlocks;
-
-                        child->mode = childInode->mode;
-                        child->uid  = childInode->UserID;
-                        child->gid  = childInode->GroupID;
-
-                        child->atime = childInode->LastAccess;
-                        child->mtime = childInode->LastModification;
-                        child->ctime = childInode->FileCreation;
-                    }
-                    nodes[count++] = child;
-                    offset += entry->TotalSize;
-                    entry = (DirectoryEntry*)((uint8_t*)entry + entry->TotalSize);
-                }
+                uint8_t* buf = (uint8_t*)bufVirt;
+                nodes = ParseDirectoryBlock(buf, count);
+                //break;
             }
         }
     } else {
@@ -737,7 +699,7 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
         extHdr->generation = newInode.Generation;
 
         Extent* ext = (Extent*)((uint8_t*)newInode.DBP + sizeof(ExtentHeader));
-        ext->block = 0;
+        ext->block = 0x0;
         ext->len = 1;
         ext->startLow = newBlock & 0xFFFFFFFF;
         ext->startHigh = (newBlock >> 32) & 0xFFFF;
@@ -749,6 +711,14 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
     }
 
     WriteInode(InodeNum, &newInode);
+
+    uint64_t blockLBA = newBlock * (blockSize / pdev->SectorSize());
+    for (uint64_t i = 0; i < sectorsInBlock; i++) {
+        if (!pdev->ReadSector(blockLBA + i, (void*)((uint8_t*)bufPhys + i * pdev->SectorSize()))) {
+            _ds->Println("Failed to read directory block");
+            return nullptr;
+        }
+    }
 
     DirectoryEntry* dot = (DirectoryEntry*)bufVirt;
     dot->Inode = InodeNum;
@@ -765,7 +735,6 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
     dotdot->Type = DETDirectory;
     dotdot->TotalSize = blockSize - dot->TotalSize;
 
-    uint64_t blockLBA = newBlock * (blockSize / pdev->SectorSize());
     for (uint64_t i = 0; i < sectorsInBlock; i++) {
         if (!pdev->WriteSector(blockLBA + i, (void*)((uint8_t*)bufPhys + i * pdev->SectorSize()))) {
             _ds->Println("Failed to write directory block");
@@ -899,6 +868,17 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
         }
     }
 
+    uint32_t group = (parent->nodeId - 1) / superblock->InodesPerBlockGroup;
+    BlockGroupDescriptor* GroupDesc = GroupDescs[group];
+
+    uint32_t usedDirs = ((uint32_t)GroupDesc->HighDirs << 16) | GroupDesc->LowDirs;
+
+    usedDirs++;
+
+    GroupDesc->LowDirs = usedDirs & 0xFFFF;
+    GroupDesc->HighDirs = usedDirs >> 16;
+
+    UpdateGroupDesc(group, GroupDesc);
     WriteInode(parent->nodeId, parentInode);
 
     return fsN;
@@ -968,281 +948,6 @@ const char* GenericEXT4Device::DriverName() const {
 PartitionDevice* GenericEXT4Device::GetParentLayer() {
     return pdev;
 }
-
-/*
- * We can use this to read all Group Descs
- * at the Mount func to easily be able to
- * use them later on.
- * 
- * To read a Group Descriptor we need to first 
- * get the block Size and the sectors per
- * block. Then we can get the First GDT Block
- * and LBA and the desc Size, Offset, LBA and
- * Byte Offset. Then we can read the block 
- * group descriptor.
-*/
-BlockGroupDescriptor* GenericEXT4Device::ReadGroupDesc(uint32_t group) {
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
-    uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
-
-    uint64_t FirstGDTBlock = (blockSize == 1024) ? 2 : 1;
-    uint64_t FirstGDTLBA = FirstGDTBlock * sectorsPerBlock;
-
-    uint64_t descSize = superblock->GroupDescriptorBytes ? superblock->GroupDescriptorBytes : 64;
-    uint64_t descByteOffset = group * descSize;
-    uint64_t sectorSize = pdev->SectorSize();
-    uint64_t descLBA = FirstGDTLBA + (descByteOffset / sectorSize);
-    uint64_t descOff = descByteOffset % sectorSize;
-
-    uint64_t bytesNeeded = descOff + descSize;
-    uint64_t sectorsNeeded = (bytesNeeded + sectorSize - 1) / sectorSize;
-
-    void* bufPhys = _ds->RequestPage();
-    uint64_t bufVirt = (uint64_t)bufPhys + 0xFFFFFFFF00000000;
-
-    _ds->MapMemory((void*)bufVirt, bufPhys, false);
-    memset((void*)bufVirt, 0, 4096);
-
-    for (uint64_t i = 0; i < sectorsNeeded; i++) {
-        if (!pdev->ReadSector(descLBA + i, (void*)((uint8_t*)bufPhys + i * sectorSize))) {
-            _ds->Print("GDT read failed");
-        }
-    }
-    return (BlockGroupDescriptor*)((uint8_t*)bufVirt + descOff);
-}
-
-
-
-uint8_t* GenericEXT4Device::ReadBitmapBlock(BlockGroupDescriptor* GroupDesc) {
-    _ds->Println("Reading Block Bitmap");
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
-    uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
-
-    void* bufPhys = _ds->RequestPage();
-    uint64_t bufVirt = (uint64_t)bufPhys + 0xFFFFFFFF00000000;
-    _ds->MapMemory((void*)bufVirt, bufPhys, false);
-    memset((void*)bufVirt, 0, 4096);
-
-    uint64_t BitmapBlock = ((uint64_t)GroupDesc->HighAddrBlockBitmap << 32) | GroupDesc->LowAddrBlockBitmap;
-    uint64_t BitmapLBA = BitmapBlock * sectorsPerBlock;
-
-    uint64_t inodeBitmapBlock = ((uint64_t)GroupDesc->HighAddrInodeBitmap << 32) | GroupDesc->LowAddrInodeBitmap;
-
-    for (uint64_t i = 0; i < sectorsPerBlock; i++) {
-        if (!pdev->ReadSector(BitmapLBA + i, (uint8_t*)bufPhys + i * pdev->SectorSize())) {
-            _ds->Println("Failed to read block bitmap");
-            return nullptr;
-        }
-    }
-
-    uint8_t* Bitmap = (uint8_t*)bufVirt;
-
-    return Bitmap;
-}
-
-void GenericEXT4Device::WriteBitmapBlock(BlockGroupDescriptor* GroupDesc, uint8_t* bitmap) {
-    _ds->Println("Writing Block Bitmap");
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
-    uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
-
-    void* bufPhys = _ds->RequestPage();
-    uint64_t bufVirt = (uint64_t)bufPhys + 0xFFFFFFFF00000000;
-    _ds->MapMemory((void*)bufVirt, bufPhys, false);
-    memset((void*)bufVirt, 0, 4096);
-
-    uint64_t BitmapBlock = ((uint64_t)GroupDesc->HighAddrBlockBitmap << 32) | GroupDesc->LowAddrBlockBitmap;
-    uint64_t BitmapLBA = BitmapBlock * sectorsPerBlock;
-
-    uint64_t inodeBitmapBlock = ((uint64_t)GroupDesc->HighAddrInodeBitmap << 32) | GroupDesc->LowAddrInodeBitmap;
-
-    for (uint64_t i = 0; i < sectorsPerBlock; i++) {
-        if (!pdev->ReadSector(BitmapLBA + i, (uint8_t*)bufVirt + i * pdev->SectorSize())) {
-            _ds->Println("Failed to read block bitmap");
-            return;
-        }
-    }
-
-    memcpy((void*)bufVirt, bitmap, blockSize);
-
-    for (uint64_t i = 0; i < sectorsPerBlock; i++) {
-        if (!pdev->WriteSector(BitmapLBA + i, (uint8_t*)bufPhys + i * pdev->SectorSize())) {
-            _ds->Println("Failed to write block bitmap");
-            return;
-        }
-    }
-
-    _ds->UnMapMemory((void*)bufVirt);
-    _ds->FreePage(bufPhys);
-}
-
-/*
- * To Allocate a Block we must first find a free Block.
- * To do this, we can iterate through all the blocks
- * and check if it has free blocks.
- * If it does, then we can mark it as used and use it.
-*/
-uint32_t GenericEXT4Device::AllocateBlock(FsNode* parent) {
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
-    uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
-
-    /*
-     * First we must find the Parent's Block Group
-    */
-    uint32_t parentBlockGroup = (parent->nodeId - 1) / superblock->InodesPerBlockGroup;
-
-    if (parentBlockGroup < superblock->FirstDataBlock) {
-        parentBlockGroup = superblock->FirstDataBlock;
-    }
-
-    BlockGroupDescriptor* GroupDesc = GroupDescs[parentBlockGroup];
-    uint64_t inodeTableStart = ((uint64_t)GroupDesc->HighAddrInodeTable << 32) | GroupDesc->LowAddrInodeTable;
-    uint64_t inodeTableBlocks = (superblock->InodesPerBlockGroup * superblock->InodeSize + blockSize - 1) / blockSize;
-
-    uint32_t firstUsableBlock = inodeTableStart + inodeTableBlocks;
-
-    /*
-     * Get some Flex Stuff
-    */
-    uint32_t flexSize = 1u << superblock->GroupsPerFlex;
-    uint32_t firstFlexGroup = parentBlockGroup - (parentBlockGroup % flexSize);
-    uint32_t endFlexGroup = firstFlexGroup + flexSize;
-
-    void* bufPhys = _ds->RequestPage();
-    uint64_t bufVirt = (uint64_t)bufPhys + 0xFFFFFFFF00000000;
-    _ds->MapMemory((void*)bufVirt, bufPhys, false);
-    memset((void*)bufVirt, 0, 4096);
-
-    for (uint32_t BlockGroup = firstFlexGroup; BlockGroup < endFlexGroup; BlockGroup++) {
-        BlockGroupDescriptor* GroupDesc = GroupDescs[BlockGroup];
-
-        uint32_t freeBlocks = ((uint32_t)GroupDesc->HighUnallocBlocks << 16) | GroupDesc->LowUnallocBlocks;
-
-        uint64_t inodeTableStart = ((uint64_t)GroupDesc->HighAddrInodeTable << 32) | GroupDesc->LowAddrInodeTable;
-        uint64_t inodeTableBlocks = (superblock->InodesPerBlockGroup * superblock->InodeSize + blockSize - 1) / blockSize;
-
-        if (freeBlocks == 0) continue;
-
-        /*
-         * Let's read our Block Bitmap
-        */
-        uint8_t* Bitmap = ReadBitmapBlock(GroupDesc);
-
-        uint32_t BlocksPerGroup = superblock->BlocksPerBlockGroup;
-
-        uint32_t maxBits = blockSize * 8;
-        uint32_t limit = (BlocksPerGroup < maxBits) ? BlocksPerGroup : maxBits;
-
-        for (uint32_t i = 0; i < limit; i++) {
-            uint64_t GlobalBlock = (uint64_t)BlockGroup * BlocksPerGroup + i;
-            uint64_t GroupStart = (uint64_t)BlockGroup * BlocksPerGroup;
-
-            if (GlobalBlock == 0) continue;
-            if (GlobalBlock < firstUsableBlock) continue;
-
-            /*
-             * Now we can check if it is in use
-            */
-            uint32_t byte_index = i / 8;
-            uint8_t bit_index = i % 8;
-
-            if (Bitmap[byte_index] & (1 << bit_index)) {
-                continue;
-            }
-
-            Bitmap[byte_index] |= (1 << bit_index);
-
-            WriteBitmapBlock(GroupDesc, Bitmap);
-
-            superblock->UnallocBlocks--;
-
-            uint32_t count = (GroupDesc->HighUnallocBlocks << 16) | GroupDesc->LowUnallocBlocks;
-            count--;
-            GroupDesc->LowUnallocBlocks = count & 0xFFFF;
-            GroupDesc->HighUnallocBlocks = count >> 16;
-
-            UpdateSuperblock();
-            UpdateGroupDesc(BlockGroup, GroupDesc);
-
-            return GlobalBlock;
-        }
-    }
-    return 0;
-}
-
-void GenericEXT4Device::UpdateBlockBitmapChksum(uint32_t group, BlockGroupDescriptor* GroupDesc) {
-    if (superblock->MetaCheckAlgo == 1) {
-        uint64_t blockSize = 1024ull << superblock->BlockSize;
-
-        uint8_t* bitmap = ReadBitmapBlock(GroupDesc);
-
-        uint32_t crc = crc32c_sw(superblock->CheckUUID, bitmap, blockSize);
-
-        GroupDesc->LowChkBlockBitmap = crc & 0xFFFF;
-        if (superblock->RequiredFeatures & BITS64) {
-            _ds->Println("64 Bit Bitmap Checksum");
-            GroupDesc->HighChkBlockBitmap = (crc >> 16) & 0xFFFF;
-        }
-    }
-}
-
-void GenericEXT4Device::UpdateGroupDesc(uint32_t group, BlockGroupDescriptor* GroupDesc) {
-    _ds->Print("Group: ");
-    _ds->Println(to_hstridng(group));
-    if (superblock->MetaCheckAlgo == 1) {
-        GroupDesc->LowChkInodeBitmap = 0;
-        GroupDesc->HighChkInodeBitmap = 0;
-        GroupDesc->LowChkBlockBitmap = 0;
-        GroupDesc->HighChkBlockBitmap = 0;
-
-        UpdateBlockBitmapChksum(group, GroupDesc);
-        UpdateInodeBitmapChksum(group, GroupDesc);
-        
-        GroupDesc->Checksum = 0;
-
-        uint32_t crc = crc32c_sw(superblock->CheckUUID, &group, sizeof(group));
-        crc = crc32c_sw(crc, GroupDesc, superblock->GroupDescriptorBytes);
-
-        GroupDesc->Checksum = crc & 0xFFFF;
-    }
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
-    uint64_t sectorSize = pdev->SectorSize();
-    uint64_t sectorsPerBlock = blockSize / sectorSize;
-
-    uint64_t firstGDTBlock = (blockSize == 1024) ? 2 : 1;
-    uint64_t firstGDTLBA = firstGDTBlock * sectorsPerBlock;
-
-    uint64_t descSize = superblock->GroupDescriptorBytes ? superblock->GroupDescriptorBytes : 64;
-
-    uint64_t descByteOffset = (uint64_t)group * descSize;
-    uint64_t descLBA = firstGDTLBA + (descByteOffset / sectorSize);
-    uint64_t descOff = descByteOffset % sectorSize;
-
-    uint64_t bytes = descOff + descSize;
-    uint64_t sectors = (bytes + sectorSize - 1) / sectorSize;
-
-    void* bufPhys = _ds->RequestPage();
-    uint64_t bufVirt = (uint64_t)bufPhys + 0xFFFFFFFF00000000;
-    _ds->MapMemory((void*)bufVirt, bufPhys, false);
-    memset((void*)bufVirt, 0, 4096);
-
-    for (uint64_t i = 0; i < sectors; i++) {
-        if (!pdev->ReadSector(descLBA + i, (uint8_t*)bufPhys + i * sectorSize)) {
-            _ds->Println("GDT read failed");
-            return;
-        }
-    }
-
-    memcpy((uint8_t*)bufVirt + descOff, GroupDesc, descSize);
-
-    for (uint64_t i = 0; i < sectors; i++) {
-        if (!pdev->WriteSector(descLBA + i, (uint8_t*)bufPhys + i * sectorSize)) {
-            _ds->Println("GDT write failed");
-            return;
-        }
-    }
-}
-
-
 
 /*
  * TODO:

@@ -3,7 +3,7 @@ BdsDxe: loading Boot0002 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1
 BdsDxe: starting Boot0002 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)
 Found ACPI 2.0 RSDP at: 0x7FB7E014
 Volume label is ''
-Offset: 0x1000Addr: 0x1000Offset: 0x11000Addr: 0x11000Offset: 0x30000Addr: 0x30000Offset: 0x36000Addr: 0x36000initramfs loaded at 0x7E4E0018 (152576 bytes)
+Offset: 0x1000Addr: 0x1000Offset: 0x11000Addr: 0x11000Offset: 0x30000Addr: 0x30000Offset: 0x36000Addr: 0x36000initramfs loaded at 0x7E4DF018 (157696 bytes)
 GOP located
 ss
 Handles freed
@@ -78,28 +78,12 @@ Found FS Driver: Generic EXT4 Driver
 FS Signature: 0x0
 FS Signature: 0xEF53
 FS Signature: 0xEF53
-sUpdating Superblock on Disk
-Block Size: 0x1000
-Mounted EXT4 Filesystem!
-Reading Inode Bitmap
-Writing Inode Bitmap
-Updating Superblock on Disk
-Block Size: 0x1000
-Group: 0x0
+sMounted EXT4 Filesystem!
 New Inode: 0xC
-Reading Block Bitmap
-Writing Block Bitmap
-Updating Superblock on Disk
-Block Size: 0x1000
-Group: 0x0
 New Block: 0x23E9
 Inode Size: 0x100
 FS Requires Extents
-Inode Creation: 0x694BC909
-Wrote Inode
-Inode Creation: 0x694BC909
-Wrote Inode
-Directory Inode List Dir uses File Extents : Looong Message
+Depth is 0
 Node ID: 0x2
 Name: .
 Type: Directory
@@ -110,7 +94,7 @@ UID: 0x0
 GID: 0x0
 ATime: 0xFFAABBCC
 MTime: 0xFFAABBCC
-CTime: 0x694BC909
+CTime: 0x694E6C2E
 -------------------------
 Node ID: 0x2
 Name: ..
@@ -122,7 +106,7 @@ UID: 0x0
 GID: 0x0
 ATime: 0xFFAABBCC
 MTime: 0xFFAABBCC
-CTime: 0x694BC909
+CTime: 0x694E6C2E
 -------------------------
 Node ID: 0xB
 Name: lost+found
@@ -132,11 +116,11 @@ Blocks: 0x0
 Mode: 0x0
 UID: 0x0
 GID: 0x0
-ATime: 0x694BC909
-MTime: 0x694BC909
+ATime: 0x694E6C2E
+MTime: 0x694E6C2E
 CTime: 0x0
 -------------------------
-Node ID: 0x1FC01
+Node ID: 0x3F801
 Name: AstralOS
 Type: Directory
 Size: 0x1000
@@ -144,9 +128,9 @@ Blocks: 0x8
 Mode: 0x41ED
 UID: 0x0
 GID: 0x0
-ATime: 0x694BC90A
-MTime: 0x694BC90A
-CTime: 0x694BC90A
+ATime: 0x694E6C2E
+MTime: 0x694E6C2E
+CTime: 0x694E6C2E
 -------------------------
 Node ID: 0xC
 Name: TestDir
@@ -158,9 +142,9 @@ UID: 0x0
 GID: 0x0
 ATime: 0xFFAABBCC
 MTime: 0xFFAABBCC
-CTime: 0x694BC909
+CTime: 0x694E6C2E
 -------------------------
-Directory Inode List Dir uses File Extents : Looong Message
-Directory Inode List Dir uses File Extents : Looong Message
-Directory Inode List Dir uses File Extents : Looong Message
+Depth is 0
+Depth is 0
+Depth is 0
 Found: kernel.elf

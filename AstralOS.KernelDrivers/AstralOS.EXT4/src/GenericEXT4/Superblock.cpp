@@ -11,22 +11,35 @@ bool GenericEXT4Device::HasSuperblockBKP(uint32_t group) {
     return false;
 }
 
+/*
+ * Updating the superblock is pretty easy
+ * since all we need to do is read, copy
+ * and then write the superblock. We must
+ * also update the backup superblocks,
+ * which is what the above function is for.
+ * 
+ * Updating the checksum is also pretty
+ * easy, all we need to do is use ~0 as a
+ * seed and generate the FilesystemUUID
+ * crc32c for the CheckUUID. This UUID is
+ * what we use for the superblock, group
+ * desc and Inodes.
+ * 
+ * Then we zero the checksum and generate
+ * a crc32c checksum based on the CheckUUID
+ * and superblock.
+*/
 void GenericEXT4Device::UpdateSuperblock() {
-    _ds->Println("Updating Superblock on Disk");
     if (superblock->MetaCheckAlgo == 1) {
         superblock->CheckUUID = crc32c_sw(~0, superblock->FilesystemUUID, sizeof(superblock->FilesystemUUID));
         superblock->Checksum = 0;
         superblock->Checksum = crc32c_sw(superblock->CheckUUID, superblock, offsetof(EXT4_Superblock, Checksum));
-        _ds->Print("Updated Superblock Checksum: ");
-        _ds->Println(to_hstridng(superblock->Checksum));
     }
     uint32_t sectorSize = pdev->SectorSize();
 
     uint64_t superblockSize = 1024;
     uint64_t SuperblockOffset = 1024;
     uint64_t blockSize = 1024ull << superblock->BlockSize;
-    _ds->Print("Block Size: ");
-    _ds->Println(to_hstridng(blockSize));
 
     auto writeSuperblock = [&](uint64_t blockNum) {
         uint64_t LBA = (blockNum * blockSize) / sectorSize;
@@ -44,6 +57,8 @@ void GenericEXT4Device::UpdateSuperblock() {
                 return;
             }
         }
+
+        EXT4_Superblock* sup = (EXT4_Superblock*)bufVirt + Offset;
 
         memcpy((uint8_t*)bufVirt + Offset, superblock, superblockSize);
 

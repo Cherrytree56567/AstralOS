@@ -133,9 +133,7 @@ uint32_t GenericEXT4Device::AllocateInode(FsNode* parent) {
      * Now we can scan for a Free Inode
      * using our Inode Bitmap.
     */
-    for (uint32_t i = FlexInodeOff; i < FlexInodeOff + superblock->InodesPerBlockGroup; i++) {
-        if (i < First) continue;
-
+    for (uint32_t i = 0; i < superblock->InodesPerBlockGroup; i++) {
         uint32_t byte = i >> 3;
         uint8_t bit = i & 7;
 
@@ -155,10 +153,15 @@ uint32_t GenericEXT4Device::AllocateInode(FsNode* parent) {
     
     superblock->UnallocInodes--;
     UpdateSuperblock();
-    GroupDesc->LowUnallocInodes--;
+    uint32_t UnallocInodes = ((uint32_t)GroupDesc->HighUnallocInodes << 16) | GroupDesc->LowUnallocInodes;
+
+    UnallocInodes--;
+    GroupDesc->LowUnallocInodes = UnallocInodes & 0xFFFF;
+    GroupDesc->HighUnallocInodes = UnallocInodes >> 16;
+
     UpdateGroupDesc(FirstFlex, GroupDesc);
 
-    uint32_t globalInode = (ParentBlockGroup * superblock->InodesPerBlockGroup) + newInode + 1;
+    uint32_t globalInode = ParentBlockGroup * superblock->InodesPerBlockGroup + newInode + 1;
     return globalInode;
 }
 
@@ -183,7 +186,7 @@ void GenericEXT4Device::UpdateInodeBitmapChksum(uint32_t group, BlockGroupDescri
         GroupDesc->LowChkInodeBitmap = crc & 0xFFFF;
         if (superblock->RequiredFeatures & BITS64) {
             _ds->Println("64 Bit Bitmap Checksum");
-            GroupDesc->HighChkInodeBitmap = (crc >> 16) & 0xFFFF;
+            GroupDesc->HighChkInodeBitmap = (crc >> 16);
         }
     }
 }
@@ -244,6 +247,17 @@ Inode* GenericEXT4Device::ReadInode(uint64_t node) {
  * having trouble writng in the Inode.
 */
 void GenericEXT4Device::WriteInode(uint32_t inodeNum, Inode* ind) {
+    if (superblock->MetaCheckAlgo == 1) {
+        ind->ChecksumHigh = 0;
+        ind->osval2.LowChecksum = 0;
+        uint32_t crc = crc32c_sw(superblock->CheckUUID, (unsigned char *)&inodeNum, sizeof(inodeNum));
+        crc = crc32c_sw(crc, (unsigned char *)&ind->Generation, sizeof(ind->Generation));
+        uint32_t size = 128 + ind->HighInodeSize;
+        crc = crc32c_sw(crc, (unsigned char *)ind, size);
+        
+        ind->osval2.LowChecksum = crc & 0xFFFF;
+        ind->ChecksumHigh = (crc >> 16);
+    }
     uint64_t blockSize = 1024ull << superblock->BlockSize;
     uint64_t sectorSize = pdev->SectorSize();
     uint64_t sectorsPerBlock = blockSize / sectorSize;
