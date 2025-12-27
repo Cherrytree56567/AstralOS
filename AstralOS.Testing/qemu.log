@@ -83,7 +83,7 @@ New Inode: 0xC
 New Block: 0x23E9
 Inode Size: 0x100
 FS Requires Extents
-Depth is 0
+0x0Depth is 0
 Node ID: 0x2
 Name: .
 Type: Directory
@@ -94,7 +94,7 @@ UID: 0x0
 GID: 0x0
 ATime: 0xFFAABBCC
 MTime: 0xFFAABBCC
-CTime: 0x694E6C2E
+CTime: 0x694FE389
 -------------------------
 Node ID: 0x2
 Name: ..
@@ -106,7 +106,7 @@ UID: 0x0
 GID: 0x0
 ATime: 0xFFAABBCC
 MTime: 0xFFAABBCC
-CTime: 0x694E6C2E
+CTime: 0x694FE389
 -------------------------
 Node ID: 0xB
 Name: lost+found
@@ -116,11 +116,11 @@ Blocks: 0x0
 Mode: 0x0
 UID: 0x0
 GID: 0x0
-ATime: 0x694E6C2E
-MTime: 0x694E6C2E
+ATime: 0x694FE389
+MTime: 0x694FE389
 CTime: 0x0
 -------------------------
-Node ID: 0x3F801
+Node ID: 0x5F401
 Name: AstralOS
 Type: Directory
 Size: 0x1000
@@ -128,9 +128,9 @@ Blocks: 0x8
 Mode: 0x41ED
 UID: 0x0
 GID: 0x0
-ATime: 0x694E6C2E
-MTime: 0x694E6C2E
-CTime: 0x694E6C2E
+ATime: 0x694FE38A
+MTime: 0x694FE38A
+CTime: 0x694FE38A
 -------------------------
 Node ID: 0xC
 Name: TestDir
@@ -142,7 +142,7 @@ UID: 0x0
 GID: 0x0
 ATime: 0xFFAABBCC
 MTime: 0xFFAABBCC
-CTime: 0x694E6C2E
+CTime: 0x694FE389
 -------------------------
 Depth is 0
 Depth is 0

@@ -384,8 +384,8 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
                 FsNode* fsN = bldev->Mount();
 
                 size_t count = 0;
-                FsNode* Testdir = bldev->CreateDir(fsN, "TestDir");
-                FsNode** nodes = bldev->ListDir(Testdir, &count);
+                //FsNode* Testdir = bldev->CreateDir(fsN, "TestDir");
+                FsNode** nodes = bldev->ListDir(fsN, &count);
                 //kernelServices.basicConsole.Print(TestDir->name);
 
                 /*

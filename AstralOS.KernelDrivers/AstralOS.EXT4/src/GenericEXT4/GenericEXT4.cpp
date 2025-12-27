@@ -683,6 +683,8 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
 
     newInode.LowSize = blockSize;
 
+    newInode.Flags |= EXT4_USERMOD_FL;
+
     /*
      * Our Ext4 FS can use a feature called Extents,
      * where a dir is basically a file with its contents
@@ -692,6 +694,7 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
         _ds->Println("FS Requires Extents");
 
         ExtentHeader* extHdr = (ExtentHeader*)newInode.DBP;
+        _ds->Print(to_hstridng(extHdr->magic));
         extHdr->magic = 0xF30A;
         extHdr->entries = 1;
         extHdr->max = (15 * 4 - sizeof(ExtentHeader)) / sizeof(Extent);
@@ -711,30 +714,53 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
     }
 
     WriteInode(InodeNum, &newInode);
-
-    uint64_t blockLBA = newBlock * (blockSize / pdev->SectorSize());
+/*
+    
     for (uint64_t i = 0; i < sectorsInBlock; i++) {
         if (!pdev->ReadSector(blockLBA + i, (void*)((uint8_t*)bufPhys + i * pdev->SectorSize()))) {
             _ds->Println("Failed to read directory block");
             return nullptr;
         }
-    }
+    }*/
 
     DirectoryEntry* dot = (DirectoryEntry*)bufVirt;
     dot->Inode = InodeNum;
     dot->Name[0] = '.';
     dot->NameLen = 1;
     dot->Type = DETDirectory;
-    dot->TotalSize = 12;
+    int rec_len = (1 + 8 + 3);
+	rec_len &= ~3;
+    dot->TotalSize = rec_len;
     
     DirectoryEntry* dotdot = (DirectoryEntry*)(bufVirt + dot->TotalSize);
     dotdot->Inode = parent->nodeId;
     dotdot->Name[0] = '.';
     dotdot->Name[1] = '.';
     dotdot->NameLen = 2;
-    dotdot->Type = DETDirectory;
-    dotdot->TotalSize = blockSize - dot->TotalSize;
+    dotdot->Type = DETDirectory; 
+    /*
+     * From e2fsprogs
+     * https://github.com/tytso/e2fsprogs/blob/master/lib/ext2fs/newdir.c#L74
+    */
+    if (((blockSize - dot->TotalSize) > blockSize) || (blockSize > (1 << 18)) || ((blockSize - dot->TotalSize) & 3)) {
+		dotdot->TotalSize = 0;
+	}
 
+    if ((blockSize - dot->TotalSize) < 65536) {
+		dotdot->TotalSize = (blockSize - dot->TotalSize);
+	}
+
+	if ((blockSize - dot->TotalSize) == blockSize) {
+		if (blockSize == 65536) {
+			dotdot->TotalSize = ((1<<16)-1);
+        } else {
+			dotdot->TotalSize = 0;
+        }
+	} else {
+		dotdot->TotalSize = ((blockSize - dot->TotalSize) & 65532) | (((blockSize - dot->TotalSize) >> 16) & 3);
+    }
+
+    uint64_t blockLBA = newBlock * (blockSize / pdev->SectorSize());
     for (uint64_t i = 0; i < sectorsInBlock; i++) {
         if (!pdev->WriteSector(blockLBA + i, (void*)((uint8_t*)bufPhys + i * pdev->SectorSize()))) {
             _ds->Println("Failed to write directory block");
@@ -885,10 +911,51 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
 }
 
 bool GenericEXT4Device::Remove(FsNode* node) {
+    if (node->type == FsNodeType::Directory) {
+        if (node->nodeId == 2) {
+            _ds->Println("Cannot remove root directory");
+            return false;
+        }
+
+        size_t count = 0;
+        FsNode** contents = ListDir(node, &count);
+        if (count > 2) {
+            _ds->Println("Directory not empty, cannot remove");
+            _ds->free(contents);
+            return false;
+        }
+        uint64_t parent = 0;
+        for (int i = 0; i < 2; i++) {
+            if (strcmp(contents[i]->name, "..") == 0) {
+                parent = contents[i]->nodeId;
+                break;
+            }
+        }
+        
+        _ds->free(contents);
+
+        Inode parent_inode = *ReadInode(parent);
+    }
 }
 
 File* GenericEXT4Device::Open(FsNode* node, uint32_t flags) {
-    
+    File* file = (File*)_ds->malloc(sizeof(File));
+    if (!file) {
+        return nullptr;
+    }
+
+    Inode inode = *ReadInode(node->nodeId);
+
+    bool write = flags & (WRONLY | RDWR);
+
+    if (node->type == FsNodeType::Directory && write) return nullptr;
+    if ((flags & TRUNC) && node->type != FsNodeType::File) return nullptr;
+    if ((inode.Flags & EXT4_IMMUTABLE_FL) && write) return nullptr;
+    if ((inode.Flags & EXT4_APPEND_FL) && write && !(flags & APPEND)) return nullptr;
+
+    file->node = node;
+    file->flags = flags;
+    file->position = 0;
 }
 
 bool GenericEXT4Device::Close(File* file) {
