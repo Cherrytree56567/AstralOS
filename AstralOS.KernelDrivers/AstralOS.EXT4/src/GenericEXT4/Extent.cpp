@@ -88,3 +88,110 @@ Extent** GenericEXT4Device::GetExtents(Inode* ind, ExtentHeader* exthdr, uint64_
 
     return extents;
 }
+
+/*
+ * This func is GPT Generated.
+ * I will rewrite this later.
+*/
+uint64_t GenericEXT4Device::ResolveExtentBlockFromHdr(ExtentHeader* hdr, uint64_t logicalBlock) {
+    if (hdr->depth == 0) {
+        Extent* ext = (Extent*)(hdr + 1);
+
+        for (uint16_t i = 0; i < hdr->entries; i++) {
+            uint32_t logicalStart = ext[i].block;
+            uint32_t len = ext[i].len & 0x7FFF;
+
+            if (logicalBlock >= logicalStart &&
+                logicalBlock < logicalStart + len) {
+
+                uint64_t physStart =
+                    ((uint64_t)ext[i].startHigh << 32) | ext[i].startLow;
+
+                return physStart + (logicalBlock - logicalStart);
+            }
+        }
+
+        return 0;
+    }
+
+    ExtentIDX* idx = (ExtentIDX*)(hdr + 1);
+
+    for (int i = hdr->entries - 1; i >= 0; i--) {
+        if (logicalBlock >= idx[i].Block) {
+            uint64_t nextPhys = ((uint64_t)idx[i].LeafHigh << 32) | idx[i].LeafLow;
+
+            uint64_t blockSize = 1024ULL << superblock->BlockSize;
+            uint64_t sectors = blockSize / pdev->SectorSize();
+
+            void* tmp = _ds->RequestPage();
+            uint64_t tmpPhys = (uint64_t)tmp;
+            uint64_t tmpVirt = tmpPhys + 0xFFFFFFFF00000000;
+            _ds->MapMemory((void*)tmpVirt, (void*)tmpPhys, false);
+
+            for (uint64_t s = 0; s < sectors; s++) {
+                if (!pdev->ReadSector(nextPhys * sectors + s, (void*)(tmpPhys + s * pdev->SectorSize()))) {
+                    return 0;
+                }
+            }
+
+            return ResolveExtentBlockFromHdr((ExtentHeader*)tmpVirt, logicalBlock);
+        }
+    }
+
+    return 0;
+}
+
+/*
+ * Also GPT Generated and will be rewritten later
+*/
+uint64_t GenericEXT4Device::ResolveExtentBlock(Inode* inode, uint64_t logicalBlock) {
+    ExtentHeader* hdr = (ExtentHeader*)inode->DBP;
+
+    if (hdr->magic != 0xF30A) return 0;
+
+    if (hdr->depth == 0) {
+        Extent* ext = (Extent*)(hdr + 1);
+
+        for (uint16_t i = 0; i < hdr->entries; i++) {
+            uint32_t logicalStart = ext[i].block;
+            uint32_t len = ext[i].len & 0x7FFF;
+
+            if (logicalBlock >= logicalStart &&
+                logicalBlock < logicalStart + len) {
+
+                uint64_t physStart = ((uint64_t)ext[i].startHigh << 32) | ext[i].startLow;
+
+                return physStart + (logicalBlock - logicalStart);
+            }
+        }
+
+        return 0;
+    }
+
+    ExtentIDX* idx = (ExtentIDX*)(hdr + 1);
+
+    for (int i = hdr->entries - 1; i >= 0; i--) {
+        if (logicalBlock >= idx[i].Block) {
+            uint64_t nextPhys = ((uint64_t)idx[i].LeafHigh << 32) | idx[i].LeafLow;
+
+            uint64_t blockSize = 1024ULL << superblock->BlockSize;
+            uint64_t sectors = blockSize / pdev->SectorSize();
+
+            void* tmp = _ds->RequestPage();
+            uint64_t tmpPhys = (uint64_t)tmp;
+            uint64_t tmpVirt = tmpPhys + 0xFFFFFFFF00000000;
+            _ds->MapMemory((void*)tmpVirt, (void*)tmpPhys, false);
+
+            for (uint64_t s = 0; s < sectors; s++) {
+                if (!pdev->ReadSector(nextPhys * sectors + s, (void*)(tmpPhys + s * pdev->SectorSize()))) {
+                    return 0;
+                }
+            }
+
+            ExtentHeader* nextHdr = (ExtentHeader*)tmpVirt;
+            return ResolveExtentBlockFromHdr(nextHdr, logicalBlock);
+        }
+    }
+
+    return 0;
+}

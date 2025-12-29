@@ -2,6 +2,109 @@
 #include "../global.h"
 #include <new>
 
+size_t strlen(const char *str) {
+    size_t count = 0;
+    while (str[count] != '\0') {
+        count++;
+    }
+    return count;
+}
+
+char* strchr(const char* s, int c) {
+    while (*s) {
+        if (*s == (char)c)
+            return (char*)s;
+        s++;
+    }
+
+    if (c == '\0')
+        return (char*)s;
+
+    return NULL;
+}
+
+char* strtok(char* str, const char* delim) {
+    static char* next = NULL;
+
+    if (str)
+        next = str;
+
+    if (!next)
+        return NULL;
+        
+    char* start = next;
+    while (*start && strchr(delim, *start))
+        start++;
+
+    if (*start == '\0') {
+        next = NULL;
+        return NULL;
+    }
+
+    char* end = start;
+    while (*end && !strchr(delim, *end))
+        end++;
+
+    if (*end) {
+        *end = '\0';
+        next = end + 1;
+    } else {
+        next = NULL;
+    }
+
+    return start;
+}
+
+/*
+ * Found on Stack Overflow:
+ * https://stackoverflow.com/questions/9210528/split-string-with-delimiters-in-c
+*/
+char** str_split(DriverServices* _ds, char* a_str, const char a_delim, size_t* size) {
+    char** result    = 0;
+    size_t count     = 0;
+    char* tmp        = _ds->strdup(a_str);
+    char* last_comma = 0;
+    char delim[2];
+    delim[0] = a_delim;
+    delim[1] = 0;
+
+    /* Count how many elements will be extracted. */
+    while (*tmp)
+    {
+        if (a_delim == *tmp)
+        {
+            count++;
+            last_comma = tmp;
+        }
+        tmp++;
+    }
+
+    /* Add space for trailing token. */
+    count += last_comma < (a_str + strlen(a_str) - 1);
+
+    /* Add space for terminating null string so caller
+       knows where the list of returned strings ends. */
+    count++;
+
+    result = (char**)_ds->malloc(sizeof(char*) * count);
+
+    if (result)
+    {
+        size_t idx  = 0;
+        char* token = strtok(a_str, delim);
+
+        while (token)
+        {
+            *(result + idx++) = _ds->strdup(token);
+            token = strtok(0, delim);
+        }
+        *(result + idx) = 0;
+    }
+    *size = count;
+
+    return result;
+}
+
 const char* to_hstridng(uint64_t value) {
     static char buffer[19];
     char* ptr = buffer + sizeof(buffer) - 1;
@@ -254,6 +357,7 @@ FsNode* GenericEXT4Device::Mount() {
 
     pdev->SetMount(EXT4MountID);
     pdev->SetMountNode(node);
+    rootNode = *node;
 
     //superblock->FSstate &= ~Clean;
     superblock->FSstate |= Clean; // Force Clean for now
@@ -314,7 +418,7 @@ FsNode** GenericEXT4Device::ListDir(FsNode* node, size_t* outCount) {
 
     _ds->MapMemory((void*)bufVirt, (void*)bufPhys, false);
 
-    if (dir_inode.Flags & EXT4_EXTENTS_FL) {
+    if (false) {
         ExtentHeader* exthdr = (ExtentHeader*)dir_inode.DBP;
 
         uint64_t extCount = 0;
@@ -409,8 +513,8 @@ FsNode** GenericEXT4Device::ListDir(FsNode* node, size_t* outCount) {
                     child->blocks = childInode->LowBlocks;
 
                     child->mode = childInode->mode;
-                    child->uid  = childInode->UserID;
-                    child->gid  = childInode->GroupID;
+                    child->uid = childInode->UserID;
+                    child->gid = childInode->GroupID;
 
                     child->atime = childInode->LastAccess;
                     child->mtime = childInode->LastModification;
@@ -428,144 +532,43 @@ FsNode** GenericEXT4Device::ListDir(FsNode* node, size_t* outCount) {
     return nodes;
 }
 
-size_t strlen(const char *str) {
-    size_t count = 0;
-    while (str[count] != '\0') {
-        count++;
-    }
-    return count;
-}
-
-/*
-size_t strlen(const char *str) {
-    size_t count = 0;
-    while (str[count] != '\0') {
-        count++;
-    }
-    return count;
-}
-
-char* strchr(const char* s, int c) {
-    while (*s) {
-        if (*s == (char)c)
-            return (char*)s;
-        s++;
-    }
-
-    if (c == '\0')
-        return (char*)s;
-
-    return NULL;
-}
-
-char* strtok(char* str, const char* delim) {
-    static char* next = NULL;
-
-    if (str)
-        next = str;
-
-    if (!next)
-        return NULL;
-        
-    char* start = next;
-    while (*start && strchr(delim, *start))
-        start++;
-
-    if (*start == '\0') {
-        next = NULL;
-        return NULL;
-    }
-
-    char* end = start;
-    while (*end && !strchr(delim, *end))
-        end++;
-
-    if (*end) {
-        *end = '\0';
-        next = end + 1;
-    } else {
-        next = NULL;
-    }
-
-    return start;
-}
-
-/*
- * Found on Stack Overflow:
- * https://stackoverflow.com/questions/9210528/split-string-with-delimiters-in-c
-/
-char** str_split(DriverServices* _ds, char* a_str, const char a_delim, size_t* size) {
-    char** result    = 0;
-    size_t count     = 0;
-    char* tmp        = a_str;
-    char* last_comma = 0;
-    char delim[2];
-    delim[0] = a_delim;
-    delim[1] = 0;
-
-    / Count how many elements will be extracted. /
-    while (*tmp)
-    {
-        if (a_delim == *tmp)
-        {
-            count++;
-            last_comma = tmp;
-        }
-        tmp++;
-    }
-
-    / Add space for trailing token. /
-    count += last_comma < (a_str + strlen(a_str) - 1);
-
-    / Add space for terminating null string so caller
-       knows where the list of returned strings ends. /
-    count++;
-
-    result = (char**)_ds->malloc(sizeof(char*) * count);
-
-    if (result)
-    {
-        size_t idx  = 0;
-        char* token = strtok(a_str, delim);
-
-        while (token)
-        {
-            *(result + idx++) = _ds->strdup(token);
-            token = strtok(0, delim);
-        }
-        *(result + idx) = 0;
-    }
-    size = &count;
-
-    return result;
-}
-*/
-
 /*
  * To Find a File through a Dir you can just
  * use `ListDir` to get all the files in the
  * node and recursively look through subdirs
  * to find the file and return the FsNode*.
 */
-FsNode* GenericEXT4Device::FindDir(FsNode* node, const char* name) {
-    size_t count = 0;
-    FsNode** contents = ListDir(node, &count);
+FsNode* GenericEXT4Device::FindDir(FsNode* node, const char* path) {
+    size_t cont = 0;
 
-    for (int x = 0; x < count; x++) {
-        if (strcmp(contents[x]->name, name) == 0) {
-            return contents[x];
-        }
+    char** parts = str_split(_ds, (char*)path, '/', &cont);
+    _ds->Println(to_hstridng(cont));
+    _ds->Println(parts[0]);
+    _ds->Println(parts[1]);
+    _ds->Println(parts[2]);
 
-        if (strcmp(contents[x]->name, ".") == 0) continue;
-        if (strcmp(contents[x]->name, "..") == 0) continue;
+    FsNode* nd = node;
 
-        if (contents[x]->type == FsNodeType::Directory) {
-            FsNode* fsn = FindDir(contents[x], name);
-            if (fsn) return fsn;
+    for (int i = 0; i < cont; i++) {
+        size_t count = 0;
+        FsNode** contents = ListDir(nd, &count);
+
+        char* name = parts[i];
+
+        for (int x = 0; x < count; x++) {
+            if (strcmp(contents[x]->name, name) == 0) {
+                nd = contents[x];
+            }
         }
     }
-    _ds->free(contents);
-    return NULL;
+    _ds->Print("Found");
+    _ds->Println(nd->name);
+    _ds->Println(to_hstridng(nd->nodeId));
+    if (nd == node) {
+        _ds->Println("File Not Found");
+        return nullptr;
+    }
+    return nd;
 }
 
 /*
@@ -682,8 +685,6 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
     newInode.HighFileCreation = 0;
 
     newInode.LowSize = blockSize;
-
-    newInode.Flags |= EXT4_USERMOD_FL;
 
     /*
      * Our Ext4 FS can use a feature called Extents,
@@ -938,32 +939,141 @@ bool GenericEXT4Device::Remove(FsNode* node) {
     }
 }
 
-File* GenericEXT4Device::Open(FsNode* node, uint32_t flags) {
+File* GenericEXT4Device::Open(const char* name, uint32_t flags) {
     File* file = (File*)_ds->malloc(sizeof(File));
     if (!file) {
+        _ds->Println("Failed to allocate File struct");
         return nullptr;
     }
 
-    Inode inode = *ReadInode(node->nodeId);
+    FsNode* node = FindDir(&rootNode, name);
+    Inode* inode = ReadInode(2);
 
     bool write = flags & (WRONLY | RDWR);
 
-    if (node->type == FsNodeType::Directory && write) return nullptr;
-    if ((flags & TRUNC) && node->type != FsNodeType::File) return nullptr;
-    if ((inode.Flags & EXT4_IMMUTABLE_FL) && write) return nullptr;
-    if ((inode.Flags & EXT4_APPEND_FL) && write && !(flags & APPEND)) return nullptr;
+    if (node->type == FsNodeType::Directory && write) {
+        _ds->Println("Cannot open directory for writing");
+        return nullptr;
+    }
+    if ((flags & TRUNC) && node->type != FsNodeType::File) {
+        _ds->Println("Cannot truncate non-file node");
+        return nullptr;
+    }
+    if ((inode->Flags & EXT4_IMMUTABLE_FL) && write) {
+        _ds->Println("Cannot open immutable file for writing");
+        return nullptr;
+    }
+    if ((inode->Flags & EXT4_APPEND_FL) && write && !(flags & APPEND)) {
+        _ds->Println("Cannot open append-only file for writing without APPEND flag");
+        return nullptr;
+    }
 
     file->node = node;
     file->flags = flags;
     file->position = 0;
+    return file;
 }
 
 bool GenericEXT4Device::Close(File* file) {
-    
+    _ds->free(file->node);
+    _ds->free(file);
+    file = nullptr;
+    return true;
 }
 
+/*
+ * Some of it is GPT Generated
+*/
 int64_t GenericEXT4Device::Read(File* file, void* buffer, uint64_t size) {
-    
+    if (!file) return -3;
+
+    if (buffer == nullptr && size == 0) {
+        Inode* inode = ReadInode(file->node->nodeId);
+        uint64_t fileSize = inode->LowSize | ((uint64_t)inode->HighSize << 32);
+        _ds->Print("FileSize: ");
+        _ds->Println(to_hstridng(inode->LowSize));
+
+        if (file->position >= fileSize) return 0;
+
+        return fileSize - file->position;
+    }
+
+    if (!(file->flags & RDONLY) && !(file->flags & RDWR)) {
+        _ds->Println("Read: File not opened for reading");
+        return -1;
+    }
+    if (file->node->type == FsNodeType::Directory) {
+        _ds->Println("Read: Cannot read from a directory");
+        return -2;
+    }
+
+    void* buf = _ds->RequestPage();
+    uint64_t bufPhys = (uint64_t)buf;
+    uint64_t bufVirt = bufPhys + 0xFFFFFFFF00000000;
+    _ds->MapMemory((void*)bufVirt, (void*)bufPhys, false);
+    memset((void*)bufVirt, 0, 4096);
+
+    FsNode* node = file->node;
+
+    Inode* inode = ReadInode(node->nodeId);
+
+    uint64_t fileSize = inode->LowSize | ((uint64_t)inode->HighSize << 32);
+    uint64_t pos = file->position;
+
+    if (pos >= fileSize) {
+        return 0;
+    }
+
+    uint64_t toRead = size;
+    if (pos + toRead > fileSize) toRead = fileSize - pos;
+
+    uint8_t* out = (uint8_t*)buffer;
+    uint64_t readTotal = 0;
+    uint64_t blockSize = 1024ULL << superblock->BlockSize;
+
+    if ((inode->Flags & EXT4_EXTENTS_FL)) {
+        while (readTotal < toRead) {
+            memset((void*)bufVirt, 0, 4096);
+
+            uint64_t fileOffset = pos + readTotal;
+            uint64_t logicalBlock = fileOffset / blockSize;
+            uint64_t blockOffset = fileOffset % blockSize;
+
+            uint64_t physBlock = ResolveExtentBlock(inode, logicalBlock);
+
+            uint64_t chunk = blockSize - blockOffset;
+            if (chunk > toRead - readTotal) {
+                chunk = toRead - readTotal;
+            }
+
+            if (physBlock == 0) {
+                memset(out + readTotal, 0, chunk);
+                readTotal += chunk;
+                continue;
+            }
+
+            uint64_t sectorsInBlock = blockSize / pdev->SectorSize();
+            uint64_t firstSector = physBlock * sectorsInBlock;
+
+            for (uint64_t i = 0; i < sectorsInBlock; i++) {
+                if (!pdev->ReadSector( firstSector + i, (void*)((uint8_t*)bufPhys + i * pdev->SectorSize()))) {
+                    _ds->Println("Failed to read data block");
+                    return -4;
+                }
+            }
+
+            memcpy(out + readTotal, (void*)(bufVirt + blockOffset), chunk);
+            _ds->Print("INODE MODE = ");
+            _ds->Println(to_hstridng(inode->mode));
+
+            readTotal += chunk;
+        }
+    } else {
+        _ds->Println("File Doesnt use Extents!");
+    }
+
+    file->position += readTotal;
+    return readTotal;
 }
 
 int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {

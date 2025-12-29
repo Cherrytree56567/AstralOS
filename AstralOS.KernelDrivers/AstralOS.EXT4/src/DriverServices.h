@@ -121,7 +121,7 @@ public:
     virtual FsNode* CreateDir(FsNode* parent, const char* name) = 0;
     virtual bool Remove(FsNode* node) = 0;
 
-    virtual File* Open(FsNode* node, uint32_t flags) = 0;
+    virtual File* Open(const char* name, uint32_t flags) = 0;
     virtual bool Close(File* file) = 0;
     virtual int64_t Read(File* file, void* buffer, uint64_t size) = 0;
     virtual int64_t Write(File* file, void* buffer, uint64_t size) = 0;

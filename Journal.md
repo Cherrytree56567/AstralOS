@@ -127,3 +127,11 @@ The cool easter egg value I was putting into a reserved EXT4 OSVal2 var caused t
 ![CreateDir3](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/CreateDir3.png?raw=true)
 
 **Total time spent: 2h 28m**
+
+# December 25th - 29th: Lets go slower
+
+I found a lot of bugs and inconsistencies when testing the OS for example when I wanted to add Opening and Reading Files in the driver or when I tried to fix ListDir, which is still somewhat broken btw. I decided to restart and look at the linux kernel documentation and code to understand EXT4 and get my Driver to work. So currently, I've re-done the Superblock, Inode and Block Group Descriptor structs and enums. I also noticed a bunch of fields I should've been using like the `s_first_ino` or `s_rev_level`. The superblock was also the wrong size, like having a `uint64_t[32]` array which would've really misaligned the superblock struct. I also added a ton of nice comments explaining how various parts of EXT4 work.
+
+![Reworking](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/Reworking.png?raw=true)
+
+**Total time spent: 14h 41m**

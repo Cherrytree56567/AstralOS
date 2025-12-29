@@ -121,7 +121,7 @@ public:
     virtual FsNode* CreateDir(FsNode* parent, const char* name) = 0;
     virtual bool Remove(FsNode* node) = 0;
 
-    virtual File* Open(FsNode* node, uint32_t flags) = 0;
+    virtual File* Open(const char* name, uint32_t flags) = 0;
     virtual bool Close(File* file) = 0;
     virtual int64_t Read(File* file, void* buffer, uint64_t size) = 0;
     virtual int64_t Write(File* file, void* buffer, uint64_t size) = 0;
@@ -166,6 +166,7 @@ struct DriverServices {
     void (*FreePage)(void* address);
     void (*FreePages)(void* address, uint64_t pageCount);
     void (*MapMemory)(void* virtualMemory, void* physicalMemory, bool cache);
+    void (*UnMapMemory)(void* virtualMemory);
     void* (*malloc)(size_t size);
     void (*free)(void* ptr);
     char* (*strdup)(const char* str);

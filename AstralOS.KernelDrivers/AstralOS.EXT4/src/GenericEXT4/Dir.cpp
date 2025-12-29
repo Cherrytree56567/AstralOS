@@ -41,10 +41,10 @@ FsNode** GenericEXT4Device::ParseDirectoryBlock(uint8_t* block, uint64_t& FSNcou
             memset(child, 0, sizeof(FsNode));
             child->nodeId = ent->Inode;
             switch (ent->Type) {
-                case 0x1:
+                case InodeTypeEnum::File:
                     child->type = FsNodeType::File;
                     break;
-                case 0x2:
+                case InodeTypeEnum::Directory:
                     child->type = FsNodeType::Directory;
                     break;
                 default:

@@ -32,10 +32,10 @@ struct File {
 };
 
 enum FileFlags {
-    RDONLY,
-    WRONLY,
-    RDWR,
-    APPEND,
-    CREATE,
-    TRUNC
+    RDONLY = 1,
+    WRONLY = 2,
+    RDWR = 3,
+    APPEND = 4,
+    CREATE = 5,
+    TRUNC = 6
 };

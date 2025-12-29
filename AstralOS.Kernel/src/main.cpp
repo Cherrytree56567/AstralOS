@@ -385,7 +385,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
                 size_t count = 0;
                 //FsNode* Testdir = bldev->CreateDir(fsN, "TestDir");
-                FsNode** nodes = bldev->ListDir(fsN, &count);
+                FsNode** nodes = bldev->ListDir(bldev->FindDir(fsN, "AstralOS/System64"), &count);
                 //kernelServices.basicConsole.Print(TestDir->name);
 
                 /*
@@ -437,10 +437,26 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
                     kernelServices.basicConsole.Println("-------------------------");
                 }
 
-                FsNode* fself = bldev->FindDir(fsN, "kernel.elf");
+                FsNode* fself = bldev->FindDir(fsN, "AstralOS/System64/kernel.elf");
                 if (fself) {
                     kernelServices.basicConsole.Print("Found: ");
                     kernelServices.basicConsole.Println(fself->name);
+                    File* file = bldev->Open("AstralOS/System64/hello.txt", FileFlags::RDONLY);
+                    kernelServices.basicConsole.Print(to_hstring(file->flags));
+                    int64_t size = bldev->Read(file, nullptr, 0);
+                    void* buf = kernelServices.heapAllocator.malloc(size);
+                    kernelServices.basicConsole.Print("ff");
+                    bldev->Read(file, buf, size);
+                    kernelServices.basicConsole.Print("D");
+                    kernelServices.basicConsole.Print(to_hstring((uint64_t)size));
+                    
+                    uint8_t* buff = (uint8_t*)buf;
+
+                    for (uint64_t i = 0; i < size; i++) {
+                        kernelServices.basicConsole.Print(to_hstring(buff[i]));
+                        kernelServices.basicConsole.Print(" ");
+                    }
+                    kernelServices.basicConsole.Println("");
                 } else {
                     kernelServices.basicConsole.Println("Not Found: kernel.elf");
                 }
