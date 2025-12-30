@@ -1,4 +1,4 @@
-#include "GenericEXT4.h"
+#include "../GenericEXT4.h"
 
 /*
  * We can use this to read all Group Descs
@@ -13,13 +13,13 @@
  * group descriptor.
 */
 BlockGroupDescriptor* GenericEXT4Device::ReadGroupDesc(uint32_t group) {
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
+    uint64_t blockSize = 1024ull << superblock->s_log_block_size;
     uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
 
     uint64_t FirstGDTBlock = (blockSize == 1024) ? 2 : 1;
     uint64_t FirstGDTLBA = FirstGDTBlock * sectorsPerBlock;
 
-    uint64_t descSize = superblock->GroupDescriptorBytes ? superblock->GroupDescriptorBytes : 64;
+    uint64_t descSize = superblock->s_desc_size ? superblock->s_desc_size : 64;
     uint64_t descByteOffset = group * descSize;
     uint64_t sectorSize = pdev->SectorSize();
     uint64_t descLBA = FirstGDTLBA + (descByteOffset / sectorSize);
@@ -49,30 +49,31 @@ BlockGroupDescriptor* GenericEXT4Device::ReadGroupDesc(uint32_t group) {
  * we can crc32 the GroupDesc.
 */
 void GenericEXT4Device::UpdateGroupDesc(uint32_t group, BlockGroupDescriptor* GroupDesc) {
-    if (superblock->MetaCheckAlgo == 1) {
-        GroupDesc->LowChkInodeBitmap = 0;
-        GroupDesc->HighChkInodeBitmap = 0;
-        GroupDesc->LowChkBlockBitmap = 0;
-        GroupDesc->HighChkBlockBitmap = 0;
+    if (superblock->s_checksum_type == 1) {
+        GroupDesc->bg_inode_bitmap_csum_lo = 0;
+        GroupDesc->bg_inode_bitmap_csum_hi = 0;
+        GroupDesc->bg_block_bitmap_csum_lo = 0;
+        GroupDesc->bg_block_bitmap_csum_hi = 0;
 
         UpdateBlockBitmapChksum(group, GroupDesc);
         UpdateInodeBitmapChksum(group, GroupDesc);
         
-        GroupDesc->Checksum = 0;
+        GroupDesc->bg_checksum = 0;
 
-        uint32_t crc = crc32c_sw(superblock->CheckUUID, &group, sizeof(group));
-        crc = crc32c_sw(crc, (uint8_t*)GroupDesc, superblock->GroupDescriptorBytes);
+        uint32_t crc = crc32c_sw(~0, superblock->s_uuid, 16);
+        crc = crc32c_sw(crc, &group, sizeof(group));
+        crc = crc32c_sw(crc, (uint8_t*)GroupDesc, superblock->s_desc_size);
 
-        GroupDesc->Checksum = crc & 0xFFFF;
+        GroupDesc->bg_checksum = crc & 0xFFFF;
     }
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
+    uint64_t blockSize = 1024ull << superblock->s_log_block_size;
     uint64_t sectorSize = pdev->SectorSize();
     uint64_t sectorsPerBlock = blockSize / sectorSize;
 
     uint64_t firstGDTBlock = (blockSize == 1024) ? 2 : 1;
     uint64_t firstGDTLBA = firstGDTBlock * sectorsPerBlock;
 
-    uint64_t descSize = superblock->GroupDescriptorBytes ? superblock->GroupDescriptorBytes : 64;
+    uint64_t descSize = superblock->s_desc_size ? superblock->s_desc_size : 64;
 
     uint64_t descByteOffset = (uint64_t)group * descSize;
     uint64_t descLBA = firstGDTLBA + (descByteOffset / sectorSize);

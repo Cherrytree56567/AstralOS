@@ -1,4 +1,4 @@
-#include "GenericEXT4.h"
+#include "../GenericEXT4.h"
 
 /*
  * Reading the Bitmap Block is pretty much
@@ -10,7 +10,7 @@
  * read.
 */
 uint8_t* GenericEXT4Device::ReadBitmapBlock(BlockGroupDescriptor* GroupDesc) {
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
+    uint64_t blockSize = 1024ull << superblock->s_log_block_size;
     uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
 
     void* bufPhys = _ds->RequestPage();
@@ -18,10 +18,10 @@ uint8_t* GenericEXT4Device::ReadBitmapBlock(BlockGroupDescriptor* GroupDesc) {
     _ds->MapMemory((void*)bufVirt, bufPhys, false);
     memset((void*)bufVirt, 0, 4096);
 
-    uint64_t BitmapBlock = ((uint64_t)GroupDesc->HighAddrBlockBitmap << 32) | GroupDesc->LowAddrBlockBitmap;
+    uint64_t BitmapBlock = ((uint64_t)GroupDesc->bg_block_bitmap_hi << 32) | GroupDesc->bg_block_bitmap_lo;
     uint64_t BitmapLBA = BitmapBlock * sectorsPerBlock;
 
-    uint64_t inodeBitmapBlock = ((uint64_t)GroupDesc->HighAddrInodeBitmap << 32) | GroupDesc->LowAddrInodeBitmap;
+    uint64_t inodeBitmapBlock = ((uint64_t)GroupDesc->bg_inode_bitmap_hi << 32) | GroupDesc->bg_inode_bitmap_lo;
 
     for (uint64_t i = 0; i < sectorsPerBlock; i++) {
         if (!pdev->ReadSector(BitmapLBA + i, (uint8_t*)bufPhys + i * pdev->SectorSize())) {
@@ -41,7 +41,7 @@ uint8_t* GenericEXT4Device::ReadBitmapBlock(BlockGroupDescriptor* GroupDesc) {
  * the bitmap to the buffer and writing to it.
 */
 void GenericEXT4Device::WriteBitmapBlock(BlockGroupDescriptor* GroupDesc, uint8_t* bitmap) {
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
+    uint64_t blockSize = 1024ull << superblock->s_log_block_size;
     uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
 
     void* bufPhys = _ds->RequestPage();
@@ -49,10 +49,10 @@ void GenericEXT4Device::WriteBitmapBlock(BlockGroupDescriptor* GroupDesc, uint8_
     _ds->MapMemory((void*)bufVirt, bufPhys, false);
     memset((void*)bufVirt, 0, 4096);
 
-    uint64_t BitmapBlock = ((uint64_t)GroupDesc->HighAddrBlockBitmap << 32) | GroupDesc->LowAddrBlockBitmap;
+    uint64_t BitmapBlock = ((uint64_t)GroupDesc->bg_block_bitmap_hi << 32) | GroupDesc->bg_block_bitmap_lo;
     uint64_t BitmapLBA = BitmapBlock * sectorsPerBlock;
 
-    uint64_t inodeBitmapBlock = ((uint64_t)GroupDesc->HighAddrInodeBitmap << 32) | GroupDesc->LowAddrInodeBitmap;
+    uint64_t inodeBitmapBlock = ((uint64_t)GroupDesc->bg_inode_bitmap_hi << 32) | GroupDesc->bg_inode_bitmap_lo;
 
     for (uint64_t i = 0; i < sectorsPerBlock; i++) {
         if (!pdev->ReadSector(BitmapLBA + i, (uint8_t*)bufVirt + i * pdev->SectorSize())) {
@@ -80,17 +80,18 @@ void GenericEXT4Device::WriteBitmapBlock(BlockGroupDescriptor* GroupDesc, uint8_
  * seed and crc32c the whole bitmap
 */
 void GenericEXT4Device::UpdateBlockBitmapChksum(uint32_t group, BlockGroupDescriptor* GroupDesc) {
-    if (superblock->MetaCheckAlgo == 1) {
-        uint64_t blockSize = 1024ull << superblock->BlockSize;
+    if (superblock->s_checksum_type == 1) {
+        uint64_t blockSize = 1024ull << superblock->s_log_block_size;
 
         uint8_t* bitmap = ReadBitmapBlock(GroupDesc);
 
-        uint32_t crc = crc32c_sw(superblock->CheckUUID, bitmap, blockSize);
+        uint32_t crc = crc32c_sw(~0, superblock->s_uuid, 16);
+        crc = crc32c_sw(crc, bitmap, blockSize);
 
-        GroupDesc->LowChkBlockBitmap = crc & 0xFFFF;
-        if (superblock->RequiredFeatures & BITS64) {
+        GroupDesc->bg_block_bitmap_csum_lo = crc & 0xFFFF;
+        if (superblock->s_feature_incompat & IncompatFeatures::INCOMPAT_64BIT) {
             _ds->Println("64 Bit Bitmap Checksum");
-            GroupDesc->HighChkBlockBitmap = (crc >> 16);
+            GroupDesc->bg_block_bitmap_csum_hi = (crc >> 16);
         }
     }
 }
@@ -102,28 +103,28 @@ void GenericEXT4Device::UpdateBlockBitmapChksum(uint32_t group, BlockGroupDescri
  * If it does, then we can mark it as used and use it.
 */
 uint32_t GenericEXT4Device::AllocateBlock(FsNode* parent) {
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
+    uint64_t blockSize = 1024ull << superblock->s_log_block_size;
     uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
 
     /*
      * First we must find the Parent's Block Group
     */
-    uint32_t parentBlockGroup = (parent->nodeId - 1) / superblock->InodesPerBlockGroup;
+    uint32_t parentBlockGroup = (parent->nodeId - 1) / superblock->s_inodes_per_group;
 
-    if (parentBlockGroup < superblock->FirstDataBlock) {
-        parentBlockGroup = superblock->FirstDataBlock;
+    if (parentBlockGroup < superblock->s_first_data_block) {
+        parentBlockGroup = superblock->s_first_data_block;
     }
 
     BlockGroupDescriptor* GroupDesc = GroupDescs[parentBlockGroup];
-    uint64_t inodeTableStart = ((uint64_t)GroupDesc->HighAddrInodeTable << 32) | GroupDesc->LowAddrInodeTable;
-    uint64_t inodeTableBlocks = (superblock->InodesPerBlockGroup * superblock->InodeSize + blockSize - 1) / blockSize;
+    uint64_t inodeTableStart = ((uint64_t)GroupDesc->bg_inode_table_hi << 32) | GroupDesc->bg_inode_table_lo;
+    uint64_t inodeTableBlocks = (superblock->s_inodes_per_group * superblock->s_inode_size + blockSize - 1) / blockSize;
 
     uint32_t firstUsableBlock = inodeTableStart + inodeTableBlocks;
 
     /*
      * Get some Flex Stuff
     */
-    uint32_t flexSize = 1u << superblock->GroupsPerFlex;
+    uint32_t flexSize = 1u << superblock->s_log_groups_per_flex;
     uint32_t firstFlexGroup = parentBlockGroup - (parentBlockGroup % flexSize);
     uint32_t endFlexGroup = firstFlexGroup + flexSize;
 
@@ -135,10 +136,10 @@ uint32_t GenericEXT4Device::AllocateBlock(FsNode* parent) {
     for (uint32_t BlockGroup = firstFlexGroup; BlockGroup < endFlexGroup; BlockGroup++) {
         BlockGroupDescriptor* GroupDesc = GroupDescs[BlockGroup];
 
-        uint32_t freeBlocks = ((uint32_t)GroupDesc->HighUnallocBlocks << 16) | GroupDesc->LowUnallocBlocks;
+        uint32_t freeBlocks = ((uint32_t)GroupDesc->bg_free_blocks_count_hi << 16) | GroupDesc->bg_free_blocks_count_lo;
 
-        uint64_t inodeTableStart = ((uint64_t)GroupDesc->HighAddrInodeTable << 32) | GroupDesc->LowAddrInodeTable;
-        uint64_t inodeTableBlocks = (superblock->InodesPerBlockGroup * superblock->InodeSize + blockSize - 1) / blockSize;
+        uint64_t inodeTableStart = ((uint64_t)GroupDesc->bg_inode_table_hi << 32) | GroupDesc->bg_inode_table_lo;
+        uint64_t inodeTableBlocks = (superblock->s_inodes_per_group * superblock->s_inode_size + blockSize - 1) / blockSize;
 
         if (freeBlocks == 0) continue;
 
@@ -147,7 +148,7 @@ uint32_t GenericEXT4Device::AllocateBlock(FsNode* parent) {
         */
         uint8_t* Bitmap = ReadBitmapBlock(GroupDesc);
 
-        uint32_t BlocksPerGroup = superblock->BlocksPerBlockGroup;
+        uint32_t BlocksPerGroup = superblock->s_blocks_per_group;
 
         uint32_t maxBits = blockSize * 8;
         uint32_t limit = (BlocksPerGroup < maxBits) ? BlocksPerGroup : maxBits;
@@ -173,12 +174,15 @@ uint32_t GenericEXT4Device::AllocateBlock(FsNode* parent) {
 
             WriteBitmapBlock(GroupDesc, Bitmap);
 
-            superblock->UnallocBlocks--;
+            uint32_t UnallocBlocks = (superblock->s_free_blocks_count_hi << 16) | superblock->s_free_blocks_count_lo;
+            UnallocBlocks--;
+            superblock->s_free_blocks_count_hi = UnallocBlocks >> 16;
+            superblock->s_free_blocks_count_lo = UnallocBlocks & 0xFFFF;
 
-            uint32_t count = (GroupDesc->HighUnallocBlocks << 16) | GroupDesc->LowUnallocBlocks;
+            uint32_t count = (GroupDesc->bg_free_blocks_count_hi << 16) | GroupDesc->bg_free_blocks_count_lo;
             count--;
-            GroupDesc->LowUnallocBlocks = count & 0xFFFF;
-            GroupDesc->HighUnallocBlocks = count >> 16;
+            GroupDesc->bg_free_blocks_count_lo = count & 0xFFFF;
+            GroupDesc->bg_free_blocks_count_hi = count >> 16;
 
             UpdateSuperblock();
             UpdateGroupDesc(BlockGroup, GroupDesc);

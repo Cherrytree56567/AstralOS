@@ -322,7 +322,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
                     EFI_PHYSICAL_ADDRESS addr = phdr.p_paddr;
                     Print(L"Offset: 0x%lx", addr);
                     Print(L"Addr: 0x%lx", phdr.p_paddr);
-                    EFI_STATUS status = uefi_call_wrapper(BS->AllocatePages, 4, AllocateAnyPages, EfiLoaderData, EFI_SIZE_TO_PAGES(phdr.p_memsz), &addr);
+                    EFI_STATUS status = uefi_call_wrapper(BS->AllocatePages, 4, AllocateAddress, EfiLoaderData, EFI_SIZE_TO_PAGES(phdr.p_memsz), &addr);
                     if (EFI_ERROR(status)) {
                         Print(L"Failed to allocate pages: %r\n", status);
                         return status;

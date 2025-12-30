@@ -1,8 +1,8 @@
-#include "GenericEXT4.h"
+#include "../GenericEXT4.h"
 
 bool GenericEXT4Device::HasSuperblockBKP(uint32_t group) {
     if (group == 0 || group == 1) return true;
-    if (!(superblock->ReqFeaturesRO & SparseSuperBlocks)) return true;
+    if (!(superblock->s_feature_ro_compat & ROFeatures::RO_COMPAT_SPARSE_SUPER)) return true;
 
     if (isPower(group, 3)) return true;
     if (isPower(group, 5)) return true;
@@ -30,16 +30,15 @@ bool GenericEXT4Device::HasSuperblockBKP(uint32_t group) {
  * and superblock.
 */
 void GenericEXT4Device::UpdateSuperblock() {
-    if (superblock->MetaCheckAlgo == 1) {
-        superblock->CheckUUID = crc32c_sw(~0, superblock->FilesystemUUID, sizeof(superblock->FilesystemUUID));
-        superblock->Checksum = 0;
-        superblock->Checksum = crc32c_sw(superblock->CheckUUID, superblock, offsetof(EXT4_Superblock, Checksum));
+    if (superblock->s_checksum_type == 1) {
+        superblock->s_checksum = crc32c_sw(~0, superblock->s_uuid, 16);
+        superblock->s_checksum = crc32c_sw(superblock->s_checksum, superblock, offsetof(EXT4_Superblock, s_checksum));
     }
     uint32_t sectorSize = pdev->SectorSize();
 
     uint64_t superblockSize = 1024;
     uint64_t SuperblockOffset = 1024;
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
+    uint64_t blockSize = 1024ull << superblock->s_log_block_size;
 
     auto writeSuperblock = [&](uint64_t blockNum) {
         uint64_t LBA = (blockNum * blockSize) / sectorSize;
@@ -72,11 +71,14 @@ void GenericEXT4Device::UpdateSuperblock() {
 
     writeSuperblock(SuperblockOffset / blockSize);
 
-    if (superblock->ReqFeaturesRO & SparseSuperBlocks != 0) {
-        uint32_t totalBlockGroups = (superblock->TotalBlocks + superblock->BlocksPerBlockGroup - 1) / superblock->BlocksPerBlockGroup;
+    if (superblock->s_feature_ro_compat & ROFeatures::RO_COMPAT_SPARSE_SUPER != 0) {
+        uint64_t blocks = superblock->s_blocks_count_lo;
+        blocks |= ((uint64_t)superblock->s_blocks_count_hi) << 32;
+
+        uint32_t totalBlockGroups = (blocks + superblock->s_blocks_per_group - 1) / superblock->s_blocks_per_group;
         for (uint32_t bg = 0; bg < totalBlockGroups; bg++) {
             if (bg == 0 || bg == 1 || bg % 3 == 0 || bg % 5 == 0 || bg % 7 == 0) {
-                uint64_t backupBlock = bg * superblock->BlocksPerBlockGroup + superblock->FirstDataBlock;
+                uint64_t backupBlock = bg * superblock->s_blocks_per_group + superblock->s_first_data_block;
                 if (backupBlock != SuperblockOffset / blockSize) {
                     writeSuperblock(backupBlock);
                 }

@@ -1,4 +1,4 @@
-#include "GenericEXT4.h"
+#include "../GenericEXT4.h"
 
 /*
  * So a Bitmap is basically data that tells
@@ -25,10 +25,10 @@ uint8_t* GenericEXT4Device::ReadBitmapInode(BlockGroupDescriptor* GroupDesc) {
     _ds->MapMemory((void*)bufVirt, bufPhys, false);
     memset((void*)bufVirt, 0, 4096);
 
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
+    uint64_t blockSize = 1024ull << superblock->s_log_block_size;
     uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
 
-    uint64_t inodeBitmapBlock = ((uint64_t)GroupDesc->HighAddrInodeBitmap << 32) | GroupDesc->LowAddrInodeBitmap;
+    uint64_t inodeBitmapBlock = ((uint64_t)GroupDesc->bg_inode_bitmap_hi << 32) | GroupDesc->bg_inode_bitmap_lo;
     uint64_t inodeBitmapLBA = inodeBitmapBlock * sectorsPerBlock;
 
     /*
@@ -58,10 +58,10 @@ void GenericEXT4Device::WriteBitmapInode(BlockGroupDescriptor* GroupDesc, uint8_
     _ds->MapMemory((void*)bufVirt, bufPhys, false);
     memset((void*)bufVirt, 0, 4096);
 
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
+    uint64_t blockSize = 1024ull << superblock->s_log_block_size;
     uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
 
-    uint64_t inodeBitmapBlock = ((uint64_t)GroupDesc->HighAddrInodeBitmap << 32) | GroupDesc->LowAddrInodeBitmap;
+    uint64_t inodeBitmapBlock = ((uint64_t)GroupDesc->bg_inode_bitmap_hi << 32) | GroupDesc->bg_inode_bitmap_lo;
     uint64_t inodeBitmapLBA = inodeBitmapBlock * sectorsPerBlock;
 
     for (uint64_t i = 0; i < sectorsPerBlock; i++) {
@@ -110,9 +110,9 @@ uint32_t GenericEXT4Device::AllocateInode(FsNode* parent) {
      * Then we can get our FlexSize and FirstFlex bc we are using Flex
      * Block Groups
     */
-    uint32_t ParentBlockGroup = (parent->nodeId - 1) / superblock->InodesPerBlockGroup;
+    uint32_t ParentBlockGroup = (parent->nodeId - 1) / superblock->s_inodes_per_group;
 
-    uint32_t FlexSize = 1u << superblock->GroupsPerFlex;
+    uint32_t FlexSize = 1u << superblock->s_log_groups_per_flex;
     uint32_t FirstFlex = ParentBlockGroup - (ParentBlockGroup % FlexSize);
 
     BlockGroupDescriptor* GroupDesc = GroupDescs[FirstFlex];
@@ -125,15 +125,17 @@ uint32_t GenericEXT4Device::AllocateInode(FsNode* parent) {
     */
     uint8_t* bitmap = ReadBitmapInode(GroupDesc);
 
-    uint32_t FlexInodeOff = (ParentBlockGroup - FirstFlex) * superblock->InodesPerBlockGroup;
-    uint32_t First = (FirstFlex == 0) ? (superblock->FirstInode - 1) : 0;
+    uint32_t FlexInodeOff = (ParentBlockGroup - FirstFlex) * superblock->s_inodes_per_group;
+    uint32_t First = (FirstFlex == 0) ? (superblock->s_first_ino - 1) : 0;
+    _ds->Print("First Inode: ");
+    _ds->Println(to_hstridng(superblock->s_first_ino));
     uint32_t newInode = 0xFFFFFFFF;
 
     /*
      * Now we can scan for a Free Inode
      * using our Inode Bitmap.
     */
-    for (uint32_t i = 0; i < superblock->InodesPerBlockGroup; i++) {
+    for (uint32_t i = 0; i < superblock->s_inodes_per_group; i++) {
         uint32_t byte = i >> 3;
         uint8_t bit = i & 7;
 
@@ -151,17 +153,17 @@ uint32_t GenericEXT4Device::AllocateInode(FsNode* parent) {
 
     WriteBitmapInode(GroupDesc, bitmap);
     
-    superblock->UnallocInodes--;
+    superblock->s_free_inodes_count--;
     UpdateSuperblock();
-    uint32_t UnallocInodes = ((uint32_t)GroupDesc->HighUnallocInodes << 16) | GroupDesc->LowUnallocInodes;
+    uint32_t UnallocInodes = ((uint32_t)GroupDesc->bg_free_inodes_count_hi << 16) | GroupDesc->bg_free_inodes_count_lo;
 
     UnallocInodes--;
-    GroupDesc->LowUnallocInodes = UnallocInodes & 0xFFFF;
-    GroupDesc->HighUnallocInodes = UnallocInodes >> 16;
+    GroupDesc->bg_free_inodes_count_lo = UnallocInodes & 0xFFFF;
+    GroupDesc->bg_free_inodes_count_hi = UnallocInodes >> 16;
 
     UpdateGroupDesc(FirstFlex, GroupDesc);
 
-    uint32_t globalInode = ParentBlockGroup * superblock->InodesPerBlockGroup + newInode + 1;
+    uint32_t globalInode = ParentBlockGroup * superblock->s_inodes_per_group + newInode + 1;
     return globalInode;
 }
 
@@ -176,17 +178,18 @@ uint32_t GenericEXT4Device::AllocateInode(FsNode* parent) {
  * seed.
 */
 void GenericEXT4Device::UpdateInodeBitmapChksum(uint32_t group, BlockGroupDescriptor* GroupDesc) {
-    if (superblock->MetaCheckAlgo == 1) {
-        uint64_t blockSize = 1024ull << superblock->BlockSize;
+    if (superblock->s_checksum_type == 1) {
+        uint64_t blockSize = 1024ull << superblock->s_log_block_size;
 
         uint8_t* bitmap = ReadBitmapInode(GroupDesc);
 
-        uint32_t crc = crc32c_sw(superblock->CheckUUID, bitmap, blockSize);
+        uint32_t crc = crc32c_sw(~0, superblock->s_uuid, 16);
+        crc = crc32c_sw(crc, bitmap, blockSize);
 
-        GroupDesc->LowChkInodeBitmap = crc & 0xFFFF;
-        if (superblock->RequiredFeatures & BITS64) {
+        GroupDesc->bg_inode_bitmap_csum_lo = crc & 0xFFFF;
+        if (superblock->s_feature_incompat & IncompatFeatures::INCOMPAT_64BIT) {
             _ds->Println("64 Bit Bitmap Checksum");
-            GroupDesc->HighChkInodeBitmap = (crc >> 16);
+            GroupDesc->bg_inode_bitmap_csum_hi = (crc >> 16);
         }
     }
 }
@@ -203,10 +206,10 @@ void GenericEXT4Device::UpdateInodeBitmapChksum(uint32_t group, BlockGroupDescri
  * we can read it.
 */
 Inode* GenericEXT4Device::ReadInode(uint64_t node) {
-    uint64_t InodeBlockGroup = (node - 1) / superblock->InodesPerBlockGroup;
-    uint64_t InodeIndex = (node - 1) % superblock->InodesPerBlockGroup;
+    uint64_t InodeBlockGroup = (node - 1) / superblock->s_inodes_per_group;
+    uint64_t InodeIndex = (node - 1) % superblock->s_inodes_per_group;
 
-    uint64_t BlockSize = 1024ull << superblock->BlockSize;
+    uint64_t BlockSize = 1024ull << superblock->s_log_block_size;
     uint64_t SectorsBlock = BlockSize / pdev->SectorSize();
 
     void* buf = _ds->RequestPage();
@@ -218,10 +221,10 @@ Inode* GenericEXT4Device::ReadInode(uint64_t node) {
 
     BlockGroupDescriptor* GroupDesc = GroupDescs[InodeBlockGroup];
 
-    uint64_t InodeTableBlock = ((uint64_t)GroupDesc->HighAddrInodeTable << 32) | (uint64_t)GroupDesc->LowAddrInodeTable;
+    uint64_t InodeTableBlock = ((uint64_t)GroupDesc->bg_inode_table_hi << 32) | (uint64_t)GroupDesc->bg_inode_table_lo;
     uint64_t InodeTableLBA = InodeTableBlock * (BlockSize / pdev->SectorSize());
-    uint64_t InodeOffset = InodeIndex * superblock->InodeSize;
-    uint64_t InodeSize = superblock->InodeSize;
+    uint64_t InodeOffset = InodeIndex * superblock->s_inode_size;
+    uint64_t InodeSize = superblock->s_inode_size;
 
     uint64_t InodeSectors = (InodeSize + pdev->SectorSize() - 1) / pdev->SectorSize();
     for (uint64_t i = 0; i < InodeSectors; i++) {
@@ -247,27 +250,36 @@ Inode* GenericEXT4Device::ReadInode(uint64_t node) {
  * having trouble writng in the Inode.
 */
 void GenericEXT4Device::WriteInode(uint32_t inodeNum, Inode* ind) {
-    if (superblock->MetaCheckAlgo == 1) {
-        ind->ChecksumHigh = 0;
-        ind->osval2.LowChecksum = 0;
-        uint32_t crc = crc32c_sw(superblock->CheckUUID, (unsigned char *)&inodeNum, sizeof(inodeNum));
-        crc = crc32c_sw(crc, (unsigned char *)&ind->Generation, sizeof(ind->Generation));
-        uint32_t size = 128 + ind->HighInodeSize;
+    if (superblock->s_checksum_type == 1) {
+        ind->i_checksum_hi = 0;
+        if (superblock->s_creator_os == CreatorOSIDs::Linux) {
+            ind->i_osd2.linux2.l_i_checksum_lo = 0;
+        } else if (superblock->s_creator_os == CreatorOSIDs::AstralOS) {
+            ind->i_osd2.astral2.a_i_checksum_lo = 0;
+        }
+        uint32_t crc = crc32c_sw(~0, superblock->s_uuid, 16);
+        crc = crc32c_sw(crc, (unsigned char *)&inodeNum, sizeof(inodeNum));
+        crc = crc32c_sw(crc, (unsigned char *)&ind->i_generation, sizeof(ind->i_generation));
+        uint32_t size = 128 + ind->i_size_high;
         crc = crc32c_sw(crc, (unsigned char *)ind, size);
         
-        ind->osval2.LowChecksum = crc & 0xFFFF;
-        ind->ChecksumHigh = (crc >> 16);
+        if (superblock->s_creator_os == CreatorOSIDs::Linux) {
+            ind->i_osd2.linux2.l_i_checksum_lo = crc & 0xFFFF;
+        } else if (superblock->s_creator_os == CreatorOSIDs::AstralOS) {
+            ind->i_osd2.astral2.a_i_checksum_lo = crc & 0xFFFF;
+        }
+        ind->i_checksum_hi = (crc >> 16);
     }
-    uint64_t blockSize = 1024ull << superblock->BlockSize;
+    uint64_t blockSize = 1024ull << superblock->s_log_block_size;
     uint64_t sectorSize = pdev->SectorSize();
     uint64_t sectorsPerBlock = blockSize / sectorSize;
 
     uint32_t inodeIndex = inodeNum - 1;
-    uint32_t inodesPerGroup = superblock->InodesPerBlockGroup;
+    uint32_t inodesPerGroup = superblock->s_inodes_per_group;
 
     uint32_t group = inodeIndex / inodesPerGroup;
     uint32_t indexInGroup = inodeIndex % inodesPerGroup;
-    uint64_t inodeSize = superblock->InodeSize;
+    uint64_t inodeSize = superblock->s_inode_size;
     uint64_t byteOffset = indexInGroup * inodeSize;
 
     BlockGroupDescriptor* GroupDesc = GroupDescs[group];
@@ -275,7 +287,7 @@ void GenericEXT4Device::WriteInode(uint32_t inodeNum, Inode* ind) {
         _ds->Println("Group Desc Is Invalid");
         return;
     }
-    uint64_t inodeTableBlock = ((uint64_t)GroupDesc->HighAddrInodeTable << 32) | (uint64_t)GroupDesc->LowAddrInodeTable;
+    uint64_t inodeTableBlock = ((uint64_t)GroupDesc->bg_inode_table_hi << 32) | (uint64_t)GroupDesc->bg_inode_table_lo;
 
     uint64_t blockOffset = byteOffset / blockSize;
     uint64_t offsetInBlock = byteOffset % blockSize;

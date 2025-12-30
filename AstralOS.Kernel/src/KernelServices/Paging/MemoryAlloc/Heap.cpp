@@ -42,10 +42,10 @@ void HeapAllocator::Initialize() {
     heapCurrent = heapStart;
 
     /*
-     * bc we want to free mem in our
-     * heap and reuse that mem, we 
-     * need to keep track of the mem
-     * we freed.
+    * bc we want to free mem in our
+    * heap and reuse that mem, we 
+    * need to keep track of the mem
+    * we freed.
     */
     hdr = (BlockHeader*)heapStart;
     hdr->size = PAGE_SIZE - sizeof(BlockHeader);

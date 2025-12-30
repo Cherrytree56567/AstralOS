@@ -62,6 +62,7 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
     }
 
     kernelServices->pageTableManager.MapMemory((void*)((uint64_t)pBootInfo->initrdBase + HIGHER_VIRT_ADDR), pBootInfo->initrdBase);
+    kernelServices->pageTableManager.MapMemory((void*)((uint64_t)pBootInfo->rsdp + HIGHER_VIRT_ADDR), (void*)pBootInfo->rsdp);
 
     /*
      * We must translate our base addr and our ACPI Address.
@@ -72,15 +73,14 @@ extern "C" void InitializePaging(KernelServices* kernelServices, BootInfo* pBoot
     kernelServices->pBootInfo.pFramebuffer.BaseAddress = (void*)((uint64_t)HIGHER_VIRT_ADDR + (uint64_t)kernelServices->pBootInfo.pFramebuffer.BaseAddress);
     kernelServices->pBootInfo.initrdBase = (void*)((uint64_t)HIGHER_VIRT_ADDR + (uint64_t)kernelServices->pBootInfo.initrdBase);
     kernelServices->pBootInfo.mMap = (EFI_MEMORY_DESCRIPTOR*)(HIGHER_VIRT_ADDR + (uint64_t)pBootInfo->mMap);
-    kernelServices->pBootInfo.initrdBase = (void*)((uint64_t)pBootInfo->initrdBase + HIGHER_VIRT_ADDR);
 
     /*
      * Gotcha: 
      * Dont do `(HIGHER_VIRT_ADDR + kernelServices->pBootInfo.rsdp)`
      * because we already added the HIGHER_VIRT_ADDR before.
      */
-    kernelServices->pageTableManager.MapMemory((void*)kernelServices->pBootInfo.rsdp, (void*)pBootInfo->rsdp);
-    kernelServices->pageTableManager.MapMemory((void*)pBootInfo->rsdp, (void*)pBootInfo->rsdp);
+    
+    //
 
     uint64_t initrdPages = (pBootInfo->initrdSize + 0xFFF) / 0x1000;
     uint64_t initrdPhys = (uint64_t)pBootInfo->initrdBase;

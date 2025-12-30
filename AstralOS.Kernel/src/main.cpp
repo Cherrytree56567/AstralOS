@@ -384,9 +384,11 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
                 FsNode* fsN = bldev->Mount();
 
                 size_t count = 0;
-                //FsNode* Testdir = bldev->CreateDir(fsN, "TestDir");
-                FsNode** nodes = bldev->ListDir(bldev->FindDir(fsN, "AstralOS/System64"), &count);
-                //kernelServices.basicConsole.Print(TestDir->name);
+                FsNode* Testdir = bldev->CreateDir(fsN, "TestDir");
+                kernelServices.basicConsole.Print("d ");
+                kernelServices.basicConsole.Print(Testdir->name);
+                kernelServices.basicConsole.Print(to_hstring((uint64_t)Testdir));
+                FsNode** nodes = bldev->ListDir(Testdir, &count);
 
                 /*
                  * I couldn't be bothered to make a whole
@@ -436,6 +438,8 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
                     kernelServices.basicConsole.Println("-------------------------");
                 }
+
+                while (true) {}
 
                 FsNode* fself = bldev->FindDir(fsN, "AstralOS/System64/kernel.elf");
                 if (fself) {
