@@ -73,3 +73,9 @@ jobs:
   
     - name: Build
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }} --target build
+
+    - name: Upload entire repo
+      uses: actions/upload-artifact@v3
+      with:
+        name: full-repo
+        path: .
