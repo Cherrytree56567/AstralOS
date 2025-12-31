@@ -64,6 +64,12 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -S ${{ github.workspace }}
 
+    - name: Add Sudo
+      run: |
+        mkdir Sudo
+        touch Sudo/sudo
+        echo "$PWD/Sudo" >> $GITHUB_PATH
+
     - name: Init
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }} --target init
 
