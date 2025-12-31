@@ -83,5 +83,5 @@ jobs:
     - name: Upload entire repo
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ steps.cc.outputs.cc }}-${{ runner.os }}
+        name: ${{ matrix.c_compiler }}-${{ runner.os }}
         path: .
