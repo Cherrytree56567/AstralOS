@@ -200,8 +200,6 @@ void GenericEXT4Device::Init(DriverServices& ds, DeviceKey& dKey) {
     uint64_t dev = ((uint64_t)devKey.bars[0] << 32) | devKey.bars[1];
     BaseDriver* bsdrv = (BaseDriver*)dev;
     pdev = (PartitionDevice*)bsdrv;
-
-    _ds->Println("Initialized Generic EXT4 Driver");
 }
 
 /*
@@ -243,9 +241,6 @@ bool GenericEXT4Device::Support() {
         offsetI += pdev->SectorSize();
     }
     superblock = (EXT4_Superblock*)(bufVirt + offset);
-
-    _ds->Print("FS Signature: ");
-    _ds->Println(to_hstridng(superblock->s_magic));
 
     if (superblock->s_magic == 0xEF53) {
         uint32_t supported = static_cast<uint32_t>(
@@ -306,7 +301,6 @@ FsNode* GenericEXT4Device::Mount() {
     GroupDescs = (BlockGroupDescriptor**)_ds->malloc(BlockGroupCount * sizeof(BlockGroupDescriptor*));
     if (!GroupDescs) return nullptr;
     memset(GroupDescs, 0, BlockGroupCount * sizeof(BlockGroupDescriptor*));
-    _ds->Print("s");
 
     for (uint32_t group = 0; group < BlockGroupCount; group++) {
         BlockGroupDescriptor* BlockGroupDesc = ReadGroupDesc(group);
@@ -401,8 +395,6 @@ FsNode* GenericEXT4Device::Mount() {
 
     isMounted = true;
 
-    _ds->Println("Mounted EXT4 Filesystem!");
-
     return node;
 }
 
@@ -447,116 +439,27 @@ FsNode** GenericEXT4Device::ListDir(FsNode* node, size_t* outCount) {
     uint64_t bufVirt = bufPhys + 0xFFFFFFFF00000000;
     uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
 
-    _ds->Print("Inode Links Count ");
-    _ds->Println(to_hstridng(dir_inode.i_links_count));
-
     _ds->MapMemory((void*)bufVirt, (void*)bufPhys, false);
 
     if ((dir_inode.i_flags & InodeFlags::EXT4_EXTENTS_FL) != 0) {
         ExtentHeader* eh = (ExtentHeader*)dir_inode.i_block;
-        _ds->Print("EH Magic ");
-        _ds->Println(to_hstridng(eh->eh_magic));
-        _ds->Print("EH Entries ");
-        _ds->Println(to_hstridng(eh->eh_entries));
-        _ds->Print("EH Depth ");
-        _ds->Println(to_hstridng(eh->eh_depth));
-
-        for (uint64_t i = 0; i < 15; i++) {
-            _ds->Print(to_hstridng(dir_inode.i_block[i]));
-            _ds->Print(" ");
-        }
 
         for (int i = 0; i < eh->eh_entries; i++) {
-            Extent* ee = reinterpret_cast<Extent*>((uint64_t)eh + 1);
-            _ds->Print("Ext len ");
-            _ds->Println(to_hstridng(ee->ee_len));
-            _ds->Print("Ext block ");
-            _ds->Println(to_hstridng(ee->ee_block));
+            memset((void*)bufVirt, 0, 4096);
+            Extent* ee = (Extent*)((uint64_t)eh + sizeof(ExtentHeader) + i * sizeof(Extent));
+
+            if (ee->ee_len == 0) continue;
+
+            uint64_t block = ((uint64_t)ee->ee_start_hi << 32) | (uint64_t)ee->ee_start_lo;
+            
+            ParseDirectoryBlock(nodes, count, capacity, block);
         }
 
     } else {
         for (uint64_t i = 0; i < 15; i++) {
             if (dir_inode.i_block[i] == 0) continue;
-            memset((void*)bufVirt, 0, 4096);
-            uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
-
-            for (uint64_t s = 0; s < sectorsPerBlock; s++) {
-                uint64_t lba = dir_inode.i_block[i] * sectorsPerBlock + s;
-                if (!pdev->ReadSector(lba, (void*)((uint64_t)bufPhys + s * pdev->SectorSize()))) {
-                    _ds->Println("Failed to read sector");
-                    return nullptr;
-                }
-            }
-
-            uint64_t offset = 0;
-            while (offset < blockSize) {
-                DirectoryEntry2* entry = (DirectoryEntry2*)(bufVirt + offset);
-                if (entry->rec_len < sizeof(DirectoryEntry2)) break;
-                if (entry->file_type != 0x2 && entry->file_type != 0x1) break;
-                if (entry->inode == 0) {
-                    offset += entry->rec_len;
-                    continue;
-                }
-
-                char nameBuf[256] = {0};
-
-                if (entry->name_len == 0 || entry->name_len >= sizeof(nameBuf)) break;
-
-                memcpy(nameBuf, entry->name, entry->name_len);
-                nameBuf[entry->name_len] = '\0';
-
-                if (count >= capacity) {
-                    size_t newCap = capacity == 0 ? 4 : capacity * 2;
-                    FsNode** tmp = (FsNode**)_ds->malloc(newCap * sizeof(FsNode*));
-                    if (!tmp) break;
-                    if (nodes) {
-                        memcpy(tmp, nodes, count * sizeof(FsNode*));
-                        _ds->free(nodes);
-                    }
-                    nodes = tmp;
-                    capacity = newCap;
-                }
-
-                FsNode* child = (FsNode*)_ds->malloc(sizeof(FsNode));
-                if (!child) break;
-                memset(child, 0, sizeof(FsNode));
-                child->nodeId = entry->inode;
-                switch (entry->rec_len) {
-                    case 0x1:
-                        child->type = FsNodeType::File;
-                        break;
-                    case 0x2:
-                        child->type = FsNodeType::Directory;
-                        break;
-                    default:
-                        break;
-                }
-                child->name = _ds->strdup(nameBuf);
-
-                Inode* childInode = ReadInode(entry->inode);
-                if (childInode) {
-                    child->size = childInode->i_size_lo | ((uint64_t)childInode->i_size_high << 32);
-                    if (superblock->s_creator_os == CreatorOSIDs::Linux) {
-                        child->blocks = (uint64_t)childInode->i_osd2.linux2.l_i_blocks_high << 32 | childInode->i_blocks_lo;
-                    } else if (superblock->s_creator_os == CreatorOSIDs::AstralOS) {
-                        child->blocks = (uint64_t)childInode->i_osd2.astral2.a_i_blocks_high << 32 | childInode->i_blocks_lo;
-                    } else {
-                        child->blocks = childInode->i_blocks_lo;
-                    }
-
-                    child->mode = childInode->i_mode;
-                    child->uid = childInode->i_uid;
-                    child->gid = childInode->i_gid;
-
-                    child->atime = childInode->i_atime;
-                    child->mtime = childInode->i_mtime;
-                    child->ctime = childInode->i_crtime;
-                }
-
-                nodes[count++] = child;
-
-                offset += entry->rec_len;
-            }
+            
+            ParseDirectoryBlock(nodes, count, capacity, dir_inode.i_block[i]);
         }
     }
 
@@ -574,10 +477,6 @@ FsNode* GenericEXT4Device::FindDir(FsNode* node, const char* path) {
     size_t cont = 0;
 
     char** parts = str_split(_ds, (char*)path, '/', &cont);
-    _ds->Println(to_hstridng(cont));
-    _ds->Println(parts[0]);
-    _ds->Println(parts[1]);
-    _ds->Println(parts[2]);
 
     FsNode* nd = node;
 
@@ -593,9 +492,7 @@ FsNode* GenericEXT4Device::FindDir(FsNode* node, const char* path) {
             }
         }
     }
-    _ds->Print("Found");
-    _ds->Println(nd->name);
-    _ds->Println(to_hstridng(nd->nodeId));
+    
     if (nd == node) {
         _ds->Println("File Not Found");
         return nullptr;
@@ -644,12 +541,7 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
     uint64_t sectorsInBlock = blockSize / pdev->SectorSize();
 
     uint32_t InodeNum = AllocateInode(parent);
-    _ds->Print("New Inode: ");
-    _ds->Println(to_hstridng(InodeNum));
-
     uint32_t newBlock = AllocateBlock(parent);
-    _ds->Print("New Block: ");
-    _ds->Println(to_hstridng(newBlock));
     
     uint32_t inodeIndex = InodeNum - 1;
     uint32_t inodesPerGroup = superblock->s_inodes_per_group;
@@ -685,9 +577,6 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
     for (int i = 0; i < 15; i++) {
         newInode->i_block[i] = 0;
     }
-
-    _ds->Print("Inode Size: ");
-    _ds->Println(to_hstridng(superblock->s_inode_size));
 
     /*
      * TODO: Add Inode Checksum
@@ -740,8 +629,6 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
      * being a list of subdirs and files.
     */
     if (superblock->s_feature_incompat & IncompatFeatures::INCOMPAT_EXTENTS) {
-        _ds->Println("FS Requires Extents");
-
         ExtentHeader* extHdr = (ExtentHeader*)newInode->i_block;
         _ds->Print(to_hstridng(extHdr->eh_magic));
         extHdr->eh_magic = 0xF30A;
@@ -1060,6 +947,10 @@ int64_t GenericEXT4Device::Read(File* file, void* buffer, uint64_t size) {
         _ds->Println("Read: Cannot read from a directory");
         return -2;
     }
+    
+    uint64_t blockSize = 1024ull << superblock->s_log_block_size;
+    uint64_t sectorSize = pdev->SectorSize();
+    uint64_t sectorsInBlock = blockSize / pdev->SectorSize();
 
     void* buf = _ds->RequestPage();
     uint64_t bufPhys = (uint64_t)buf;
@@ -1083,44 +974,26 @@ int64_t GenericEXT4Device::Read(File* file, void* buffer, uint64_t size) {
 
     uint8_t* out = (uint8_t*)buffer;
     uint64_t readTotal = 0;
-    uint64_t blockSize = 1024ULL << superblock->s_log_block_size;
 
     if ((inode->i_flags & InodeFlags::EXT4_EXTENTS_FL)) {
-        while (readTotal < toRead) {
+        ExtentHeader* eh = (ExtentHeader*)inode->i_block;
+
+        for (int i = 0; i < eh->eh_entries; i++) {
             memset((void*)bufVirt, 0, 4096);
+            Extent* ee = (Extent*)((uint64_t)eh + sizeof(ExtentHeader) + i * sizeof(Extent));
 
-            uint64_t fileOffset = pos + readTotal;
-            uint64_t logicalBlock = fileOffset / blockSize;
-            uint64_t blockOffset = fileOffset % blockSize;
+            if (ee->ee_len == 0) continue;
 
-            uint64_t physBlock = ResolveExtentBlock(inode, logicalBlock);
+            uint64_t block = ((uint64_t)ee->ee_start_hi << 32) | (uint64_t)ee->ee_start_lo;
 
-            uint64_t chunk = blockSize - blockOffset;
-            if (chunk > toRead - readTotal) {
-                chunk = toRead - readTotal;
-            }
-
-            if (physBlock == 0) {
-                memset(out + readTotal, 0, chunk);
-                readTotal += chunk;
-                continue;
-            }
-
-            uint64_t sectorsInBlock = blockSize / pdev->SectorSize();
-            uint64_t firstSector = physBlock * sectorsInBlock;
-
+            uint64_t LBA = block * sectorsInBlock;
+            
             for (uint64_t i = 0; i < sectorsInBlock; i++) {
-                if (!pdev->ReadSector( firstSector + i, (void*)((uint8_t*)bufPhys + i * pdev->SectorSize()))) {
-                    _ds->Println("Failed to read data block");
-                    return -4;
+                if (!pdev->ReadSector(LBA + i, (void*)((uint8_t*)bufPhys + i * pdev->SectorSize()))) {
+                    _ds->Println("Failed to read directory block");
+                    return -28;
                 }
             }
-
-            memcpy(out + readTotal, (void*)(bufVirt + blockOffset), chunk);
-            _ds->Print("INODE MODE = ");
-            _ds->Println(to_hstridng(inode->i_mode));
-
-            readTotal += chunk;
         }
     } else {
         _ds->Println("File Doesnt use Extents!");

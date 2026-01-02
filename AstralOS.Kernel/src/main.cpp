@@ -260,10 +260,11 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     for (size_t i = 0; i < 2; i++) {
         kernelServices.driverMan.DetectDrivers(i);
     }
+    /*
 
     /*
      * AHCI Driver Test
-    */
+    /
     BaseDriver* driver = kernelServices.driverMan.GetDevice(0x1, 0x6, 0x1);
     if (driver) {
         kernelServices.basicConsole.Println(((String)"Found Driver: " + driver->DriverName()).c_str());
@@ -305,7 +306,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
         /*
          * We should reuse our old buffer!
-        */
+        /
         memset((void*)buf_virt, 0, sectorSize);
         strcpy((char*)buf_virt, "Hello World!");
 
@@ -323,7 +324,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
         /*
         if (!bldev->WriteSector(5043, (void*)buf_phys))  {
             ks->basicConsole.Println("Failed Writing Sector");
-        }*/
+        }/
 
         for (uint64_t lba = 5042; lba < 5045; lba++) {
             memset((void*)buf_virt, 0, sectorSize);
@@ -339,7 +340,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
     /*
      * GPT Driver Test
-    */
+    /
     BaseDriver* Partdriver = kernelServices.driverMan.GetDevice(DriverType::Partition);
     if (Partdriver) {
         kernelServices.basicConsole.Println(((String)"Found Partition Driver: " + Partdriver->DriverName()).c_str());
@@ -370,7 +371,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
                 ks->basicConsole.Println("Failed Reading Sector");
             }
         }
-    }
+    }*/
 
     BaseDriver* FSDriver = kernelServices.driverMan.GetDevice(DriverType::Filesystem);
     if (FSDriver) {
@@ -385,10 +386,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
                 size_t count = 0;
                 FsNode* Testdir = bldev->CreateDir(fsN, "TestDir");
-                kernelServices.basicConsole.Print("d ");
-                kernelServices.basicConsole.Print(Testdir->name);
-                kernelServices.basicConsole.Print(to_hstring((uint64_t)Testdir));
-                FsNode** nodes = bldev->ListDir(Testdir, &count);
+                FsNode** nodes = bldev->ListDir(bldev->FindDir(fsN, "AstralOS/System64"), &count);
 
                 /*
                  * I couldn't be bothered to make a whole
@@ -411,6 +409,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
                         case FsNodeType::Directory: kernelServices.basicConsole.Println("Directory"); break;
                         default: kernelServices.basicConsole.Println("Unknown"); break;
                     }
+                    /*
 
                     kernelServices.basicConsole.Print("Size: ");
                     kernelServices.basicConsole.Println(to_hstring(node->size));
@@ -434,12 +433,10 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
                     kernelServices.basicConsole.Println(to_hstring(node->mtime));
 
                     kernelServices.basicConsole.Print("CTime: ");
-                    kernelServices.basicConsole.Println(to_hstring(node->ctime));
+                    kernelServices.basicConsole.Println(to_hstring(node->ctime));*/
 
                     kernelServices.basicConsole.Println("-------------------------");
                 }
-
-                while (true) {}
 
                 FsNode* fself = bldev->FindDir(fsN, "AstralOS/System64/kernel.elf");
                 if (fself) {

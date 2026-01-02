@@ -115,56 +115,68 @@ uint32_t GenericEXT4Device::AllocateInode(FsNode* parent) {
     uint32_t FlexSize = 1u << superblock->s_log_groups_per_flex;
     uint32_t FirstFlex = ParentBlockGroup - (ParentBlockGroup % FlexSize);
 
-    BlockGroupDescriptor* GroupDesc = GroupDescs[FirstFlex];
+    uint64_t totalBlocks = ((uint64_t)superblock->s_blocks_count_hi << 32) | superblock->s_blocks_count_lo;
+    uint32_t groupCount = (totalBlocks + superblock->s_blocks_per_group - 1) / superblock->s_blocks_per_group;
 
-    /*
-     * Then we can allocate a page to use for the
-     * rest of our func.
-     * 
-     * To re-use it, we can just memset it again.
-    */
-    uint8_t* bitmap = ReadBitmapInode(GroupDesc);
+    uint32_t flexEnd = FirstFlex + FlexSize;
+    if (flexEnd > groupCount) {
+        flexEnd = groupCount;
+    }
 
-    uint32_t FlexInodeOff = (ParentBlockGroup - FirstFlex) * superblock->s_inodes_per_group;
-    uint32_t First = (FirstFlex == 0) ? (superblock->s_first_ino - 1) : 0;
-    _ds->Print("First Inode: ");
-    _ds->Println(to_hstridng(superblock->s_first_ino));
-    uint32_t newInode = 0xFFFFFFFF;
+    for (int i = FirstFlex; i < flexEnd; i++) {
+        if (i == 0) continue;
+        BlockGroupDescriptor* GroupDesc = GroupDescs[i];
 
-    /*
-     * Now we can scan for a Free Inode
-     * using our Inode Bitmap.
-    */
-    for (uint32_t i = 0; i < superblock->s_inodes_per_group; i++) {
-        uint32_t byte = i >> 3;
-        uint8_t bit = i & 7;
+        /*
+        * Then we can allocate a page to use for the
+        * rest of our func.
+        * 
+        * To re-use it, we can just memset it again.
+        */
+        uint8_t* bitmap = ReadBitmapInode(GroupDesc);
 
-        if (!(bitmap[byte] & (1 << bit))) {
-            bitmap[byte] |= (1 << bit);
-            newInode = i;
-            break;
+        uint32_t FlexInodeOff = (ParentBlockGroup - i) * superblock->s_inodes_per_group;
+        uint32_t First = (i == 0) ? (superblock->s_first_ino - 1) : 0;
+        uint32_t newInode = 0xFFFFFFFF;
+
+        /*
+        * Now we can scan for a Free Inode
+        * using our Inode Bitmap.
+        */
+        
+        for (uint32_t s = First; s < superblock->s_inodes_per_group; s++) {
+            uint32_t byte = s >> 3;
+            uint8_t bit = s & 7;
+
+            if (!(bitmap[byte] & (1 << bit))) {
+                bitmap[byte] |= (1 << bit);
+                newInode = s;
+                break;
+            }
         }
+
+        if (newInode == 0xFFFFFFFF) {
+            _ds->Println("No free inode");
+            continue;
+        }
+
+        WriteBitmapInode(GroupDesc, bitmap);
+        
+        superblock->s_free_inodes_count--;
+        UpdateSuperblock();
+        uint32_t UnallocInodes = ((uint32_t)GroupDesc->bg_free_inodes_count_hi << 16) | GroupDesc->bg_free_inodes_count_lo;
+
+        UnallocInodes--;
+        GroupDesc->bg_free_inodes_count_lo = UnallocInodes & 0xFFFF;
+        GroupDesc->bg_free_inodes_count_hi = UnallocInodes >> 16;
+
+        UpdateGroupDesc(i, GroupDesc);
+
+        uint32_t globalInode = i * superblock->s_inodes_per_group + newInode + 1;
+        return globalInode;
     }
 
-    if (newInode == 0xFFFFFFFF) {
-        _ds->Println("No free inode");
-        return 0;
-    }
-
-    WriteBitmapInode(GroupDesc, bitmap);
-    
-    superblock->s_free_inodes_count--;
-    UpdateSuperblock();
-    uint32_t UnallocInodes = ((uint32_t)GroupDesc->bg_free_inodes_count_hi << 16) | GroupDesc->bg_free_inodes_count_lo;
-
-    UnallocInodes--;
-    GroupDesc->bg_free_inodes_count_lo = UnallocInodes & 0xFFFF;
-    GroupDesc->bg_free_inodes_count_hi = UnallocInodes >> 16;
-
-    UpdateGroupDesc(FirstFlex, GroupDesc);
-
-    uint32_t globalInode = ParentBlockGroup * superblock->s_inodes_per_group + newInode + 1;
-    return globalInode;
+    return NULL;
 }
 
 /*

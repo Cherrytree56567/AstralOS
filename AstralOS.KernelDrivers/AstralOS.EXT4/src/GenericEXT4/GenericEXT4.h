@@ -86,7 +86,7 @@ private:
     uint64_t CountExtents(ExtentHeader* hdr);
     Extent** GetExtents(Inode* ind, ExtentHeader* hdr, uint64_t& extentsCount);
     Extent** GetExtentsRecursive(Inode* ind, ExtentHeader* exthdr, uint64_t& extentsCount);
-    FsNode** ParseDirectoryBlock(uint8_t* block, uint64_t& count);
+    void ParseDirectoryBlock(FsNode**& nodes, uint64_t& count, size_t& capacity, uint64_t block);
     uint64_t ResolveExtentBlockFromHdr(ExtentHeader* hdr, uint64_t logicalBlock);
     uint64_t ResolveExtentBlock(Inode* inode, uint64_t logicalBlock);
 

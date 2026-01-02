@@ -135,3 +135,11 @@ I found a lot of bugs and inconsistencies when testing the OS for example when I
 ![Reworking](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/Reworking.png?raw=true)
 
 **Total time spent: 14h 41m**
+
+# January 2nd: Fixing ListDir
+
+Since I couldn't find any documentation online on how extents work, I had to ask GPT for help since I couldn't understand how the linux kernel did it. GPT kept saying you have to iterate extents by doing `DBP + i`, when instead you needed to do `DBP + sizeof(ExtentHeader) + i * sizeof(Extent)`. I had a feeling that was the right way, but I wasn't too sure. After I got that working, I was able to fix the ListDir func.
+
+![ListDirExtent](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/ListDirExtent.png?raw=true)
+
+**Total time spent: 3h 7m**
