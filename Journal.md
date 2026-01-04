@@ -143,3 +143,11 @@ Since I couldn't find any documentation online on how extents work, I had to ask
 ![ListDirExtent](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/ListDirExtent.png?raw=true)
 
 **Total time spent: 3h 7m**
+
+# January 4nd: Fixed Read - Part 1
+
+I was trying to fix the Read function today and turns out it was bc it was reading the wrong inode. So I fixed the ReadInode function and then it was able to read correctly. Then I added some code for reading when not using extents. After that I started to work on GetExtents so that I can easily read huge files using multiple Extents. The logic behind GetExtents is solid, but the function crashes when used with a kernel panic. Ill fix that tomorrow.
+
+![FixedRead](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/FixedRead.png?raw=true)
+
+**Total time spent: 3h 7m**

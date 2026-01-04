@@ -222,7 +222,8 @@ Inode* GenericEXT4Device::ReadInode(uint64_t node) {
     uint64_t InodeIndex = (node - 1) % superblock->s_inodes_per_group;
 
     uint64_t BlockSize = 1024ull << superblock->s_log_block_size;
-    uint64_t SectorsBlock = BlockSize / pdev->SectorSize();
+    uint64_t SectorSize = pdev->SectorSize();
+    uint64_t SectorsPerBlock = BlockSize / SectorSize;
 
     void* buf = _ds->RequestPage();
     uint64_t bufPhys = (uint64_t)buf;
@@ -234,20 +235,23 @@ Inode* GenericEXT4Device::ReadInode(uint64_t node) {
     BlockGroupDescriptor* GroupDesc = GroupDescs[InodeBlockGroup];
 
     uint64_t InodeTableBlock = ((uint64_t)GroupDesc->bg_inode_table_hi << 32) | (uint64_t)GroupDesc->bg_inode_table_lo;
-    uint64_t InodeTableLBA = InodeTableBlock * (BlockSize / pdev->SectorSize());
+    uint64_t InodeTableLBA = InodeTableBlock * SectorsPerBlock;
     uint64_t InodeOffset = InodeIndex * superblock->s_inode_size;
     uint64_t InodeSize = superblock->s_inode_size;
 
-    uint64_t InodeSectors = (InodeSize + pdev->SectorSize() - 1) / pdev->SectorSize();
-    for (uint64_t i = 0; i < InodeSectors; i++) {
-        uint64_t LBA = InodeTableLBA + i;
-        uint64_t OffsetBuf = i * pdev->SectorSize();
-        if (!pdev->ReadSector(LBA, (void*)(bufPhys + OffsetBuf))) {
+    uint64_t startSectorIndex = InodeOffset / SectorSize;
+    uint64_t sectorOffset = InodeOffset % SectorSize;
+
+    uint64_t bytesNeeded = sectorOffset + InodeSize;
+    uint64_t sectorsToRead = (bytesNeeded + SectorSize - 1) / SectorSize;
+    for (uint64_t i = 0; i < sectorsToRead; i++) {
+        uint64_t LBA = InodeTableLBA + startSectorIndex + i;
+        if (!pdev->ReadSector(LBA, (void*)(bufPhys + i * SectorSize))) {
             _ds->Println("Failed to read root inode");
             return nullptr;
         }
     }
-    return (Inode*)(bufVirt + (InodeOffset % pdev->SectorSize()));
+    return (Inode*)(bufVirt + sectorOffset);
 }
 
 /*

@@ -476,27 +476,27 @@ FsNode** GenericEXT4Device::ListDir(FsNode* node, size_t* outCount) {
 FsNode* GenericEXT4Device::FindDir(FsNode* node, const char* path) {
     size_t cont = 0;
 
-    char** parts = str_split(_ds, (char*)path, '/', &cont);
+    char** parts = str_split(_ds, _ds->strdup(path), '/', &cont);
 
     FsNode* nd = node;
 
     for (int i = 0; i < cont; i++) {
+        bool found = false;
         size_t count = 0;
         FsNode** contents = ListDir(nd, &count);
 
-        char* name = parts[i];
-
         for (int x = 0; x < count; x++) {
-            if (strcmp(contents[x]->name, name) == 0) {
+            if (strcmp(contents[x]->name, parts[i]) == 0) {
                 nd = contents[x];
             }
+            found = true;
+        }
+        if (found != true) {
+            _ds->Println("File Not Found");
+            return nullptr;
         }
     }
     
-    if (nd == node) {
-        _ds->Println("File Not Found");
-        return nullptr;
-    }
     return nd;
 }
 
@@ -890,6 +890,9 @@ File* GenericEXT4Device::Open(const char* name, uint32_t flags) {
     FsNode* node = FindDir(&rootNode, name);
     Inode* inode = ReadInode(2);
 
+    _ds->Print("Opening File: ");
+    _ds->Println(to_hstridng(node->nodeId));
+
     bool write = flags & (WRONLY | RDWR);
 
     if (node->type == FsNodeType::Directory && write) {
@@ -931,8 +934,6 @@ int64_t GenericEXT4Device::Read(File* file, void* buffer, uint64_t size) {
     if (buffer == nullptr && size == 0) {
         Inode* inode = ReadInode(file->node->nodeId);
         uint64_t fileSize = inode->i_size_lo | ((uint64_t)inode->i_size_high << 32);
-        _ds->Print("FileSize: ");
-        _ds->Println(to_hstridng(inode->i_size_lo));
 
         if (file->position >= fileSize) return 0;
 
@@ -962,7 +963,7 @@ int64_t GenericEXT4Device::Read(File* file, void* buffer, uint64_t size) {
 
     Inode* inode = ReadInode(node->nodeId);
 
-    uint64_t fileSize = inode->i_size_lo | ((uint64_t)inode->i_size_high<< 32);
+    uint64_t fileSize = inode->i_size_lo | ((uint64_t)inode->i_size_high << 32);
     uint64_t pos = file->position;
 
     if (pos >= fileSize) {
@@ -987,19 +988,51 @@ int64_t GenericEXT4Device::Read(File* file, void* buffer, uint64_t size) {
             uint64_t block = ((uint64_t)ee->ee_start_hi << 32) | (uint64_t)ee->ee_start_lo;
 
             uint64_t LBA = block * sectorsInBlock;
-            
+                
             for (uint64_t i = 0; i < sectorsInBlock; i++) {
                 if (!pdev->ReadSector(LBA + i, (void*)((uint8_t*)bufPhys + i * pdev->SectorSize()))) {
                     _ds->Println("Failed to read directory block");
                     return -28;
                 }
             }
+
+            memcpy(out + readTotal, (void*)bufVirt, blockSize);
+
+            readTotal += blockSize;
         }
     } else {
         _ds->Println("File Doesnt use Extents!");
+        
+        uint64_t remaining = toRead;
+        while (remaining > 0) {
+            uint64_t blockIndex = pos / blockSize;
+            uint64_t blockOffset = pos % blockSize;
+
+            if (blockIndex >= 12) break;
+
+            uint32_t block = inode->i_block[blockIndex];
+            if (block == 0) break;
+
+            uint64_t LBA = block * sectorsInBlock;
+
+            for (uint64_t i = 0; i < sectorsInBlock; i++) {
+                if (!pdev->ReadSector(LBA + i, (void*)((uint8_t*)bufPhys + i * pdev->SectorSize()))) {
+                    _ds->Println("Failed to read directory block");
+                    return -28;
+                }
+            }
+
+            uint64_t chunk = blockSize - blockOffset;
+            if (chunk > remaining) chunk = remaining;
+
+            memcpy(out + readTotal, (uint8_t*)bufVirt + blockOffset, chunk);
+
+            readTotal += chunk;
+            pos += chunk;
+            remaining -= chunk;
+        }
     }
 
-    file->position += readTotal;
     return readTotal;
 }
 
