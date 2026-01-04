@@ -150,4 +150,4 @@ I was trying to fix the Read function today and turns out it was bc it was readi
 
 ![FixedRead](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/FixedRead.png?raw=true)
 
-**Total time spent: 3h 7m**
+**Total time spent: 2h 44m**
