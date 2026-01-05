@@ -99,6 +99,8 @@ public:
     }
     virtual bool SetMount(uint64_t FSID) = 0;
     virtual bool SetMountNode(FsNode* Node) = 0;
+    virtual uint64_t GetMount() = 0;
+    virtual FsNode* GetMountNode() = 0;
 };
 
 class PartitionDriverFactory : public BaseDriverFactory {

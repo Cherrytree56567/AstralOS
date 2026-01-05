@@ -67,7 +67,9 @@ Extent** GenericEXT4Device::GetExtents(ExtentHeader* hdr, uint64_t& extentsCount
         for (int i = 0; i < hdr->eh_entries; i++) {
             Extent* ee = (Extent*)((uint64_t)hdr + sizeof(ExtentHeader) + i * sizeof(Extent));
             Extent* eeCopy = (Extent*)_ds->malloc(sizeof(Extent));
+
             *eeCopy = *ee;
+
             extents[extentsCount] = eeCopy;
             extentsCount++;
         }
@@ -79,7 +81,7 @@ Extent** GenericEXT4Device::GetExtents(ExtentHeader* hdr, uint64_t& extentsCount
 
         uint64_t blockSize = 1024ull << superblock->s_log_block_size;
         uint64_t sectorSize = pdev->SectorSize();
-        uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
+        uint64_t sectorsPerBlock = blockSize / sectorSize;
 
         for (int i = 0; i < hdr->eh_entries; i++) {
             memset((void*)bufVirt, 0, 4096);

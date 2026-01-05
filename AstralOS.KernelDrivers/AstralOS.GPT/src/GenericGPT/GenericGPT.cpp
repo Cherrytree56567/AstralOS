@@ -216,6 +216,14 @@ bool GenericGPTDevice::SetMountNode(FsNode* Node) {
     return true;
 }
 
+uint64_t GenericGPTDevice::GetMount() {
+    return PartitionMountID[CurrentPartition];
+}
+
+FsNode* GenericGPTDevice::GetMountNode() {
+    return PartitionFsNode[CurrentPartition];
+}
+
 const char* GenericGPTDevice::name() const {
     char cname[37];
     for (int j = 0; j < 36; j++) {

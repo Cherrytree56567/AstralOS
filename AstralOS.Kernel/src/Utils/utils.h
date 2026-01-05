@@ -20,6 +20,8 @@ char* strtok(char *s, const char *delim);
 char* strcat(char *s, const char *append);
 char* strcpy(char *to, const char *from);
 
+char** str_split(char* a_str, const char a_delim, size_t* size);
+
 void* operator new(size_t size);
 void operator delete(void* ptr) noexcept;
 void* operator new[](size_t size);

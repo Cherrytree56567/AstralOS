@@ -444,9 +444,11 @@ FsNode** GenericEXT4Device::ListDir(FsNode* node, size_t* outCount) {
     if ((dir_inode.i_flags & InodeFlags::EXT4_EXTENTS_FL) != 0) {
         ExtentHeader* eh = (ExtentHeader*)dir_inode.i_block;
 
-        for (int i = 0; i < eh->eh_entries; i++) {
-            memset((void*)bufVirt, 0, 4096);
-            Extent* ee = (Extent*)((uint64_t)eh + sizeof(ExtentHeader) + i * sizeof(Extent));
+        uint64_t ExtsCount = 0;
+        Extent** extents = GetExtents(eh, ExtsCount);
+
+        for (int i = 0; i < ExtsCount; i++) {
+            Extent* ee = extents[i];
 
             if (ee->ee_len == 0) continue;
 
@@ -454,7 +456,6 @@ FsNode** GenericEXT4Device::ListDir(FsNode* node, size_t* outCount) {
             
             ParseDirectoryBlock(nodes, count, capacity, block);
         }
-
     } else {
         for (uint64_t i = 0; i < 15; i++) {
             if (dir_inode.i_block[i] == 0) continue;
@@ -979,26 +980,37 @@ int64_t GenericEXT4Device::Read(File* file, void* buffer, uint64_t size) {
     if ((inode->i_flags & InodeFlags::EXT4_EXTENTS_FL)) {
         ExtentHeader* eh = (ExtentHeader*)inode->i_block;
 
-        for (int i = 0; i < eh->eh_entries; i++) {
-            memset((void*)bufVirt, 0, 4096);
-            Extent* ee = (Extent*)((uint64_t)eh + sizeof(ExtentHeader) + i * sizeof(Extent));
+        uint64_t EXTsCount = 0;
+        Extent** exts = GetExtents(eh, EXTsCount);
+
+        for (int i = 0; i < EXTsCount; i++) {
+            Extent* ee = exts[i];
 
             if (ee->ee_len == 0) continue;
 
             uint64_t block = ((uint64_t)ee->ee_start_hi << 32) | (uint64_t)ee->ee_start_lo;
+            uint64_t fileBlock = ee->ee_block;
 
-            uint64_t LBA = block * sectorsInBlock;
-                
-            for (uint64_t i = 0; i < sectorsInBlock; i++) {
-                if (!pdev->ReadSector(LBA + i, (void*)((uint8_t*)bufPhys + i * pdev->SectorSize()))) {
-                    _ds->Println("Failed to read directory block");
-                    return -28;
+            for (int x = 0; x < ee->ee_len; x++) {
+                memset((void*)bufVirt, 0, 4096);
+                uint64_t LBA = (block + x) * sectorsInBlock;
+                    
+                for (uint64_t j = 0; j < sectorsInBlock; j++) {
+                    if (!pdev->ReadSector(LBA + j, (void*)((uint8_t*)bufPhys + j * pdev->SectorSize()))) {
+                        _ds->Println("Failed to read directory block");
+                        return -28;
+                    }
                 }
+
+                uint64_t off = (fileBlock + x) * blockSize;
+
+                uint64_t remaining = fileSize - off;
+                uint64_t toCopy = remaining < blockSize ? remaining : blockSize;
+
+                memcpy(out + off, (void*)bufVirt, toCopy);
+
+                readTotal += blockSize;
             }
-
-            memcpy(out + readTotal, (void*)bufVirt, blockSize);
-
-            readTotal += blockSize;
         }
     } else {
         _ds->Println("File Doesnt use Extents!");

@@ -14,6 +14,7 @@
 #include "InitialRamFS/InitialRamFS.h"
 #include "DriverManager/DriverManager.h"
 #include "Timer/Timer.h"
+#include "Filesystem/Filesystem.h"
 
 struct BootInfo {
 	FrameBuffer pFramebuffer;
@@ -47,6 +48,7 @@ public:
 	DriverManager driverMan;
 	APICTimer timer;
 	PIT pit;
+	VFS vfs;
 };
 
 extern KernelServices* ks;

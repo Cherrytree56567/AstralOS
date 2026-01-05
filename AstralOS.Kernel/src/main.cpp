@@ -448,14 +448,14 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
                      * Null Read Just to get the Size
                     */
                     int64_t size = bldev->Read(file, nullptr, 0);
+                    kernelServices.basicConsole.Print("Size: ");
+                    kernelServices.basicConsole.Println(to_hstring((uint64_t)size));
                     void* buf = kernelServices.heapAllocator.malloc(size);
                     
                     /*
                      * Now we can actually Read
                     */
                     bldev->Read(file, buf, size);
-                    kernelServices.basicConsole.Print("Size: ");
-                    kernelServices.basicConsole.Println(to_hstring((uint64_t)size));
                     
                     char* buff = (char*)buf;
 
@@ -464,6 +464,10 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
                 } else {
                     kernelServices.basicConsole.Println("Not Found: kernel.elf");
                 }
+
+                kernelServices.vfs.mount("/dev/sdb0p1", "/", bldev->GetParentLayer()->GetMount());
+                kernelServices.basicConsole.Print("Mounting");
+                break;
             }
         }
         

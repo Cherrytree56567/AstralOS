@@ -74,6 +74,8 @@ public:
     virtual BaseDriver* GetParentLayer() override;
     virtual bool SetMount(uint64_t FSID) override;
     virtual bool SetMountNode(FsNode* Node) override;
+    virtual uint64_t GetMount() override;
+    virtual FsNode* GetMountNode() override;
 private:
 	BlockDevice* bldev;
 	DriverServices* _ds = nullptr;

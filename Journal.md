@@ -151,3 +151,11 @@ I was trying to fix the Read function today and turns out it was bc it was readi
 ![FixedRead](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/FixedRead.png?raw=true)
 
 **Total time spent: 2h 44m**
+
+# January 5nd: Fixed Read - Part 2
+
+So the GetExtents function wasn't actually broken, I just had 2 variables with the same name, which the compiler hadn't told me about. So once I fixed that it started working. I then used GetExtents in the Read function so that I could read large files like the usermode or the kernel. In the demo, you can see Ive just opened up `hello.txt`. I decided not to do more of the EXT4 Driver, since Im only going to be only reading anyway in the kernel. I've started the VFS abstration. Most of the code Ive written before,isn't going to futureproof well, so Im going to rewrite it in another update. So after the VFS, I need to add multithreading and then add a simple usermode app.
+
+![ReadFile](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/ReadFile.png?raw=true)
+
+**Total time spent: 2h 32m**
