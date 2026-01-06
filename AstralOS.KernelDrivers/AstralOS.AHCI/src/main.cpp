@@ -1,6 +1,6 @@
 #define DRIVER
 #include <new>
-#include "GenericAHCI/GenericAHCI.h"
+#include "GenericAHCI/GenericAHCIController.h"
 #include "global.h"
 
 DriverServices* g_ds = nullptr;
@@ -30,7 +30,7 @@ DriverInfo DriverMain(DriverServices& DServices) {
     DriverInfo di((char*)"", 1, 0, 0);
     di.name = DServices.strdup("ACHI Driver");
 
-    void* mem = DServices.malloc(sizeof(GenericAHCI));
+    void* mem = DServices.malloc(sizeof(GenericAHCIControllerFactory));
     if (!mem) {
         DServices.Println("Failed to Malloc for Generic AHCI");
         DServices.Println(to_hstring((uint64_t)mem));
@@ -38,7 +38,7 @@ DriverInfo DriverMain(DriverServices& DServices) {
         return di;
     }
 
-    GenericAHCI* factory = new(mem) GenericAHCI();
+    GenericAHCIControllerFactory* factory = new(mem) GenericAHCIControllerFactory();
 
     DServices.RegisterDriver(factory);
 

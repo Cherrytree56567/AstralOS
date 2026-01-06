@@ -14,6 +14,7 @@ struct Mount {
 struct Path {
     String path;
     uint64_t FSID;
+    String device;
 };
 
 class VFS {

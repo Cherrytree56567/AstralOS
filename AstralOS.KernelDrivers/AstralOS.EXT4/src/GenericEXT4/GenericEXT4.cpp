@@ -1069,7 +1069,7 @@ bool GenericEXT4Device::Utimes(FsNode* node, uint64_t atime, uint64_t mtime, uin
 }
 
 uint8_t GenericEXT4Device::GetClass() {
-    return 0x0;
+    return EXT4MountID;
 }
 
 uint8_t GenericEXT4Device::GetSubClass() {
@@ -1081,7 +1081,7 @@ uint8_t GenericEXT4Device::GetProgIF() {
 }
 
 const char* GenericEXT4Device::name() const {
-    return "";
+    return "EXT4";
 }
 
 /*

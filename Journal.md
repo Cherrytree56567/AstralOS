@@ -159,3 +159,11 @@ So the GetExtents function wasn't actually broken, I just had 2 variables with t
 ![ReadFile](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/ReadFile.png?raw=true)
 
 **Total time spent: 2h 32m**
+
+# January 6nd: Fixing the Driver System - Part 1
+
+So I looked at the DriverSystem and saw that it was pretty broken, so Im fixing that. First, Im splitting the Block Device into a Block Controller which makes multiple BlockDevices per drive. Im not fully done with it just yet, but ill probably finish it tomorrow. Ive gotten the `DriverSystem.h` file structs fixed.
+
+![ReadFile](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/ReadFile.png?raw=true)
+
+**Total time spent: 1h 27m**

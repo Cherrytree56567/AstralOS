@@ -55,6 +55,25 @@ Path VFS::ResolvePath(const char* pat) {
 
     return {
         .path = rel,
-        .FSID = best->FSID
+        .FSID = best->FSID,
+        .device = best->device
     };
+}
+
+File* VFS::open(const char* path, FileFlags flags) {
+    File* file = (File*)ks->heapAllocator.malloc(sizeof(File));
+    Path p = ResolvePath(path);
+    BaseDriver* FSDriver = ks->driverMan.GetDevice(DriverType::Filesystem);
+    if (FSDriver) {
+        ks->basicConsole.Println(((String)"Found FS Driver: " + FSDriver->DriverName()).c_str());
+        FilesystemDevice* bldev = static_cast<FilesystemDevice*>(FSDriver);
+
+        for (size_t i = 0; i < 3; i++) {
+            if (!bldev->GetParentLayer()->SetPartition(i)) continue;
+            if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
+            if (bldev->Support()) {
+                
+            }
+        }
+    }
 }

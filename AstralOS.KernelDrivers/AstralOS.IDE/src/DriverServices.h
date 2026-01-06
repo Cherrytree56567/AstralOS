@@ -11,12 +11,15 @@
 
 struct DriverServices;
 
-enum DriverType {
-    BaseDev,
-    BlockDev,
-    Partition,
-    Filesystem
-};
+namespace DriverType {
+    enum _DriverType {
+        BaseDevice,
+        BlockDevice,
+        BlockController,
+        PartitionDriver,
+        FilesystemDriver
+    };
+}
 
 enum LayerType {
     OTHER = 0,
@@ -31,13 +34,12 @@ enum MountFSID {
 class BaseDriver {
 public:
     virtual ~BaseDriver() {}
-    virtual const char* name() const = 0;
     virtual const char* DriverName() const = 0;
     virtual void Init(DriverServices& ds, DeviceKey& devKey) = 0;
     virtual uint8_t GetClass() = 0;
     virtual uint8_t GetSubClass() = 0;
     virtual uint8_t GetProgIF() = 0;
-    virtual DriverType GetDriverType() = 0;
+    virtual DriverType::_DriverType GetDriverType() = 0;
     virtual BaseDriver* GetParentLayer() { return NULL; }
 };
 
@@ -54,20 +56,21 @@ public:
     virtual void Init(DriverServices& ds, DeviceKey& devKey) override = 0;
     virtual bool ReadSector(uint64_t lba, void* buffer) = 0;
     virtual bool WriteSector(uint64_t lba, void* buffer) = 0;
-    virtual bool SetDrive(uint8_t drive) = 0;
 
     virtual uint64_t SectorCount() const = 0;
     virtual uint32_t SectorSize() const = 0;
     virtual void* GetInternalBuffer() = 0;
+    virtual const char* name() const = 0;
 
     virtual uint8_t GetClass() override = 0;
     virtual uint8_t GetSubClass() override = 0;
     virtual uint8_t GetProgIF() override = 0;
-    virtual const char* name() const override = 0;
+    virtual uint8_t GetDrive() = 0;
     virtual const char* DriverName() const override = 0;
-    virtual DriverType GetDriverType() override {
-        return BlockDev;
+    virtual DriverType::_DriverType GetDriverType() override {
+        return DriverType::BlockDevice;
     }
+    virtual BlockController* GetParentLayer() = 0;
 };
 
 class BlockDeviceFactory : public BaseDriverFactory {
@@ -75,6 +78,34 @@ public:
     virtual ~BlockDeviceFactory() {}
     virtual bool Supports(const DeviceKey& devKey) override = 0;
     virtual BlockDevice* CreateDevice() override = 0;
+    virtual LayerType GetLayerType() override { return PCIE; }
+};
+
+class BlockController : public BaseDriver {
+public:
+    virtual void Init(DriverServices& ds, DeviceKey& devKey) override = 0;
+    virtual bool ReadSector(uint8_t drive, uint64_t lba, void* buffer) = 0;
+    virtual bool WriteSector(uint8_t drive, uint64_t lba, void* buffer) = 0;
+
+    virtual uint64_t SectorCount(uint8_t drive) const = 0;
+    virtual uint32_t SectorSize(uint8_t drive) const = 0;
+    virtual void* GetInternalBuffer(uint8_t drive) = 0;
+    virtual const char* name(uint8_t drive) const = 0;
+
+    virtual uint8_t GetClass() override = 0;
+    virtual uint8_t GetSubClass() override = 0;
+    virtual uint8_t GetProgIF() override = 0;
+    virtual const char* DriverName() const override = 0;
+    virtual DriverType::_DriverType GetDriverType() override {
+        return DriverType::BlockController;
+    }
+};
+
+class BlockControllerFactory : public BaseDriverFactory {
+public:
+    virtual ~BlockControllerFactory() {}
+    virtual bool Supports(const DeviceKey& devKey) override = 0;
+    virtual BlockController* CreateDevice() override = 0;
     virtual LayerType GetLayerType() override { return PCIE; }
 };
 
@@ -91,11 +122,11 @@ public:
     virtual uint8_t GetClass() override = 0;
     virtual uint8_t GetSubClass() override = 0;
     virtual uint8_t GetProgIF() override = 0;
-    virtual const char* name() const override = 0;
+    virtual const char* name() const = 0;
     virtual const char* DriverName() const override = 0;
     virtual BaseDriver* GetParentLayer() override = 0;
-    virtual DriverType GetDriverType() override {
-        return Partition;
+    virtual DriverType::_DriverType GetDriverType() override {
+        return DriverType::PartitionDriver;
     }
     virtual bool SetMount(uint64_t FSID) = 0;
     virtual bool SetMountNode(FsNode* Node) = 0;
@@ -136,11 +167,11 @@ public:
     virtual uint8_t GetClass() override = 0;
     virtual uint8_t GetSubClass() override = 0;
     virtual uint8_t GetProgIF() override = 0;
-    virtual const char* name() const override = 0;
+    virtual const char* name() const = 0;
     virtual const char* DriverName() const override = 0;
     virtual PartitionDevice* GetParentLayer() override = 0;
-    virtual DriverType GetDriverType() override {
-        return Filesystem;
+    virtual DriverType::_DriverType GetDriverType() override {
+        return DriverType::FilesystemDriver;
     }
 };
 
