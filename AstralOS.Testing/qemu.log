@@ -1,29 +1,16 @@
-[2J[01;01H[=3h[2J[01;01H[0m[35m[40m[0m[37m[40mBdsDxe: loading Boot0002 "EFI Internal Shell" from Fv(7CB8BDC9-F8EB-4F34-AAEA-3EE4AF6516A1)/FvFile(7C04A583-9E3E-4F1C-AD65-E05268D0B4D1)
-BdsDxe: starting Boot0002 "EFI Internal Shell" from Fv(7CB8BDC9-F8EB-4F34-AAEA-3EE4AF6516A1)/FvFile(7C04A583-9E3E-4F1C-AD65-E05268D0B4D1)
-[2J[01;01H[01;01HUEFI Interactive Shell v2.2
-EDK II
-UEFI v2.70 (EDK II, 0x00010000)
-[1m[33m[40mMapping table[0m[37m[40m
-[1m[33m[40m      FS0:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40mHD0a65535a1:;BLK1:
-          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(1,GPT,B371EA4E-63F4-4D61-AC42-9B29CFAA2EC2,0x800,0x2F000)
-[1m[33m[40m     BLK0:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
-          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)
-[1m[33m[40m     BLK3:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
-          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x2,0xFFFF,0x0)
-[1m[33m[40m     BLK2:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
-          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(2,GPT,339AFC3A-6BD5-42C6-9919-ACA3FA1E9914,0x2F800,0x13D0000)
-[15;01HPress [1m[37m[40mESC[0m[37m[40m in 5 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 4 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 3 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 2 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 1 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.
-[1m[33m[40mShell> [0m[37m[40mfs0:\efi\boot\bootx64.efi
+[2J[01;01H[=3h[2J[01;01H[0m[35m[40m[2J[01;01H[=3h[2J[01;01H[0m[35m[40m[0m[37m[40mBdsDxe: failed to load Boot0001 "UEFI QEMU DVD-ROM QM00005 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x2,0xFFFF,0x0): Not Found
+BdsDxe: loading Boot0002 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)
+BdsDxe: starting Boot0002 "UEFI QEMU HARDDISK QM00001 " from PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)
 Found ACPI 2.0 RSDP at: 0x7FB7E014
 Volume label is ''
-Offset: 0x1000Addr: 0x1000Offset: 0x11000Addr: 0x11000Offset: 0x31000Addr: 0x31000Offset: 0x37000Addr: 0x37000initramfs loaded at 0x7E492018 (186880 bytes)
+Offset: 0x1000Addr: 0x1000Offset: 0x11000Addr: 0x11000Offset: 0x31000Addr: 0x31000Offset: 0x37000Addr: 0x37000initramfs loaded at 0x7E507018 (186880 bytes)
 GOP located
 ss
 Handles freed
 Buffer freed
 nn
 Failed to GGet memory map: Buffer Too Small
-Boot Info Framebuffer Addr: Current Addr: 0xFFFFFFFF0000E0DA
+Boot Info Framebuffer Addr: Current Addr: 0xFFFFFFFF0000E064
 RSDP Addr: 0xFFFFFFFF7FB7E014
 RSDP Signature: RSD PTR �BOCHS tз$
 RSDP OEM ID: BOCHS tз$
@@ -61,13 +48,26 @@ Reg D
 IDE Driver Loaded!
 Bar 5: 0xFFFFFFFFC1010000
 AHCI Version: 1.0
-No CD present in drive
+Init: No CD present in drive
 Generic AHCI Initialized!
 Initialized Drivers
-abbbc=== EXCEPTION ===
-Vector: 0xE
-Error Code: 0x286
-RIP: 0x3FD00000008
-CS: 0xFFFFFFFF00034FE0
-RFLAGS: 0x60FF880000000948
-=================
+0x30x50x5Found FS Driver: Generic EXT4 Driver
+Found FS Driver: Generic EXT4 Driver
+Warning: EXT4 Optional Features not supported.
+0x0Name: .
+Type: Directory
+-------------------------
+Name: ..
+Type: Directory
+-------------------------
+Name: kernel.elf
+Type: File
+-------------------------
+Name: hello.txt
+Type: File
+-------------------------
+Found: kernel.elf
+Opening File: 0x5F404
+Size: 0xC
+Hi from EXT4
+Mounting

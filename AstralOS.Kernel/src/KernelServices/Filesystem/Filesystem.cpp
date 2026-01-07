@@ -62,7 +62,7 @@ Path VFS::ResolvePath(const char* pat) {
 
 File* VFS::open(const char* path, FileFlags flags) {
     File* file = (File*)ks->heapAllocator.malloc(sizeof(File));
-    Path p = ResolvePath(path);
+    Path p = ResolvePath(path);/*
     BaseDriver* FSDriver = ks->driverMan.GetDevice(DriverType::FilesystemDriver);
     if (FSDriver) {
         ks->basicConsole.Println(((String)"Found FS Driver: " + FSDriver->DriverName()).c_str());
@@ -74,5 +74,5 @@ File* VFS::open(const char* path, FileFlags flags) {
                 
             }
         }
-    }
+    }*/
 }

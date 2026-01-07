@@ -63,7 +63,8 @@ void GenericEXT4Device::UpdateSuperblock() {
 
         for (uint64_t i = 0; i < sectorsNeeded; i++) {
             if (!pdev->WriteSector(LBA + i, (uint8_t*)bufPhys + i * sectorSize)) {
-                _ds->Println("Failed to write superblock backup");
+                _ds->Print("Failed to write superblock backup: ");
+                _ds->Println(to_hstridng(LBA + i));
                 return;
             }
         }

@@ -32,7 +32,7 @@ void GenericIDE::Init(DriverServices& ds, DeviceKey& dKey) {
     uint64_t dev = ((uint64_t)devKey.bars[0] << 32) | devKey.bars[1];
     BaseDriver* bsdrv = (BaseDriver*)dev;
     pdev = (BlockController*)bsdrv;
-    drive = devKey.bars[2];
+    drive = devKey.bars[3];
 }
 
 bool GenericIDE::ReadSector(uint64_t lba, void* buffer) {
@@ -48,7 +48,7 @@ uint64_t GenericIDE::SectorCount() const {
 }
 
 uint32_t GenericIDE::SectorSize() const {
-    return pdev->SectorCount(drive);
+    return pdev->SectorSize(drive);
 }
 
 /*

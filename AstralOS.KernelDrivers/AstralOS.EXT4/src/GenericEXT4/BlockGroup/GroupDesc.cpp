@@ -98,7 +98,8 @@ void GenericEXT4Device::UpdateGroupDesc(uint32_t group, BlockGroupDescriptor* Gr
 
     for (uint64_t i = 0; i < sectors; i++) {
         if (!pdev->WriteSector(descLBA + i, (uint8_t*)bufPhys + i * sectorSize)) {
-            _ds->Println("GDT write failed");
+            _ds->Print("GDT write failed: ");
+            _ds->Println(to_hstridng(descLBA + i));
             return;
         }
     }

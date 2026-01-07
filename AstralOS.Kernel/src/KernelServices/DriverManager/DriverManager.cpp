@@ -114,14 +114,12 @@ void DriverManager::DetectDrivers(size_t layer) {
         devKey.bars[0] = ((uint64_t)dev >> 32); // HIGH: 0x12345678XXXXXXXX
         devKey.bars[1] = ((uint64_t)dev & 0xFFFFFFFF); // LOW: 0xXXXXXXXXABCDEF00
         devKey.bars[2] = 22;
-        ks->basicConsole.Print("a");
         for (size_t j = 0; j < factories.size(); j++) {
-            ks->basicConsole.Print("b");
             auto& factory = factories[j];
             if (factory->GetLayerType() != SOFTWARE) continue;
             if ((factory)->Supports(devKey)) {
-                ks->basicConsole.Print("c");
                 BaseDriver* device = factory->CreateDevice();
+                ks->basicConsole.Print(to_hstring((uint64_t)device->GetDriverType()));
                 device->Init(ds, devKey);
                 AddDriver(device);
                 if (layer == 0) {
@@ -140,12 +138,14 @@ BaseDriver* DriverManager::GetDevice(uint8_t _class, uint8_t subclass, uint8_t p
     return nullptr;
 }
 
-BaseDriver* DriverManager::GetDevice(DriverType::_DriverType drvT) {
+Array<BaseDriver*> DriverManager::GetDevices(DriverType::_DriverType drvT) {
+    Array<BaseDriver*> arr;
+    arr.clear();
     for (size_t i = 0; i < DeviceDrivers.size(); ++i) {
         auto& dev = DeviceDrivers[i];
-        if (dev->GetDriverType() == drvT) return dev;
+        if (dev->GetDriverType() == drvT) arr.push_back(dev);
     }
-    return nullptr;
+    return arr;
 }
 
 const Array<BaseDriver*>& DriverManager::GetDevices() const {

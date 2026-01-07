@@ -87,12 +87,12 @@ void GenericGPTController::Init(DriverServices& ds, DeviceKey& dKey) {
 
     _ds->MapMemory((void*)buf_virt, (void*)buf_phys, false);
 
-    PMBR* pmb = (PMBR*)buf_virt;
-
     /*
      * Make sure we zero out the buffer
     */
     memset((void*)buf_virt, 0, bldev->SectorSize());
+
+    PMBR* pmb = (PMBR*)buf_virt;
 
     /*
      * Usually the PMBR is in LBA0
@@ -160,7 +160,8 @@ void GenericGPTController::Init(DriverServices& ds, DeviceKey& dKey) {
                 DeviceKey DevK;
                 DevK.bars[0] = ((uint64_t)dev >> 32);
                 DevK.bars[1] = ((uint64_t)dev & 0xFFFFFFFF);
-                DevK.bars[2] = PartitionCount;
+                DevK.bars[2] = 2;
+                DevK.bars[3] = PartitionCount;
 
                 device->Init(ds, DevK);
                 _ds->AddDriver(device);

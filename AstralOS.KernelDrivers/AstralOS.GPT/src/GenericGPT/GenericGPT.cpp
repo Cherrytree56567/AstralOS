@@ -33,7 +33,7 @@ void GenericGPTDevice::Init(DriverServices& ds, DeviceKey& dKey) {
     uint64_t dev = ((uint64_t)devKey.bars[0] << 32) | devKey.bars[1];
     BaseDriver* bsdrv = (BaseDriver*)dev;
     pcdev = (PartitionController*)bsdrv;
-    partition = devKey.bars[2];
+    partition = devKey.bars[3];
 }
 
 bool GenericGPTDevice::ReadSector(uint64_t lba, void* buffer) {
