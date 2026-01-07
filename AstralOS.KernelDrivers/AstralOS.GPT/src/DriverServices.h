@@ -16,7 +16,8 @@ namespace DriverType {
         BaseDevice,
         BlockDevice,
         BlockController,
-        PartitionDriver,
+        PartitionController,
+        PartitionDevice,
         FilesystemDriver
     };
 }
@@ -51,6 +52,34 @@ public:
     virtual LayerType GetLayerType() { return PCIE; }
 };
 
+class BlockController : public BaseDriver {
+public:
+    virtual void Init(DriverServices& ds, DeviceKey& devKey) override = 0;
+    virtual bool ReadSector(uint8_t drive, uint64_t lba, void* buffer) = 0;
+    virtual bool WriteSector(uint8_t drive, uint64_t lba, void* buffer) = 0;
+
+    virtual uint64_t SectorCount(uint8_t drive) const = 0;
+    virtual uint32_t SectorSize(uint8_t drive) const = 0;
+    virtual void* GetInternalBuffer(uint8_t drive) = 0;
+    virtual const char* name(uint8_t drive) const = 0;
+
+    virtual uint8_t GetClass() override = 0;
+    virtual uint8_t GetSubClass() override = 0;
+    virtual uint8_t GetProgIF() override = 0;
+    virtual const char* DriverName() const override = 0;
+    virtual DriverType::_DriverType GetDriverType() override {
+        return DriverType::BlockController;
+    }
+};
+
+class BlockControllerFactory : public BaseDriverFactory {
+public:
+    virtual ~BlockControllerFactory() {}
+    virtual bool Supports(const DeviceKey& devKey) override = 0;
+    virtual BlockController* CreateDevice() override = 0;
+    virtual LayerType GetLayerType() override { return PCIE; }
+};
+
 class BlockDevice : public BaseDriver {
 public:
     virtual void Init(DriverServices& ds, DeviceKey& devKey) override = 0;
@@ -81,40 +110,11 @@ public:
     virtual LayerType GetLayerType() override { return PCIE; }
 };
 
-class BlockController : public BaseDriver {
-public:
-    virtual void Init(DriverServices& ds, DeviceKey& devKey) override = 0;
-    virtual bool ReadSector(uint8_t drive, uint64_t lba, void* buffer) = 0;
-    virtual bool WriteSector(uint8_t drive, uint64_t lba, void* buffer) = 0;
-
-    virtual uint64_t SectorCount(uint8_t drive) const = 0;
-    virtual uint32_t SectorSize(uint8_t drive) const = 0;
-    virtual void* GetInternalBuffer(uint8_t drive) = 0;
-    virtual const char* name(uint8_t drive) const = 0;
-
-    virtual uint8_t GetClass() override = 0;
-    virtual uint8_t GetSubClass() override = 0;
-    virtual uint8_t GetProgIF() override = 0;
-    virtual const char* DriverName() const override = 0;
-    virtual DriverType::_DriverType GetDriverType() override {
-        return DriverType::BlockController;
-    }
-};
-
-class BlockControllerFactory : public BaseDriverFactory {
-public:
-    virtual ~BlockControllerFactory() {}
-    virtual bool Supports(const DeviceKey& devKey) override = 0;
-    virtual BlockController* CreateDevice() override = 0;
-    virtual LayerType GetLayerType() override { return PCIE; }
-};
-
 class PartitionDevice : public BaseDriver {
 public:
     virtual void Init(DriverServices& ds, DeviceKey& devKey) override = 0;
     virtual bool ReadSector(uint64_t lba, void* buffer) = 0;
     virtual bool WriteSector(uint64_t lba, void* buffer) = 0;
-    virtual bool SetPartition(uint8_t partition) = 0;
 
     virtual uint64_t SectorCount() const = 0;
     virtual uint32_t SectorSize() const = 0;
@@ -122,11 +122,12 @@ public:
     virtual uint8_t GetClass() override = 0;
     virtual uint8_t GetSubClass() override = 0;
     virtual uint8_t GetProgIF() override = 0;
+    virtual uint8_t GetPartition() = 0;
     virtual const char* name() const = 0;
     virtual const char* DriverName() const override = 0;
     virtual BaseDriver* GetParentLayer() override = 0;
     virtual DriverType::_DriverType GetDriverType() override {
-        return DriverType::PartitionDriver;
+        return DriverType::PartitionDevice;
     }
     virtual bool SetMount(uint64_t FSID) = 0;
     virtual bool SetMountNode(FsNode* Node) = 0;
@@ -134,11 +135,43 @@ public:
     virtual FsNode* GetMountNode() = 0;
 };
 
-class PartitionDriverFactory : public BaseDriverFactory {
+class PartitionDeviceFactory : public BaseDriverFactory {
 public:
-    virtual ~PartitionDriverFactory() {}
+    virtual ~PartitionDeviceFactory() {}
     virtual bool Supports(const DeviceKey& devKey) = 0;
     virtual PartitionDevice* CreateDevice() = 0;
+    virtual LayerType GetLayerType() override { return SOFTWARE; }
+};
+
+class PartitionController : public BaseDriver {
+public:
+    virtual void Init(DriverServices& ds, DeviceKey& devKey) override = 0;
+    virtual bool ReadSector(uint8_t partition, uint64_t lba, void* buffer) = 0;
+    virtual bool WriteSector(uint8_t partition, uint64_t lba, void* buffer) = 0;
+
+    virtual uint64_t SectorCount(uint8_t partition) const = 0;
+    virtual uint32_t SectorSize(uint8_t partition) const = 0;
+
+    virtual uint8_t GetClass() override = 0;
+    virtual uint8_t GetSubClass() override = 0;
+    virtual uint8_t GetProgIF() override = 0;
+    virtual const char* name(uint8_t partition) const = 0;
+    virtual const char* DriverName() const override = 0;
+    virtual BaseDriver* GetParentLayer() override = 0;
+    virtual DriverType::_DriverType GetDriverType() override {
+        return DriverType::PartitionController;
+    }
+    virtual bool SetMount(uint8_t partition, uint64_t FSID) = 0;
+    virtual bool SetMountNode(uint8_t partition, FsNode* Node) = 0;
+    virtual uint64_t GetMount(uint8_t partition) = 0;
+    virtual FsNode* GetMountNode(uint8_t partition) = 0;
+};
+
+class PartitionControllerFactory : public BaseDriverFactory {
+public:
+    virtual ~PartitionControllerFactory() {}
+    virtual bool Supports(const DeviceKey& devKey) = 0;
+    virtual PartitionController* CreateDevice() = 0;
     virtual LayerType GetLayerType() override { return SOFTWARE; }
 };
 
@@ -231,6 +264,7 @@ struct DriverServices {
      * Driver Stuff
     */
     void (*RegisterDriver)(BaseDriverFactory* factory);
+    void (*AddDriver)(BaseDriver* drv);
 
     /*
      * Timer Stuff

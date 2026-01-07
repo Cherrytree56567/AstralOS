@@ -1,6 +1,6 @@
 #define DRIVER
 #include <new>
-#include "GenericGPT/GenericGPT.h"
+#include "GenericGPT/GenericGPTController.h"
 #include "global.h"
 
 DriverServices* g_ds = nullptr;
@@ -29,15 +29,15 @@ DriverInfo DriverMain(DriverServices& DServices) {
     DriverInfo di((char*)"", 1, 0, 0);
     di.name = DServices.strdup("GPT Driver");
 
-    void* mem = DServices.malloc(sizeof(GenericGPT));
+    void* mem = DServices.malloc(sizeof(GenericGPTControllerFactory));
     if (!mem) {
-        DServices.Println("Failed to Malloc for Generic GPT");
+        DServices.Println("Failed to Malloc for Generic GPT Controller Factory");
         DServices.Println(to_hstring((uint64_t)mem));
         di.exCode = 1;
         return di;
     }
 
-    GenericGPT* factory = new(mem) GenericGPT();
+    GenericGPTControllerFactory* factory = new(mem) GenericGPTControllerFactory();
 
     DServices.RegisterDriver(factory);
 

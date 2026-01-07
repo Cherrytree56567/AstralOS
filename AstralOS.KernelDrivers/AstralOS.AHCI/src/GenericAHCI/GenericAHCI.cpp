@@ -1,5 +1,30 @@
 #include "GenericAHCI.h"
 
+bool GenericAHCIFactory::Supports(const DeviceKey& devKey) {
+    if (devKey.bars[2] == 22) {
+        uint64_t dev = ((uint64_t)devKey.bars[0] << 32) | devKey.bars[1];
+        BaseDriver* bsdrv = (BaseDriver*)dev;
+        BlockController* bldev = (BlockController*)bsdrv;
+        if (bldev) {
+            if (bldev->GetDriverType() == DriverType::BlockController) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+BlockDevice* GenericAHCIFactory::CreateDevice() {
+    void* mem = g_ds->malloc(sizeof(GenericAHCI));
+    if (!mem) {
+        g_ds->Println("Failed to Malloc for Generic AHCI Device");
+        return nullptr;
+    }
+
+    GenericAHCI* device = new(mem) GenericAHCI();
+    return device;
+}
+
 void GenericAHCI::Init(DriverServices& ds, DeviceKey& dKey) {
     _ds = &ds;
     devKey = dKey;

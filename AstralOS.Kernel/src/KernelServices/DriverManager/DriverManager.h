@@ -14,7 +14,8 @@ public:
     void DetectDevices(Array<DeviceKey>& devices);
     void DetectDrivers(size_t layer);
     BaseDriver* GetDevice(uint8_t _class, uint8_t subclass, uint8_t progIF);
-    BaseDriver* GetDevice(DriverType drvT);
+    BaseDriver* GetDevice(DriverType::_DriverType drvT);
+    void AddDriver(BaseDriver* drv);
     const Array<BaseDriver*>& GetDevices() const;
     void CreateDriverServices();
     DriverServices& GetDS();

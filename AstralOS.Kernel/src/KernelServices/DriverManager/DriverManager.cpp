@@ -53,6 +53,10 @@ void DriverManager::RegisterDriver(BaseDriverFactory* factory) {
     factories.push_back(factory);
 }
 
+void DriverManager::AddDriver(BaseDriver* drv) {
+    DeviceDrivers.push_back(drv);
+}
+
 /*
  * We can use this func to detect devices
 */
@@ -64,7 +68,7 @@ void DriverManager::DetectDevices(Array<DeviceKey>& devices) {
             if ((factory)->Supports(dev)) {
                 BaseDriver* device = factory->CreateDevice();
                 device->Init(ds, dev);
-                DeviceDrivers.push_back(device);
+                AddDriver(device);
                 break;
             }
         }
@@ -103,20 +107,23 @@ void DriverManager::DetectDrivers(size_t layer) {
     for (size_t i = 0; i < (DeviceDrivers.size()); i++) {
         BaseDriver* dev = DeviceDrivers.get(i);
         if (layer != 0) {
-            if (dev->GetDriverType() != Partition) continue;
-            if (dev->GetDriverType() != Filesystem) continue;
+            if (dev->GetDriverType() != DriverType::PartitionDevice) continue;
+            if (dev->GetDriverType() != DriverType::FilesystemDriver) continue;
         }
         DeviceKey devKey;
         devKey.bars[0] = ((uint64_t)dev >> 32); // HIGH: 0x12345678XXXXXXXX
         devKey.bars[1] = ((uint64_t)dev & 0xFFFFFFFF); // LOW: 0xXXXXXXXXABCDEF00
         devKey.bars[2] = 22;
+        ks->basicConsole.Print("a");
         for (size_t j = 0; j < factories.size(); j++) {
+            ks->basicConsole.Print("b");
             auto& factory = factories[j];
             if (factory->GetLayerType() != SOFTWARE) continue;
             if ((factory)->Supports(devKey)) {
+                ks->basicConsole.Print("c");
                 BaseDriver* device = factory->CreateDevice();
                 device->Init(ds, devKey);
-                DeviceDrivers.push_back(device);
+                AddDriver(device);
                 if (layer == 0) {
                     break;
                 }
@@ -133,7 +140,7 @@ BaseDriver* DriverManager::GetDevice(uint8_t _class, uint8_t subclass, uint8_t p
     return nullptr;
 }
 
-BaseDriver* DriverManager::GetDevice(DriverType drvT) {
+BaseDriver* DriverManager::GetDevice(DriverType::_DriverType drvT) {
     for (size_t i = 0; i < DeviceDrivers.size(); ++i) {
         auto& dev = DeviceDrivers[i];
         if (dev->GetDriverType() == drvT) return dev;
@@ -258,6 +265,10 @@ void DriverManager::CreateDriverServices() {
     */
     ds.RegisterDriver = [](BaseDriverFactory* factory) { 
         ks->driverMan.RegisterDriver(factory);
+    };
+
+    ds.AddDriver = [](BaseDriver* drv) {
+        ks->driverMan.AddDriver(drv);
     };
 
     /*

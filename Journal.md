@@ -167,3 +167,19 @@ So I looked at the DriverSystem and saw that it was pretty broken, so Im fixing 
 ![ReadFile](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/ReadFile.png?raw=true)
 
 **Total time spent: 1h 27m**
+
+# January 7nd: Fixing the Driver System - Part 2
+
+The photo shows that the kernel is crashing, but Im not sure why. Anyway, Ill debug that tomorrow. I was able to fix the Driver System by splitting the Partition and Block Devices into Block Controllers and Devices and Partition Controllers and Devices.
+Here is how it works now:
+ - Block Controller
+   - Block Device #1
+     - Partition Controller
+       - Partition Device #1
+         - EXT4 Driver
+       - Partition Device #2
+         - EXT4 Driver
+
+![NewDriverSystem](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/NewDriverSystem.png?raw=true)
+
+**Total time spent: 1h 46m**

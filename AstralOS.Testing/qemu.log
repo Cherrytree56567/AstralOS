@@ -5,25 +5,25 @@ EDK II
 UEFI v2.70 (EDK II, 0x00010000)
 [1m[33m[40mMapping table[0m[37m[40m
 [1m[33m[40m      FS0:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40mHD0a65535a1:;BLK1:
-          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(1,GPT,07467073-9B6F-48BF-8A96-6CD4B4C836FE,0x800,0x2F000)
+          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(1,GPT,B371EA4E-63F4-4D61-AC42-9B29CFAA2EC2,0x800,0x2F000)
 [1m[33m[40m     BLK0:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
           PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)
 [1m[33m[40m     BLK3:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
           PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x2,0xFFFF,0x0)
 [1m[33m[40m     BLK2:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
-          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(2,GPT,AD41DA1B-6BF3-47AC-B0D0-5C91EC13DD53,0x2F800,0x13D0000)
+          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(2,GPT,339AFC3A-6BD5-42C6-9919-ACA3FA1E9914,0x2F800,0x13D0000)
 [15;01HPress [1m[37m[40mESC[0m[37m[40m in 5 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 4 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 3 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 2 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 1 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.
 [1m[33m[40mShell> [0m[37m[40mfs0:\efi\boot\bootx64.efi
 Found ACPI 2.0 RSDP at: 0x7FB7E014
 Volume label is ''
-Offset: 0x1000Addr: 0x1000Offset: 0x11000Addr: 0x11000Offset: 0x31000Addr: 0x31000Offset: 0x37000Addr: 0x37000initramfs loaded at 0x7E498018 (161792 bytes)
+Offset: 0x1000Addr: 0x1000Offset: 0x11000Addr: 0x11000Offset: 0x31000Addr: 0x31000Offset: 0x37000Addr: 0x37000initramfs loaded at 0x7E492018 (186880 bytes)
 GOP located
 ss
 Handles freed
 Buffer freed
 nn
 Failed to GGet memory map: Buffer Too Small
-Boot Info Framebuffer Addr: Current Addr: 0xFFFFFFFF0000DE22
+Boot Info Framebuffer Addr: Current Addr: 0xFFFFFFFF0000E0DA
 RSDP Addr: 0xFFFFFFFF7FB7E014
 RSDP Signature: RSD PTR �BOCHS tз$
 RSDP OEM ID: BOCHS tз$
@@ -64,22 +64,10 @@ AHCI Version: 1.0
 No CD present in drive
 Generic AHCI Initialized!
 Initialized Drivers
-Found FS Driver: Generic EXT4 Driver
-Warning: EXT4 Optional Features not supported.
-0x0Name: .
-Type: Directory
--------------------------
-Name: ..
-Type: Directory
--------------------------
-Name: kernel.elf
-Type: File
--------------------------
-Name: hello.txt
-Type: File
--------------------------
-Found: kernel.elf
-Opening File: 0x1FC04
-Size: 0xF
-Hi from EXT4!
-
+abbbc=== EXCEPTION ===
+Vector: 0xE
+Error Code: 0x286
+RIP: 0x3FD00000008
+CS: 0xFFFFFFFF00034FE0
+RFLAGS: 0x60FF880000000948
+=================

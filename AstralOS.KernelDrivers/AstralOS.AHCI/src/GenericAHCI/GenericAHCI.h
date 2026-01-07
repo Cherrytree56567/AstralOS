@@ -1,5 +1,8 @@
 #pragma once
+#define DRIVER
+#include <new>
 #include "../DriverServices.h"
+#include "../global.h"
 
 class GenericAHCIFactory : public BlockDeviceFactory {
 public:

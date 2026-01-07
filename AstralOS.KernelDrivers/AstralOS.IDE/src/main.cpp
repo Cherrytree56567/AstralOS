@@ -1,6 +1,6 @@
 #define DRIVER
 #include <new>
-#include "GenericIDE/GenericIDE.h"
+#include "GenericIDE/GenericIDEController.h"
 #include "global.h"
 
 DriverServices* g_ds = nullptr;
@@ -30,15 +30,15 @@ DriverInfo DriverMain(DriverServices& DServices) {
     DriverInfo di((char*)"", 1, 0, 0);
     di.name = DServices.strdup("IDE Driver");
 
-    void* mem = DServices.malloc(sizeof(GenericIDE));
+    void* mem = DServices.malloc(sizeof(GenericIDEControllerFactory));
     if (!mem) {
-        DServices.Println("Failed to Malloc for Generic IDE");
+        DServices.Println("Failed to Malloc for Generic IDE Controller Factory");
         DServices.Println(to_hstring((uint64_t)mem));
         di.exCode = 1;
         return di;
     }
 
-    GenericIDE* factory = new(mem) GenericIDE();
+    GenericIDEControllerFactory* factory = new(mem) GenericIDEControllerFactory();
 
     DServices.RegisterDriver(factory);
 

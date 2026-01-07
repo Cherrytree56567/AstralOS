@@ -388,13 +388,17 @@ void GenericAHCIController::Init(DriverServices& ds, DeviceKey& dKey) {
     _ds = &ds;
     devKey = dKey;
 
-    void* mem = _ds->malloc(sizeof(GenericAHCI));
+    void* mem = _ds->malloc(sizeof(GenericAHCIFactory));
     if (!mem) {
-        _ds->Println("Failed to Malloc for Generic AHCI");
-        _ds->Println(to_hstring((uint64_t)mem));
-        di.exCode = 1;
-        return di;
+        _ds->Println("Failed to Malloc for Generic AHCI Factory");
+        _ds->Println(to_hstridng((uint64_t)mem));
     }
+
+    /*
+     * Don't Register the factory bc we don't want the DriverManager
+     * to make more Generic AHCI Devices, since we are handling that.
+    */
+    GenericAHCIFactory* factory = new(mem) GenericAHCIFactory();
 
     uint16_t cmd;
     if (devKey.PCIe) {
@@ -651,11 +655,17 @@ void GenericAHCIController::Init(DriverServices& ds, DeviceKey& dKey) {
                 }
 
                 portInfo[port] = id;
+                
+                BaseDriver* device = factory->CreateDevice();
 
-                if (!driveSet) {
-                    drive = port;
-                    driveSet = true;
-                }
+                BaseDriver* dev = this;
+                DeviceKey DevK;
+                DevK.bars[0] = ((uint64_t)dev >> 32);
+                DevK.bars[1] = ((uint64_t)dev & 0xFFFFFFFF);
+                DevK.bars[2] = port;
+
+                device->Init(ds, DevK);
+                _ds->AddDriver(device);
             } else {
                 _ds->Println("IDENTIFY ATA failed");
             }
@@ -699,10 +709,16 @@ void GenericAHCIController::Init(DriverServices& ds, DeviceKey& dKey) {
 
                     portInfo[port] = id;
 
-                    if (!driveSet) {
-                        drive = port;
-                        driveSet = true;
-                    }
+                    BaseDriver* device = factory->CreateDevice();
+
+                    BaseDriver* dev = this;
+                    DeviceKey DevK;
+                    DevK.bars[0] = ((uint64_t)dev >> 32);
+                    DevK.bars[1] = ((uint64_t)dev & 0xFFFFFFFF);
+                    DevK.bars[2] = port;
+
+                    device->Init(ds, DevK);
+                    _ds->AddDriver(device);
                 } else {
                     _ds->Println("IDENTIFY ATA failed");
                 }

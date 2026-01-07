@@ -175,7 +175,7 @@ bool GenericEXT4::Supports(const DeviceKey& devKey) {
     if (devKey.bars[2] == 22) {
         uint64_t dev = ((uint64_t)devKey.bars[0] << 32) | devKey.bars[1];
         BaseDriver* bsdrv = (BaseDriver*)dev;
-        if (bsdrv->GetDriverType() == Partition) {
+        if (bsdrv->GetDriverType() == DriverType::PartitionDevice) {
             return true;
         }
     }

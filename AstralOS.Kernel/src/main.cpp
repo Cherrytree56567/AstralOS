@@ -373,13 +373,12 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
         }
     }*/
 
-    BaseDriver* FSDriver = kernelServices.driverMan.GetDevice(DriverType::Filesystem);
+    BaseDriver* FSDriver = kernelServices.driverMan.GetDevice(DriverType::FilesystemDriver);
     if (FSDriver) {
         kernelServices.basicConsole.Println(((String)"Found FS Driver: " + FSDriver->DriverName()).c_str());
         FilesystemDevice* bldev = static_cast<FilesystemDevice*>(FSDriver);
 
         for (size_t i = 0; i < 3; i++) {
-            if (!bldev->GetParentLayer()->SetPartition(i)) continue;
             if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
             if (bldev->Support()) {
                 FsNode* fsN = bldev->Mount();
