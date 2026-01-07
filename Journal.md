@@ -183,3 +183,11 @@ Here is how it works now:
 ![NewDriverSystem](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/NewDriverSystem.png?raw=true)
 
 **Total time spent: 1h 46m**
+
+# January 7nd: Fixed the Driver System
+
+Ok, so I was able to fix the bug from earlier and I even found and fixed some other bugs. It works well now, but Im going to move the mounting code from `main.cpp` to the VFS abstraction in `Filesystem.cpp`.
+
+![FixedDrivers](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/FixedDrivers.png?raw=true)
+
+**Total time spent: 53m**

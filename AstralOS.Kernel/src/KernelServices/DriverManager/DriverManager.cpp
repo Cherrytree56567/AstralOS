@@ -119,7 +119,6 @@ void DriverManager::DetectDrivers(size_t layer) {
             if (factory->GetLayerType() != SOFTWARE) continue;
             if ((factory)->Supports(devKey)) {
                 BaseDriver* device = factory->CreateDevice();
-                ks->basicConsole.Print(to_hstring((uint64_t)device->GetDriverType()));
                 device->Init(ds, devKey);
                 AddDriver(device);
                 if (layer == 0) {

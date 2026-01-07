@@ -1,1 +1,1 @@
-fs0:/EFI/BOOT/BOOTX64.EFI
+fs0:\efi\boot\bootx64.efi
