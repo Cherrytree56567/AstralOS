@@ -64,6 +64,10 @@ uint8_t GenericGPTDevice::GetProgIF() {
     return pcdev->GetProgIF();
 }
 
+uint8_t GenericGPTDevice::GetPartition() {
+    return partition;
+}
+
 bool GenericGPTDevice::SetMount(uint64_t FSID) {
     return pcdev->SetMount(partition, FSID);
 }
@@ -94,6 +98,6 @@ const char* GenericGPTDevice::DriverName() const {
     return _ds->strdup("Generic GPT Device");
 }
 
-BaseDriver* GenericGPTDevice::GetParentLayer() {
-    return pcdev;
+BlockDevice* GenericGPTDevice::GetParentLayer() {
+    return pcdev->GetParentLayer();
 }

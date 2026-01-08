@@ -25,7 +25,7 @@ public:
     virtual uint8_t GetPartition() override;
     virtual const char* name() const override;
     virtual const char* DriverName() const override;
-    virtual BaseDriver* GetParentLayer() override;
+    virtual BlockDevice* GetParentLayer() override;
     virtual bool SetMount(uint64_t FSID) override;
     virtual bool SetMountNode(FsNode* Node) override;
     virtual uint64_t GetMount() override;

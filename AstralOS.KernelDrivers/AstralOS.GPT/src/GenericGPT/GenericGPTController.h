@@ -71,7 +71,7 @@ public:
     virtual uint8_t GetProgIF() override;
     virtual const char* name(uint8_t partition) const override;
     virtual const char* DriverName() const override;
-    virtual BaseDriver* GetParentLayer() override;
+    virtual BlockDevice* GetParentLayer() override;
     virtual bool SetMount(uint8_t partition, uint64_t FSID) override;
     virtual bool SetMountNode(uint8_t partition, FsNode* Node) override;
     virtual uint64_t GetMount(uint8_t partition) override;

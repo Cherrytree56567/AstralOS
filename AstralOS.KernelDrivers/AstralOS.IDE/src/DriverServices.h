@@ -125,7 +125,7 @@ public:
     virtual uint8_t GetPartition() = 0;
     virtual const char* name() const = 0;
     virtual const char* DriverName() const override = 0;
-    virtual BaseDriver* GetParentLayer() override = 0;
+    virtual BlockDevice* GetParentLayer() override = 0;
     virtual DriverType::_DriverType GetDriverType() override {
         return DriverType::PartitionDevice;
     }
@@ -157,7 +157,7 @@ public:
     virtual uint8_t GetProgIF() override = 0;
     virtual const char* name(uint8_t partition) const = 0;
     virtual const char* DriverName() const override = 0;
-    virtual BaseDriver* GetParentLayer() override = 0;
+    virtual BlockDevice* GetParentLayer() override = 0;
     virtual DriverType::_DriverType GetDriverType() override {
         return DriverType::PartitionController;
     }

@@ -372,7 +372,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
             }
         }
     }*/
-
+/*
     Array<BaseDriver*> FSDriver = kernelServices.driverMan.GetDevices(DriverType::FilesystemDriver);
     for (size_t i = 0; i < FSDriver.size(); i++) {
         kernelServices.basicConsole.Println(((String)"Found FS Driver: " + FSDriver[i]->DriverName()).c_str());
@@ -391,7 +391,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
                  * I couldn't be bothered to make a whole
                  * for loop to print everything, so I just
                  * asked GPT.
-                */
+                /
                 for (size_t i = 0; i < count; i++) {
                     FsNode* node = nodes[i];
                     if (!node) continue;
@@ -432,7 +432,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
                     kernelServices.basicConsole.Println(to_hstring(node->mtime));
 
                     kernelServices.basicConsole.Print("CTime: ");
-                    kernelServices.basicConsole.Println(to_hstring(node->ctime));*/
+                    kernelServices.basicConsole.Println(to_hstring(node->ctime));/
 
                     kernelServices.basicConsole.Println("-------------------------");
                 }
@@ -445,7 +445,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
                     /*
                      * Null Read Just to get the Size
-                    */
+                    /
                     int64_t size = bldev->Read(file, nullptr, 0);
                     kernelServices.basicConsole.Print("Size: ");
                     kernelServices.basicConsole.Println(to_hstring((uint64_t)size));
@@ -453,7 +453,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
                     
                     /*
                      * Now we can actually Read
-                    */
+                    /
                     bldev->Read(file, buf, size);
                     
                     char* buff = (char*)buf;
@@ -470,7 +470,13 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
             }
         }
         
+    }*/
+    
+    if (!kernelServices.vfs.mount("/dev/sdap1", "/")) {
+        kernelServices.basicConsole.Println("Failed to Mount");
     }
+
+    kernelServices.vfs.open("/AstralOS/System64/hello.txt", FileFlags::RDONLY);
 
     while (true) {
         

@@ -191,3 +191,11 @@ Ok, so I was able to fix the bug from earlier and I even found and fixed some ot
 ![FixedDrivers](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/FixedDrivers.png?raw=true)
 
 **Total time spent: 53m**
+
+# January 8nd: Added Open in VFS
+
+So I was able to move the mounting code from `main.cpp` to my VFS abstraction, and I also added a few fixes for `ResolvePath`. Then I was able to add some missing functions in the GPT Partition Driver to create the open function in my VFS abstraction.
+
+![VFSRead](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/VFSRead.png?raw=true)
+
+**Total time spent: 1h 37m**

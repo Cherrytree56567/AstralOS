@@ -25,10 +25,19 @@ struct FsNode {
     uint64_t ctime;
 };
 
+struct Path {
+    String path;
+    uint64_t FSID;
+    uint64_t disk;
+    uint64_t partition;
+    String device;
+};
+
 struct File {
     FsNode* node;
     uint64_t position;
     uint32_t flags;
+    Path path;
 };
 
 enum FileFlags {

@@ -1049,7 +1049,8 @@ int64_t GenericEXT4Device::Read(File* file, void* buffer, uint64_t size) {
 }
 
 int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
-    
+    _ds->Println("Write Not Implemented");
+    return 0;
 }
 
 bool GenericEXT4Device::Stat(FsNode* node, FsNode* out) {

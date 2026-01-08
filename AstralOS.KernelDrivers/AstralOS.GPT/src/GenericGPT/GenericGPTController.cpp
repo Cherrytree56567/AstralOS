@@ -257,6 +257,6 @@ const char* GenericGPTController::DriverName() const {
     return _ds->strdup("Generic GPT Controller");
 }
 
-BaseDriver* GenericGPTController::GetParentLayer() {
+BlockDevice* GenericGPTController::GetParentLayer() {
     return bldev;
 }
