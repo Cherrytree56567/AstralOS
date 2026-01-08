@@ -27,9 +27,6 @@ jobs:
         build_type: [Release]
         c_compiler: [gcc, clang, cl]
         include:
-          - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
@@ -37,6 +34,8 @@ jobs:
             c_compiler: clang
             cpp_compiler: clang++
         exclude:
+          - os: windows-latest
+            c_compiler: cl
           - os: windows-latest
             c_compiler: gcc
           - os: windows-latest
@@ -85,3 +84,6 @@ jobs:
       with:
         name: ${{ matrix.c_compiler }}-${{ runner.os }}
         path: .
+    
+    - name: Print QEMU Logs
+      run: cat AstralOS.Testing/qemu.log
