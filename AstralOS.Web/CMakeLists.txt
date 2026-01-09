@@ -22,7 +22,7 @@ add_custom_target(init
 add_custom_target(build
     COMMAND mkdir -p tmp
     COMMAND cp -f ../AstralOS.Bin/bin/AstralOS.qcow2 tmp/
-	COMMAND cd emsdk & chmod +x emsdk_env.sh
+	COMMAND cd emsdk && chmod +x emsdk_env.sh
     COMMAND ./emsdk/emsdk_env.sh && ./emsdk/upstream/emscripten/tools/file_packager.py load-rootfs.data --lz4 --preload tmp > load-rootfs.js
     COMMAND mv -f load-rootfs.data src/image
     COMMAND mv -f load-rootfs.js src/image
