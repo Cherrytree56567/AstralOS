@@ -23,7 +23,7 @@ add_custom_target(build
     COMMAND mkdir -p tmp
     COMMAND cp -f ../AstralOS.Bin/bin/AstralOS.qcow2 tmp/
 	COMMAND cd emsdk && chmod +x emsdk_env.sh
-    COMMAND bash -c "source ./emsdk/emsdk_env.sh && ./emsdk/upstream/emscripten/tools/file_packager.py load-rootfs.data --lz4 --preload tmp > load-rootfs.js"
+    COMMAND bash -c "source ./emsdk/emsdk_env.sh && echo '$PWD' && ./emsdk/upstream/emscripten/tools/file_packager.py load-rootfs.data --lz4 --preload tmp > load-rootfs.js"
     COMMAND mv -f load-rootfs.data src/image
     COMMAND mv -f load-rootfs.js src/image
     COMMAND sed -i '114i Module.FS.mkdir("/writableh"); const varsData = Module.FS.readFile("/tmp/AstralOS.qcow2", { encoding: "binary" }); Module.FS.writeFile("/writableh/AstralOS.qcow2", varsData, { encoding: "binary" });' src/image/load-rootfs.js
