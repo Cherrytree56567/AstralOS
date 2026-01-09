@@ -1083,7 +1083,7 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
             uint64_t tailOffset = fileSize % blockSize;
 
             _ds->Print("File Offset: ");
-            _ds->Println(to_hstridng(fileOffset));
+            _ds->Println(to_hstridng(tailOffset));
             _ds->Print("Block: ");
             _ds->Println(to_hstridng(block));
             _ds->Print("Extents Count: ");
