@@ -8,6 +8,11 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -43,6 +48,9 @@ jobs:
           - os: ubuntu-latest
             c_compiler: cl
 
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
     - uses: actions/checkout@v4
 
@@ -87,3 +95,15 @@ jobs:
     
     - name: Print QEMU Logs
       run: cat AstralOS.Testing/qemu.log
+      
+    - name: Setup Pages
+      uses: actions/configure-pages@v5
+    
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: 'AstralOS.Web/src'
+      
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
