@@ -65,6 +65,8 @@ add_custom_target(build
     DEPENDS ${OBJ_FILES}
     COMMAND ${LD} -static -Bsymbolic -nostdlib -T ${LINKER_SCRIPT} -o ${OBJ_DIR}/kernel.elf ${OBJ_FILES}
     COMMAND cp ${OBJ_DIR}/kernel.elf ${BIN_DIR}/AstralOS/System64/kernel.elf
+    COMMAND cd ${BIN_DIR}/AstralOS/System64/ && rm -rf hello.txt
+    COMMAND echo "Hi from EXT4" >> ${BIN_DIR}/AstralOS/System64/hello.txt
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Building Kernel: ${LD} ${LDFLAGS} -o ${OBJ_DIR}/kernel.elf ${OBJ_FILES}"
 )

@@ -125,7 +125,7 @@ public:
     virtual uint8_t GetPartition() = 0;
     virtual const char* name() const = 0;
     virtual const char* DriverName() const override = 0;
-    virtual BaseDriver* GetParentLayer() override = 0;
+    virtual BlockDevice* GetParentLayer() override = 0;
     virtual DriverType::_DriverType GetDriverType() override {
         return DriverType::PartitionDevice;
     }
@@ -157,7 +157,7 @@ public:
     virtual uint8_t GetProgIF() override = 0;
     virtual const char* name(uint8_t partition) const = 0;
     virtual const char* DriverName() const override = 0;
-    virtual BaseDriver* GetParentLayer() override = 0;
+    virtual BlockDevice* GetParentLayer() override = 0;
     virtual DriverType::_DriverType GetDriverType() override {
         return DriverType::PartitionController;
     }
@@ -192,7 +192,6 @@ public:
     virtual int64_t Read(File* file, void* buffer, uint64_t size) = 0;
     virtual int64_t Write(File* file, void* buffer, uint64_t size) = 0;
 
-    virtual bool Stat(FsNode* node, FsNode* out) = 0;
     virtual bool Chmod(FsNode* node, uint32_t mode) = 0;
     virtual bool Chown(FsNode* node, uint32_t uid, uint32_t gid) = 0;
     virtual bool Utimes(FsNode* node, uint64_t atime, uint64_t mtime, uint64_t ctime) = 0;

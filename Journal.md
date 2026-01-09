@@ -199,3 +199,11 @@ So I was able to move the mounting code from `main.cpp` to my VFS abstraction, a
 ![VFSRead](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/VFSRead.png?raw=true)
 
 **Total time spent: 1h 37m**
+
+# January 9nd: Added Write funcs - Part 1
+
+So first, I added the code for Chown, Utimes and Chmod in the EXT4 Driver and then I added more functions in the VFS abstraction for better control over files and dirs. There still isn't code to create dirs/files in the VFS abstraction, but at least there is code to write to files in the EXT4 and VFS abstractions. Ill finish off the Write func tomorrow.
+
+![WriteFuncP1](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/WriteFuncP1.png?raw=true)
+
+**Total time spent: 5h 50m**

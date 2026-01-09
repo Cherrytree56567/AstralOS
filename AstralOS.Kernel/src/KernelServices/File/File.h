@@ -37,7 +37,7 @@ struct File {
     FsNode* node;
     uint64_t position;
     uint32_t flags;
-    Path path;
+    Path* path;
 };
 
 enum FileFlags {

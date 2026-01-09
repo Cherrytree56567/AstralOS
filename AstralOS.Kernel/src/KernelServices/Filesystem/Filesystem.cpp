@@ -4,7 +4,8 @@
 bool VFS::mount(const char* source, const char* target) {
     for (int i = 0; i < mountpoints.size(); i++) {
         Path* moun = mountpoints[i];
-        if (moun->device.c_str() == source) {
+        String mDev = String(moun->device);
+        if (mDev.c_str() == source) {
             ks->basicConsole.Println("Device is already Mounted");
             return false;
         }
@@ -144,19 +145,19 @@ Path VFS::ResolvePath(const char* pat) {
 }
 
 File* VFS::open(const char* path, FileFlags flags) {
-    File* file = (File*)ks->heapAllocator.malloc(sizeof(File));
-    Path p = ResolvePath(path);
+    Path* p = (Path*)ks->heapAllocator.malloc(sizeof(Path));
+    *p = ResolvePath(path);
     
     Array<BaseDriver*> FSDriver = ks->driverMan.GetDevices(DriverType::FilesystemDriver);
     for (size_t i = 0; i < FSDriver.size(); i++) {
         FilesystemDevice* bldev = static_cast<FilesystemDevice*>(FSDriver[i]);
 
-        if (bldev->GetParentLayer()->GetParentLayer()->GetDrive() != p.disk) continue;
-        if (bldev->GetParentLayer()->GetPartition() != p.partition) continue;
+        if (bldev->GetParentLayer()->GetParentLayer()->GetDrive() != p->disk) continue;
+        if (bldev->GetParentLayer()->GetPartition() != p->partition) continue;
 
         if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
 
-        File* f = bldev->Open(p.path.c_str(), static_cast<uint32_t>(flags));
+        File* f = bldev->Open(p->path.c_str(), static_cast<uint32_t>(flags));
         f->path = p;
         return f;
     }
@@ -164,19 +165,142 @@ File* VFS::open(const char* path, FileFlags flags) {
     return nullptr;
 }
 
-void* VFS::read(File* file, size_t& size) {
+void* VFS::read(File* file, size_t& size) {    
     Array<BaseDriver*> FSDriver = ks->driverMan.GetDevices(DriverType::FilesystemDriver);
     for (size_t i = 0; i < FSDriver.size(); i++) {
-        ks->basicConsole.Println(((String)"Found FS Driver: " + FSDriver[i]->DriverName()).c_str());
         FilesystemDevice* bldev = static_cast<FilesystemDevice*>(FSDriver[i]);
 
-        if (bldev->GetParentLayer()->GetParentLayer()->GetDrive() != file->path.disk) continue;
-        if (bldev->GetParentLayer()->GetPartition() != file->path.partition) continue;
+        if (bldev->GetParentLayer()->GetParentLayer()->GetDrive() != file->path->disk) continue;
+        if (bldev->GetParentLayer()->GetPartition() != file->path->partition) continue;
 
         if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
 
-        uint64_t size = bldev->Read(file, static_cast<uint32_t>());
+        size = file->node->size;
+        void* buffer = ks->heapAllocator.malloc(size);
+        int64_t result = bldev->Read(file, buffer, size);
+        if (result < 0) {
+            ks->basicConsole.Println("Read Failed");
+            return nullptr;
+        }
+        return buffer;
+    }
+    ks->basicConsole.Println("Failed to get - File*");
+    return nullptr;
+}
+
+bool VFS::write(File* file, void* buffer, size_t& size) {
+    Array<BaseDriver*> FSDriver = ks->driverMan.GetDevices(DriverType::FilesystemDriver);
+    for (size_t i = 0; i < FSDriver.size(); i++) {
+        FilesystemDevice* bldev = static_cast<FilesystemDevice*>(FSDriver[i]);
+
+        if (bldev->GetParentLayer()->GetParentLayer()->GetDrive() != file->path->disk) continue;
+        if (bldev->GetParentLayer()->GetPartition() != file->path->partition) continue;
+
+        if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
+
+        int64_t result = bldev->Write(file, buffer, size);
+        if (result < 0) {
+            ks->basicConsole.Println("Read Failed");
+            return false;
+        }
+        return true;
+    }
+    ks->basicConsole.Println("Failed to get _ File*");
+    return false;
+}
+
+bool VFS::close(File* file) {
+    Array<BaseDriver*> FSDriver = ks->driverMan.GetDevices(DriverType::FilesystemDriver);
+    for (size_t i = 0; i < FSDriver.size(); i++) {
+        FilesystemDevice* bldev = static_cast<FilesystemDevice*>(FSDriver[i]);
+
+        if (bldev->GetParentLayer()->GetParentLayer()->GetDrive() != file->path->disk) continue;
+        if (bldev->GetParentLayer()->GetPartition() != file->path->partition) continue;
+
+        if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
+
+        return bldev->Close(file);
     }
     ks->basicConsole.Println("Failed to get File*");
-    return nullptr;
+    return false;
+}
+
+bool VFS::chmod(File* file, uint32_t mode) {
+    Array<BaseDriver*> FSDriver = ks->driverMan.GetDevices(DriverType::FilesystemDriver);
+    for (size_t i = 0; i < FSDriver.size(); i++) {
+        FilesystemDevice* bldev = static_cast<FilesystemDevice*>(FSDriver[i]);
+
+        if (bldev->GetParentLayer()->GetParentLayer()->GetDrive() != file->path->disk) continue;
+        if (bldev->GetParentLayer()->GetPartition() != file->path->partition) continue;
+
+        if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
+
+        return bldev->Chmod(file->node, mode);
+    }
+    ks->basicConsole.Println("Failed to get File*");
+    return false;
+}
+
+bool VFS::chown(File* file, uint32_t uid, uint32_t gid) {    
+    Array<BaseDriver*> FSDriver = ks->driverMan.GetDevices(DriverType::FilesystemDriver);
+    for (size_t i = 0; i < FSDriver.size(); i++) {
+        FilesystemDevice* bldev = static_cast<FilesystemDevice*>(FSDriver[i]);
+
+        if (bldev->GetParentLayer()->GetParentLayer()->GetDrive() != file->path->disk) continue;
+        if (bldev->GetParentLayer()->GetPartition() != file->path->partition) continue;
+
+        if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
+
+        return bldev->Chown(file->node, uid, gid);
+    }
+    ks->basicConsole.Println("Failed to get File*");
+    return false;
+}
+
+bool VFS::atime(File* file, uint64_t atime) {
+    Array<BaseDriver*> FSDriver = ks->driverMan.GetDevices(DriverType::FilesystemDriver);
+    for (size_t i = 0; i < FSDriver.size(); i++) {
+        FilesystemDevice* bldev = static_cast<FilesystemDevice*>(FSDriver[i]);
+
+        if (bldev->GetParentLayer()->GetParentLayer()->GetDrive() != file->path->disk) continue;
+        if (bldev->GetParentLayer()->GetPartition() != file->path->partition) continue;
+
+        if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
+
+        return bldev->Utimes(file->node, atime, file->node->mtime, file->node->ctime);
+    }
+    ks->basicConsole.Println("Failed to get File*");
+    return false;
+}
+
+bool VFS::mtime(File* file, uint64_t mtime) {
+    Array<BaseDriver*> FSDriver = ks->driverMan.GetDevices(DriverType::FilesystemDriver);
+    for (size_t i = 0; i < FSDriver.size(); i++) {
+        FilesystemDevice* bldev = static_cast<FilesystemDevice*>(FSDriver[i]);
+
+        if (bldev->GetParentLayer()->GetParentLayer()->GetDrive() != file->path->disk) continue;
+        if (bldev->GetParentLayer()->GetPartition() != file->path->partition) continue;
+
+        if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
+
+        return bldev->Utimes(file->node, file->node->atime, mtime, file->node->ctime);
+    }
+    ks->basicConsole.Println("Failed to get File*");
+    return false;
+}
+
+bool VFS::ctime(File* file, uint64_t ctime) {
+    Array<BaseDriver*> FSDriver = ks->driverMan.GetDevices(DriverType::FilesystemDriver);
+    for (size_t i = 0; i < FSDriver.size(); i++) {
+        FilesystemDevice* bldev = static_cast<FilesystemDevice*>(FSDriver[i]);
+
+        if (bldev->GetParentLayer()->GetParentLayer()->GetDrive() != file->path->disk) continue;
+        if (bldev->GetParentLayer()->GetPartition() != file->path->partition) continue;
+
+        if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
+
+        return bldev->Utimes(file->node, file->node->atime, file->node->mtime, ctime);
+    }
+    ks->basicConsole.Println("Failed to get File*");
+    return false;
 }

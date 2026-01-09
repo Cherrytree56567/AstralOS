@@ -1049,28 +1049,208 @@ int64_t GenericEXT4Device::Read(File* file, void* buffer, uint64_t size) {
 }
 
 int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
-    _ds->Println("Write Not Implemented");
+    if ((file->flags & WRONLY) || (file->flags & RDWR)) {
+        Inode* inode = ReadInode(file->node->nodeId);
+
+        uint64_t blockSize = 1024ull << superblock->s_log_block_size;
+        uint64_t sectorSize = pdev->SectorSize();
+        uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
+
+        void* buf = _ds->RequestPage();
+        uint64_t bufPhys = (uint64_t)buf;
+        uint64_t bufVirt = bufPhys + 0xFFFFFFFF00000000;
+        _ds->MapMemory((void*)bufVirt, (void*)bufPhys, false);
+
+        uint64_t fileSize = file->node->size;
+        uint64_t tailOffset = fileSize % blockSize;
+
+        if (tailOffset != 0 && size < blockSize) {
+            ExtentHeader* exHdr = (ExtentHeader*)inode->i_block;
+            uint64_t extsCount = 0;
+            Extent** exts = GetExtents(exHdr, extsCount);
+
+            uint64_t block = ((uint64_t)exts[extsCount - 1]->ee_start_hi << 32) | (uint64_t)exts[extsCount - 1]->ee_start_lo;
+
+            uint64_t LBA = block * sectorsPerBlock;
+
+            for (uint64_t i = 0; i < sectorsPerBlock; i++) {
+                if (!pdev->ReadSector(LBA + i, (void*)((uint8_t*)bufPhys + i * pdev->SectorSize()))) {
+                    _ds->Println("Failed to read file block");
+                    return -28;
+                }
+            }
+
+            uint64_t tailOffset = fileSize % blockSize;
+
+            _ds->Print("File Offset: ");
+            _ds->Println(to_hstridng(fileOffset));
+            _ds->Print("Block: ");
+            _ds->Println(to_hstridng(block));
+            _ds->Print("Extents Count: ");
+            _ds->Println(to_hstridng(extsCount));
+        }
+
+        uint64_t offset = file->position;
+        uint64_t end = offset + size;
+
+        uint64_t firstBlock = offset / blockSize;
+        uint64_t lastBlock = (end - 1) / blockSize;
+
+        uint64_t blocksWritten = 0;
+        
+        uint64_t remaining = size;
+
+        while (remaining > 0) {
+            uint64_t blocksNeeded = (remaining + blockSize - 1) / blockSize;
+            
+            uint64_t blockStart = AllocateBlocks(file->node, blocksNeeded);
+
+            uint64_t allocated = (remaining + blockSize - 1) / blockSize;
+
+            _ds->Print("Block Start: ");
+            _ds->Println(to_hstridng(blockStart));
+            _ds->Print("Contingous Blocks Left to be Allocated: ");
+            _ds->Println(to_hstridng(blocksNeeded));
+            _ds->Print("OG: ");
+            _ds->Println(to_hstridng((size + blockSize - 1) / blockSize));
+
+            uint8_t* src = (uint8_t*)buffer;
+
+            for (uint64_t i = 0; i < allocated; i++) {
+                memset((void*)bufVirt, 0, blockSize);
+
+                uint64_t toCopy = remaining > blockSize ? blockSize : remaining;
+                memcpy((void*)bufVirt, src, toCopy);
+
+                uint64_t block = blockStart + i;
+                uint64_t firstSector = block * sectorsPerBlock;
+
+                for (uint64_t s = 0; s < sectorsPerBlock; s++) {
+                    if (!pdev->WriteSector(firstSector + s, (uint8_t*)bufPhys + (s * sectorSize))) {
+                        _ds->Println("Failed to Write Sector");
+                    }
+                }
+
+                char* prints = (char*)bufVirt;
+                _ds->Print("Prints: ");
+                _ds->Println(prints);
+                _ds->Print("Block: ");
+                _ds->Println(to_hstridng(blockStart));
+                _ds->Print("Block: ");
+                _ds->Println(to_hstridng(sectorsPerBlock));
+
+                src += toCopy;
+                remaining -= toCopy;
+            }
+
+            Extent ee;
+            ee.ee_len = allocated;
+            ee.ee_start_lo = blockStart & 0xFFFFFFFF;
+            ee.ee_start_hi = (blockStart >> 32) & 0xFFFF;
+            ee.ee_block = file->node->size + blocksWritten;
+            _ds->Print("len: ");
+            _ds->Println(to_hstridng(ee.ee_len));
+            _ds->Print("block: ");
+            _ds->Println(to_hstridng(ee.ee_block));
+            _ds->Print("Start Low: ");
+            _ds->Println(to_hstridng(ee.ee_start_lo));
+            _ds->Print("Start High: ");
+            _ds->Println(to_hstridng(ee.ee_start_hi));
+
+            if (!AddExtent(file->node, inode, ee)) {
+                _ds->Println("Failed to add Extent");
+            }
+
+            blocksWritten += allocated;
+        }
+
+        uint64_t newSize = file->node->size + size;
+        inode->i_size_lo = newSize & 0xFFFFFFFF;
+        inode->i_size_high = newSize >> 32;
+        file->node->size = newSize;
+
+        WriteInode(file->node->nodeId, inode);
+    } else if ((file->flags & CREATE)) {
+
+    } else {
+
+    }
     return 0;
 }
 
-bool GenericEXT4Device::Stat(FsNode* node, FsNode* out) {
-    
-}
-
 bool GenericEXT4Device::Chmod(FsNode* node, uint32_t mode) {
-    
+    if (!node) return false;
+
+    Inode* ind = ReadInode(node->nodeId);
+
+    ind->i_mode &= ~0x0FFF;
+    ind->i_mode |= (mode & 0x0FFF);
+
+    node->mode = ind->i_mode;
+
+    WriteInode(node->nodeId, ind);
+
+    return true;
 }
 
 bool GenericEXT4Device::Chown(FsNode* node, uint32_t uid, uint32_t gid) {
-    
+    if (!node) return false;
+
+    Inode* ind = ReadInode(node->nodeId);
+
+    ind->i_uid = uid & 0xFFFF;
+    ind->i_gid = gid & 0xFFFF;
+    if (superblock->s_creator_os == CreatorOSIDs::Linux) {
+        ind->i_osd2.linux2.l_i_uid_high = (uid >> 16) & 0xFFFF;
+        ind->i_osd2.linux2.l_i_gid_high = (gid >> 16) & 0xFFFF;
+    }
+    if (superblock->s_creator_os == CreatorOSIDs::AstralOS) {
+        ind->i_osd2.astral2.a_i_uid_high = (uid >> 16) & 0xFFFF;
+        ind->i_osd2.astral2.a_i_gid_high = (gid >> 16) & 0xFFFF;
+    }
+    if (superblock->s_creator_os == CreatorOSIDs::GNUHurd) {
+        ind->i_osd2.hurd2.h_i_uid_high = (uid >> 16) & 0xFFFF;
+        ind->i_osd2.hurd2.h_i_gid_high = (gid >> 16) & 0xFFFF;
+    }
+
+    node->uid = uid;
+    node->gid = gid;
+
+    WriteInode(node->nodeId, ind);
+
+    return true;
 }
 
 bool GenericEXT4Device::Utimes(FsNode* node, uint64_t atime, uint64_t mtime, uint64_t ctime) {
-    
+    if (!node) return false;
+
+    Inode* ind = ReadInode(node->nodeId);
+
+    uint32_t atimelo = atime & 0xFFFFFFFF;
+    uint32_t atimehi = (atime >> 32) & 0xFFFFFFFF;
+    uint32_t mtimelo = mtime & 0xFFFFFFFF;
+    uint32_t mtimehi = (mtime >> 32) & 0xFFFFFFFF;
+    uint32_t ctimelo = ctime & 0xFFFFFFFF;
+    uint32_t ctimehi = (ctime >> 32) & 0xFFFFFFFF;
+
+    ind->i_atime = atimelo;
+    ind->i_atime_extra = atimehi;
+    ind->i_mtime = mtimelo;
+    ind->i_mtime_extra = mtimehi;
+    ind->i_ctime = ctimelo;
+    ind->i_ctime_extra = ctimehi;
+
+    node->atime = atime;
+    node->mtime = mtime;
+    node->ctime = ctime;
+
+    WriteInode(node->nodeId, ind);
+
+    return true;
 }
 
 uint8_t GenericEXT4Device::GetClass() {
-    return EXT4MountID;
+    return 0x0;
 }
 
 uint8_t GenericEXT4Device::GetSubClass() {

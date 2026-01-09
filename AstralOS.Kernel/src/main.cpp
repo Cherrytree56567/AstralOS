@@ -476,7 +476,23 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
         kernelServices.basicConsole.Println("Failed to Mount");
     }
 
-    kernelServices.vfs.open("/AstralOS/System64/hello.txt", FileFlags::RDONLY);
+    File* f = kernelServices.vfs.open("/AstralOS/System64/hello.txt", FileFlags::RDWR);
+
+    uint64_t size = 0;
+    char* hello = (char*)kernelServices.vfs.read(f, size);
+
+    kernelServices.basicConsole.Println(hello);
+
+    char* write = "We have written";
+    size_t sizeWrite = 15;
+
+    if (!kernelServices.vfs.write(f, (void*)write, sizeWrite)) {
+        kernelServices.basicConsole.Println("Failed to write");
+    }
+
+    kernelServices.vfs.close(f);
+
+    kernelServices.basicConsole.Println("Written");
 
     while (true) {
         

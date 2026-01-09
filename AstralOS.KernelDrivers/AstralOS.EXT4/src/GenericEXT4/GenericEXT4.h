@@ -57,7 +57,6 @@ public:
     virtual int64_t Read(File* file, void* buffer, uint64_t size) override;
     virtual int64_t Write(File* file, void* buffer, uint64_t size) override;
 
-    virtual bool Stat(FsNode* node, FsNode* out) override;
     virtual bool Chmod(FsNode* node, uint32_t mode) override;
     virtual bool Chown(FsNode* node, uint32_t uid, uint32_t gid) override;
     virtual bool Utimes(FsNode* node, uint64_t atime, uint64_t mtime, uint64_t ctime) override;
@@ -73,6 +72,7 @@ private:
     void WriteInode(uint32_t inodeNum, Inode* ind);
     uint32_t AllocateInode(FsNode* parent);
     uint32_t AllocateBlock(FsNode* parent);
+    uint32_t AllocateBlocks(FsNode* parent, uint64_t& count);
     BlockGroupDescriptor* ReadGroupDesc(uint32_t group);
     bool HasSuperblockBKP(uint32_t group);
     void UpdateSuperblock();
@@ -85,6 +85,7 @@ private:
     void WriteBitmapInode(BlockGroupDescriptor* GroupDesc, uint8_t* bitmap);
     uint64_t CountExtents(ExtentHeader* hdr);
     Extent** GetExtents(ExtentHeader* hdr, uint64_t& extentsCount);
+    bool AddExtent(FsNode* fsN, Inode* ind, Extent ee);
     void ParseDirectoryBlock(FsNode**& nodes, uint64_t& count, size_t& capacity, uint64_t block);
 
 	PartitionDevice* pdev;

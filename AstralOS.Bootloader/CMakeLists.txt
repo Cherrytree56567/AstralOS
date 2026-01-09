@@ -30,6 +30,8 @@ add_custom_target(build
     COMMAND cd ${BUILD_DIR} && ld -shared -Bsymbolic -Lx86_64/lib -Lx86_64/gnuefi -Tgnuefi/elf_x86_64_efi.lds x86_64/gnuefi/crt0-efi-x86_64.o src/out/main.o -o main.so -lgnuefi -lefi
     COMMAND cd ${BUILD_DIR} && objcopy -j .text -j .sdata -j .data -j .rodata -j .dynamic -j .dynsym  -j .rel -j .rela -j .rel.* -j .rela.* -j .reloc --target efi-app-x86_64 --subsystem=10 main.so main.efi
     COMMAND mkdir -p ${BIN_DIR} && mkdir -p ${BIN_DIR}/EFI && mkdir -p ${BIN_DIR}/EFI/BOOT && mkdir -p ${BIN_DIR}/EFI/AstralBoot && cp ${BUILD_DIR}/main.efi ${BIN_DIR}/EFI/BOOT/BOOTX64.EFI && cp EFIDrivers/* ${BIN_DIR}/EFI/AstralBoot/
+    COMMAND cd ${BIN_DIR} && rm -rf startup.nsh
+    COMMAND cp startup.nsh ${BIN_DIR}/startup.nsh
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Buiding Bootloader"
 )
