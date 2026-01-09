@@ -13,7 +13,7 @@ add_custom_target(init
     COMMAND sudo apt update
     COMMAND sudo apt -y install git npm nodejs
     COMMAND git clone https://github.com/emscripten-core/emsdk.git
-	COMMAND cd emsdk && sudo chmod +x emsdk
+	COMMAND cd emsdk && sudo chmod +x emsdk && sudo chmod +x emsdk_env.sh
     COMMAND cd emsdk && ./emsdk install latest && ./emsdk activate latest && ./emsdk_env.sh
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Initializing Emscripten SDK"
