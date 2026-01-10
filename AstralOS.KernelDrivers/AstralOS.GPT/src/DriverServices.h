@@ -192,7 +192,6 @@ public:
     virtual int64_t Read(File* file, void* buffer, uint64_t size) = 0;
     virtual int64_t Write(File* file, void* buffer, uint64_t size) = 0;
 
-    virtual bool Stat(FsNode* node, FsNode* out) = 0;
     virtual bool Chmod(FsNode* node, uint32_t mode) = 0;
     virtual bool Chown(FsNode* node, uint32_t uid, uint32_t gid) = 0;
     virtual bool Utimes(FsNode* node, uint64_t atime, uint64_t mtime, uint64_t ctime) = 0;

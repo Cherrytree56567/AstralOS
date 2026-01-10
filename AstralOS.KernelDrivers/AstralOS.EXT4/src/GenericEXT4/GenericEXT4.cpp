@@ -1062,13 +1062,24 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
         _ds->MapMemory((void*)bufVirt, (void*)bufPhys, false);
 
         uint64_t fileSize = file->node->size;
+
+        /*
+         * We can use tailOffset to know if all the blocks
+         * are full and if we need to allocate a new block
+         * or not.
+        */
         uint64_t tailOffset = fileSize % blockSize;
 
-        if (tailOffset != 0 && size < blockSize) {
+        bool cpy = false;
+
+        if (tailOffset != 0) {
             ExtentHeader* exHdr = (ExtentHeader*)inode->i_block;
             uint64_t extsCount = 0;
             Extent** exts = GetExtents(exHdr, extsCount);
 
+            /*
+             * Get the last avaliable block and read it
+            */
             uint64_t block = ((uint64_t)exts[extsCount - 1]->ee_start_hi << 32) | (uint64_t)exts[extsCount - 1]->ee_start_lo;
 
             uint64_t LBA = block * sectorsPerBlock;
@@ -1080,88 +1091,129 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
                 }
             }
 
-            uint64_t tailOffset = fileSize % blockSize;
-
             _ds->Print("File Offset: ");
             _ds->Println(to_hstridng(tailOffset));
             _ds->Print("Block: ");
             _ds->Println(to_hstridng(block));
             _ds->Print("Extents Count: ");
             _ds->Println(to_hstridng(extsCount));
-        }
 
-        uint64_t offset = file->position;
-        uint64_t end = offset + size;
+            /*
+             * Calculate if we need to allocate a new block
+             * or just use the current one.
+            */
+            uint64_t spaceLeft = blockSize - tailOffset;
 
-        uint64_t firstBlock = offset / blockSize;
-        uint64_t lastBlock = (end - 1) / blockSize;
+            uint64_t toCopy;
 
-        uint64_t blocksWritten = 0;
-        
-        uint64_t remaining = size;
-
-        while (remaining > 0) {
-            uint64_t blocksNeeded = (remaining + blockSize - 1) / blockSize;
-            
-            uint64_t blockStart = AllocateBlocks(file->node, blocksNeeded);
-
-            uint64_t allocated = (remaining + blockSize - 1) / blockSize;
-
-            _ds->Print("Block Start: ");
-            _ds->Println(to_hstridng(blockStart));
-            _ds->Print("Contingous Blocks Left to be Allocated: ");
-            _ds->Println(to_hstridng(blocksNeeded));
-            _ds->Print("OG: ");
-            _ds->Println(to_hstridng((size + blockSize - 1) / blockSize));
-
-            uint8_t* src = (uint8_t*)buffer;
-
-            for (uint64_t i = 0; i < allocated; i++) {
-                memset((void*)bufVirt, 0, blockSize);
-
-                uint64_t toCopy = remaining > blockSize ? blockSize : remaining;
-                memcpy((void*)bufVirt, src, toCopy);
-
-                uint64_t block = blockStart + i;
-                uint64_t firstSector = block * sectorsPerBlock;
-
-                for (uint64_t s = 0; s < sectorsPerBlock; s++) {
-                    if (!pdev->WriteSector(firstSector + s, (uint8_t*)bufPhys + (s * sectorSize))) {
-                        _ds->Println("Failed to Write Sector");
-                    }
-                }
-
-                char* prints = (char*)bufVirt;
-                _ds->Print("Prints: ");
-                _ds->Println(prints);
-                _ds->Print("Block: ");
-                _ds->Println(to_hstridng(blockStart));
-                _ds->Print("Block: ");
-                _ds->Println(to_hstridng(sectorsPerBlock));
-
-                src += toCopy;
-                remaining -= toCopy;
+            if (size <= spaceLeft) {
+                toCopy = size;
+            } else {
+                _ds->Println("SpacLeft");
+                toCopy = spaceLeft;
             }
 
+            memcpy((uint8_t*)bufVirt + tailOffset, buffer, toCopy);
+
+            for (uint64_t i = 0; i < sectorsPerBlock; i++) {
+                if (!pdev->WriteSector(LBA + i, (uint8_t*)bufPhys + i * sectorSize)) {
+                    return -28;
+                }
+            }
+
+            /*
+             * Return if don't need to copy
+             * data to a newly alloc'ed block.
+            */
+            if (size <= spaceLeft) {
+                uint64_t newSize = file->node->size + size;
+                inode->i_size_lo = newSize & 0xFFFFFFFF;
+                inode->i_size_high = newSize >> 32;
+                file->node->size = newSize;
+
+                WriteInode(file->node->nodeId, inode);
+                return size;
+            } else {
+                cpy = true;
+            }
+        }
+
+        uint64_t remaining = size - (blockSize - tailOffset);
+        uint64_t blocksNeeded = (remaining + blockSize - 1) / blockSize;
+
+        uint64_t bufOff = 0;
+
+        while (true) {
+            if (remaining == 0) break;
+            if (blocksNeeded == 0) break;
+
+            uint64_t countc = blocksNeeded;
+            uint64_t blocks = AllocateBlocks(file->node, countc);
+
+            uint64_t count = blocksNeeded - countc;
+
+            _ds->Print("Count C: ");
+            _ds->Println(to_hstridng(countc));
+            _ds->Print("Count: ");
+            _ds->Println(to_hstridng(count));
+            _ds->Print("Blocks: ");
+            _ds->Println(to_hstridng(blocks));
+            _ds->Print("Blocks Needed: ");
+            _ds->Println(to_hstridng(blocksNeeded));
+            _ds->Print("Remaining: ");
+            _ds->Println(to_hstridng(remaining));
+
             Extent ee;
-            ee.ee_len = allocated;
-            ee.ee_start_lo = blockStart & 0xFFFFFFFF;
-            ee.ee_start_hi = (blockStart >> 32) & 0xFFFF;
-            ee.ee_block = file->node->size + blocksWritten;
-            _ds->Print("len: ");
-            _ds->Println(to_hstridng(ee.ee_len));
-            _ds->Print("block: ");
+            ee.ee_block = ((size - (blockSize - tailOffset)) + bufOff) / blockSize;
+            ee.ee_len = count;
+            ee.ee_start_lo = (uint32_t)(blocks & 0xFFFFFFFF);
+            ee.ee_start_hi = (uint16_t)((blocks >> 32) & 0xFFFF);
+
+            _ds->Print("Block: ");
             _ds->Println(to_hstridng(ee.ee_block));
+            _ds->Print("Len: ");
+            _ds->Println(to_hstridng(ee.ee_len));
             _ds->Print("Start Low: ");
             _ds->Println(to_hstridng(ee.ee_start_lo));
             _ds->Print("Start High: ");
             _ds->Println(to_hstridng(ee.ee_start_hi));
 
-            if (!AddExtent(file->node, inode, ee)) {
-                _ds->Println("Failed to add Extent");
+            /*
+             * The Number of bytes in the file that
+             * we write to the blocks
+            */
+            uint64_t BlockBytes = count * blockSize;
+            for (uint64_t i = 0; i < count; i++) {
+                memset((void*)bufVirt, 0, 4096);
+
+                if (remaining < blockSize) {
+                    memcpy((uint8_t*)bufVirt, (uint8_t*)buffer + bufOff, remaining);
+                    bufOff += remaining;
+                } else {
+                    memcpy((uint8_t*)bufVirt, (uint8_t*)buffer + bufOff, blockSize);
+                    bufOff += blockSize;
+                }
+
+                uint64_t LBA = (i + blocks) * sectorsPerBlock;
+
+                for (uint64_t i = 0; i < sectorsPerBlock; i++) {
+                    if (!pdev->WriteSector(LBA + i, (void*)((uint8_t*)bufPhys + i * pdev->SectorSize()))) {
+                        _ds->Println("Failed to read file block");
+                        return -28;
+                    }
+                }
             }
 
-            blocksWritten += allocated;
+            if (remaining < BlockBytes) {
+                remaining -= remaining;
+            } else {
+                remaining -= BlockBytes;
+            }
+            blocksNeeded -= count;
+
+            if (!AddExtent(file->node, inode, ee)) {
+                _ds->Println("Failed to Add Extent");
+            }
         }
 
         uint64_t newSize = file->node->size + size;
@@ -1170,6 +1222,7 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
         file->node->size = newSize;
 
         WriteInode(file->node->nodeId, inode);
+        return size;
     } else if ((file->flags & CREATE)) {
 
     } else {

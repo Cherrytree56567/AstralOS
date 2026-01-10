@@ -119,6 +119,72 @@ Extent** GenericEXT4Device::GetExtents(ExtentHeader* hdr, uint64_t& extentsCount
     return extents;
 }
 
+bool GenericEXT4Device::AddExtentDepth(ExtentHeader* hdr, uint64_t hdrBlock, Extent ext) {
+    if (!hdr || hdr->eh_magic != 0xF30A) return false;
+
+    uint64_t blockSize = 1024ull << superblock->s_log_block_size;
+    uint64_t sectorSize = pdev->SectorSize();
+    uint64_t sectorsPerBlock = blockSize / sectorSize;
+
+    if (hdr->eh_depth == 0) {
+        if (hdr->eh_max != hdr->eh_entries) {
+            Extent* ee = (Extent*)((uint64_t)hdr + sizeof(ExtentHeader) + hdr->eh_entries * sizeof(Extent));
+            *ee = ext;
+
+            hdr->eh_entries++;
+
+            uint64_t LBA = hdrBlock * sectorsPerBlock;
+
+            for (uint64_t i = 0; i < sectorsPerBlock; i++) {
+                if (!pdev->WriteSector(LBA + i, (uint8_t*)hdr + i * sectorSize)) {
+                    _ds->Println("Failed to flush extent leaf");
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+    } else {
+        void* buf = _ds->RequestPage();
+        uint64_t bufPhys = (uint64_t)buf;
+        uint64_t bufVirt = bufPhys + 0xFFFFFFFF00000000;
+        _ds->MapMemory((void*)bufVirt, (void*)bufPhys, false);
+
+        uint64_t blockSize = 1024ull << superblock->s_log_block_size;
+        uint64_t sectorSize = pdev->SectorSize();
+        uint64_t sectorsPerBlock = blockSize / sectorSize;
+
+        for (int i = 0; i < hdr->eh_entries; i++) {
+            memset((void*)bufVirt, 0, 4096);
+
+            ExtentIDX* ei = (ExtentIDX*)((uint64_t)hdr + sizeof(ExtentHeader) + i * sizeof(ExtentIDX));
+
+            uint64_t block = ((uint64_t)ei->ei_leaf_hi << 32) | (uint64_t)ei->ei_leaf_lo;
+
+            uint64_t LBA = block * sectorsPerBlock;
+                    
+            for (uint64_t x = 0; x < sectorsPerBlock; x++) {
+                if (!pdev->ReadSector(LBA + x, (void*)((uint8_t*)bufPhys + x * pdev->SectorSize()))) {
+                    _ds->Println("Failed to read directory block");
+                    return false;
+                }
+            }
+
+            ExtentHeader* eh = (ExtentHeader*)bufVirt;
+
+            if (eh->eh_magic != 0xF30A) continue;
+            if (eh->eh_depth != (hdr->eh_depth - 1)) continue;
+
+            if (AddExtentDepth(eh, block, ext)) {
+                return true;
+            }
+        }
+        _ds->UnMapMemory((void*)bufVirt);
+        _ds->FreePage(buf);
+    }
+    return false;
+}
+
 bool GenericEXT4Device::AddExtent(FsNode* fsN, Inode* ind, Extent ext) {
     ExtentHeader* eh = (ExtentHeader*)ind->i_block;
 
@@ -222,8 +288,13 @@ bool GenericEXT4Device::AddExtent(FsNode* fsN, Inode* ind, Extent ext) {
             return true;
         }
     } else {
-        _ds->Println("Not Impl");
-        return false;
+        if (AddExtentDepth(eh, 0, ext)) {
+            _ds->Println("true");
+            return true;
+        } else {
+            _ds->Println("false");
+            return false;
+        }
     }
     return false;
 }

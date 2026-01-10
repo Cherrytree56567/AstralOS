@@ -144,7 +144,7 @@ Since I couldn't find any documentation online on how extents work, I had to ask
 
 **Total time spent: 3h 7m**
 
-# January 4nd: Fixed Read - Part 1
+# January 4th: Fixed Read - Part 1
 
 I was trying to fix the Read function today and turns out it was bc it was reading the wrong inode. So I fixed the ReadInode function and then it was able to read correctly. Then I added some code for reading when not using extents. After that I started to work on GetExtents so that I can easily read huge files using multiple Extents. The logic behind GetExtents is solid, but the function crashes when used with a kernel panic. Ill fix that tomorrow.
 
@@ -152,7 +152,7 @@ I was trying to fix the Read function today and turns out it was bc it was readi
 
 **Total time spent: 2h 44m**
 
-# January 5nd: Fixed Read - Part 2
+# January 5th: Fixed Read - Part 2
 
 So the GetExtents function wasn't actually broken, I just had 2 variables with the same name, which the compiler hadn't told me about. So once I fixed that it started working. I then used GetExtents in the Read function so that I could read large files like the usermode or the kernel. In the demo, you can see Ive just opened up `hello.txt`. I decided not to do more of the EXT4 Driver, since Im only going to be only reading anyway in the kernel. I've started the VFS abstration. Most of the code Ive written before,isn't going to futureproof well, so Im going to rewrite it in another update. So after the VFS, I need to add multithreading and then add a simple usermode app.
 
@@ -160,7 +160,7 @@ So the GetExtents function wasn't actually broken, I just had 2 variables with t
 
 **Total time spent: 2h 32m**
 
-# January 6nd: Fixing the Driver System - Part 1
+# January 6th: Fixing the Driver System - Part 1
 
 So I looked at the DriverSystem and saw that it was pretty broken, so Im fixing that. First, Im splitting the Block Device into a Block Controller which makes multiple BlockDevices per drive. Im not fully done with it just yet, but ill probably finish it tomorrow. Ive gotten the `DriverSystem.h` file structs fixed.
 
@@ -168,7 +168,7 @@ So I looked at the DriverSystem and saw that it was pretty broken, so Im fixing 
 
 **Total time spent: 1h 27m**
 
-# January 7nd: Fixing the Driver System - Part 2
+# January 7th: Fixing the Driver System - Part 2
 
 The photo shows that the kernel is crashing, but Im not sure why. Anyway, Ill debug that tomorrow. I was able to fix the Driver System by splitting the Partition and Block Devices into Block Controllers and Devices and Partition Controllers and Devices.
 Here is how it works now:
@@ -184,7 +184,7 @@ Here is how it works now:
 
 **Total time spent: 1h 46m**
 
-# January 7nd: Fixed the Driver System
+# January 7th: Fixed the Driver System
 
 Ok, so I was able to fix the bug from earlier and I even found and fixed some other bugs. It works well now, but Im going to move the mounting code from `main.cpp` to the VFS abstraction in `Filesystem.cpp`.
 
@@ -192,7 +192,7 @@ Ok, so I was able to fix the bug from earlier and I even found and fixed some ot
 
 **Total time spent: 53m**
 
-# January 8nd: Added Open in VFS
+# January 8th: Added Open in VFS
 
 So I was able to move the mounting code from `main.cpp` to my VFS abstraction, and I also added a few fixes for `ResolvePath`. Then I was able to add some missing functions in the GPT Partition Driver to create the open function in my VFS abstraction.
 
@@ -200,10 +200,18 @@ So I was able to move the mounting code from `main.cpp` to my VFS abstraction, a
 
 **Total time spent: 1h 37m**
 
-# January 9nd: Added Write funcs - Part 1
+# January 9th: Added Write funcs - Part 1
 
 So first, I added the code for Chown, Utimes and Chmod in the EXT4 Driver and then I added more functions in the VFS abstraction for better control over files and dirs. There still isn't code to create dirs/files in the VFS abstraction, but at least there is code to write to files in the EXT4 and VFS abstractions. Ill finish off the Write func tomorrow.
 
 ![WriteFuncP1](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/WriteFuncP1.png?raw=true)
 
 **Total time spent: 5h 50m**
+
+# January 10th: Added Write funcs - Part 2
+
+I was able to fix the Write function, but the 7zip doesn't show the full data that I wrote. When I looked at the fs in fsck, it gives me a bunch of random inodes that have weird flags and stuff. I think the Allocate Blocks Function is broken and is causing a bunch of random inodes to be written. Ill fix that tomorrow.
+
+![WriteFuncP2](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/WriteFuncP2.png?raw=true)
+
+**Total time spent: 3h 17m**

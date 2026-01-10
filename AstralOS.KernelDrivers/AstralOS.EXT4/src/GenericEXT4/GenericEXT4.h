@@ -86,6 +86,7 @@ private:
     uint64_t CountExtents(ExtentHeader* hdr);
     Extent** GetExtents(ExtentHeader* hdr, uint64_t& extentsCount);
     bool AddExtent(FsNode* fsN, Inode* ind, Extent ee);
+    bool AddExtentDepth(ExtentHeader* hdr, uint64_t hdrBlock, Extent ext);
     void ParseDirectoryBlock(FsNode**& nodes, uint64_t& count, size_t& capacity, uint64_t block);
 
 	PartitionDevice* pdev;

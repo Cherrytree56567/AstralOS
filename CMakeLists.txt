@@ -18,9 +18,14 @@ add_custom_target(build
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.KernelDrivers && cmake . && cmake --build . --target build
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.Bin && cmake . && cmake --build . --target build
     COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.Testing && cmake . && cmake --build . --target build
-    COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.Web && cmake . && cmake --build . --target build
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Building all subprojects"
+)
+
+add_custom_target(buildweb
+    COMMAND cd ${CMAKE_SOURCE_DIR}/AstralOS.Web && cmake . && cmake --build . --target build
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Building Website"
 )
 
 add_custom_target(run

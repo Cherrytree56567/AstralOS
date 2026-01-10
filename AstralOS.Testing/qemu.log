@@ -5,18 +5,18 @@ EDK II
 UEFI v2.70 (EDK II, 0x00010000)
 [1m[33m[40mMapping table[0m[37m[40m
 [1m[33m[40m      FS0:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40mHD0a65535a1:;BLK1:
-          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(1,GPT,CE1F9746-5249-48A3-A986-C786F5652579,0x800,0x2F000)
+          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(1,GPT,DE74948B-5E65-4342-8BE7-DD99478CC488,0x800,0x2F000)
 [1m[33m[40m     BLK0:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
           PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)
 [1m[33m[40m     BLK3:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
           PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x2,0xFFFF,0x0)
 [1m[33m[40m     BLK2:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
-          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(2,GPT,03831EDC-FF1B-4230-9271-CCE97EC34ECC,0x2F800,0x13D0000)
-[15;01HPress [1m[37m[40mESC[0m[37m[40m in 5 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 4 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 3 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 2 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 1 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.
+          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(2,GPT,ABB676BA-093B-49C4-9008-1B52F6A5C706,0x2F800,0x13D0000)
+[15;01HPress [1m[37m[40mESC[0m[37m[40m in 5 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 4 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.
 [1m[33m[40mShell> [0m[37m[40mfs0:\efi\boot\bootx64.efi
 Found ACPI 2.0 RSDP at: 0x7FB7E014
 Volume label is ''
-Offset: 0x1000Addr: 0x1000Offset: 0x12000Addr: 0x12000Offset: 0x32000Addr: 0x32000Offset: 0x38000Addr: 0x38000initramfs loaded at 0x7E491018 (190976 bytes)
+Offset: 0x1000Addr: 0x1000Offset: 0x12000Addr: 0x12000Offset: 0x35000Addr: 0x35000Offset: 0x3B000Addr: 0x3B000initramfs loaded at 0x7E490018 (195584 bytes)
 GOP located
 ss
 Handles freed
@@ -69,17 +69,18 @@ Mounted disk 0x0, partition 0x1 at /
 Opening File: 0x1FC04
 Hi from EXT4
 
+0x2CB7
 File Offset: 0xD
-Block: 0x0
+Block: 0x88200
 Extents Count: 0x1
-Block Start: 0x81FE2
-Contingous Blocks Left to be Allocated: 0x0
-OG: 0x1
-Prints: We have written
-Block: 0x81FE2
-Block: 0x8
-len: 0x1
-block: 0xD
+SpacLeft
+Count C: 0x0
+Count: 0x2
+Blocks: 0x81FE2
+Blocks Needed: 0x2
+Remaining: 0x1CC4
+Block: 0x1
+Len: 0x2
 Start Low: 0x81FE2
 Start High: 0x0
 Written
