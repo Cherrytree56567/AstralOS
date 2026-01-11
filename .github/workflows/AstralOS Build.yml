@@ -86,6 +86,18 @@ jobs:
     - name: Build
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }} --target build
     
+    - name: Build
+      run: |
+        cd AstralOS.Testing
+        cp ../AstralOS.Bin/bin/AstralOS.qcow2 AstralOS.qcow2
+        sudo modprobe nbd && sudo qemu-nbd --connect=/dev/nbd0 AstralOS.qcow2
+        sudo mount /dev/nbd0p2 testing
+        ls testing/AstralOS/System64
+        sudo umount testing
+        sudo fsck -fy /dev/nbd0p2
+        sudo qemu-nbd --disconnect /dev/nbd0
+        cd ../
+    
     - name: Build Website
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }} --target buildweb
 
