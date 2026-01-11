@@ -157,8 +157,15 @@ uint32_t GenericEXT4Device::AllocateBlock(FsNode* parent) {
             uint64_t GlobalBlock = (uint64_t)BlockGroup * BlocksPerGroup + i;
             uint64_t GroupStart = (uint64_t)BlockGroup * BlocksPerGroup;
 
+            uint64_t blockBitmap = ((uint64_t)GroupDesc->bg_block_bitmap_hi << 32) | GroupDesc->bg_block_bitmap_lo;
+            uint64_t inodeBitmap = ((uint64_t)GroupDesc->bg_inode_bitmap_hi << 32) | GroupDesc->bg_inode_bitmap_lo;
+            uint64_t inodeTable = ((uint64_t)GroupDesc->bg_inode_table_hi << 32) | GroupDesc->bg_inode_table_lo;
+            uint64_t inodeTableBlocks = (superblock->s_inodes_per_group * superblock->s_inode_size + blockSize - 1) / blockSize;
+
             if (GlobalBlock == 0) continue;
-            if (GlobalBlock < firstUsableBlock) continue;
+            if (GlobalBlock == blockBitmap) continue;
+            if (GlobalBlock == inodeBitmap) continue;
+            if (GlobalBlock >= inodeTable && GlobalBlock < inodeTable + inodeTableBlocks) continue;
 
             /*
              * Now we can check if it is in use
@@ -259,7 +266,24 @@ uint32_t GenericEXT4Device::AllocateBlocks(FsNode* parent, uint64_t& count) {
                 continue;
             }
 
-            if (GlobalBlock < firstUsableBlock) {
+            uint64_t blockBitmap = ((uint64_t)GroupDesc->bg_block_bitmap_hi << 32) | GroupDesc->bg_block_bitmap_lo;
+            uint64_t inodeBitmap = ((uint64_t)GroupDesc->bg_inode_bitmap_hi << 32) | GroupDesc->bg_inode_bitmap_lo;
+            uint64_t inodeTable = ((uint64_t)GroupDesc->bg_inode_table_hi << 32) | GroupDesc->bg_inode_table_lo;
+            uint64_t inodeTableBlocks = (superblock->s_inodes_per_group * superblock->s_inode_size + blockSize - 1) / blockSize;
+
+            if (GlobalBlock == 0) {
+                run_len = 0;
+                continue;
+            }
+            if (GlobalBlock == blockBitmap) {
+                run_len = 0;
+                continue;
+            }
+            if (GlobalBlock == inodeBitmap) {
+                run_len = 0;
+                continue;
+            }
+            if (GlobalBlock >= inodeTable && GlobalBlock < inodeTable + inodeTableBlocks) {
                 run_len = 0;
                 continue;
             }
@@ -276,6 +300,8 @@ uint32_t GenericEXT4Device::AllocateBlocks(FsNode* parent, uint64_t& count) {
                 }
 
                 if (run_len == count) {
+                    best_len = run_len;
+                    best_start = run_start;
                     break;
                 }
 

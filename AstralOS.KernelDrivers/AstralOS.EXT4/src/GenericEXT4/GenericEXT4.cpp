@@ -537,6 +537,10 @@ FsNode* GenericEXT4Device::FindDir(FsNode* node, const char* path) {
  * 11. Create and Pass the FsNode*
 */
 FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
+    if (readOnly) {
+        _ds->Println("Can't Create Dir, Read Only");
+        return nullptr;
+    }
     uint64_t blockSize = 1024ull << superblock->s_log_block_size;
     uint64_t sectorSize = pdev->SectorSize();
     uint64_t sectorsInBlock = blockSize / pdev->SectorSize();
@@ -888,13 +892,28 @@ File* GenericEXT4Device::Open(const char* name, uint32_t flags) {
         return nullptr;
     }
 
+    bool write = flags & (WRONLY | RDWR);
+
     FsNode* node = FindDir(&rootNode, name);
-    Inode* inode = ReadInode(2);
+    Inode* inode = ReadInode(node->nodeId);
+
+    if ((inode->i_flags & InodeFlags::EXT4_IMMUTABLE_FL) && write) {
+        _ds->Println("Cannot open immutable file for writing");
+        return nullptr;
+    }
+
+    if ((inode->i_flags & InodeFlags::EXT4_APPEND_FL) && write && !(flags & APPEND)) {
+        _ds->Println("Cannot open append-only file for writing without APPEND flag");
+        return nullptr;
+    }
 
     _ds->Print("Opening File: ");
     _ds->Println(to_hstridng(node->nodeId));
 
-    bool write = flags & (WRONLY | RDWR);
+    if (write && readOnly) {
+        _ds->Println("Cannot Write when Read Only Mode is enabled!");
+        return nullptr;
+    }
 
     if (node->type == FsNodeType::Directory && write) {
         _ds->Println("Cannot open directory for writing");
@@ -902,14 +921,6 @@ File* GenericEXT4Device::Open(const char* name, uint32_t flags) {
     }
     if ((flags & TRUNC) && node->type != FsNodeType::File) {
         _ds->Println("Cannot truncate non-file node");
-        return nullptr;
-    }
-    if ((inode->i_flags & InodeFlags::EXT4_IMMUTABLE_FL) && write) {
-        _ds->Println("Cannot open immutable file for writing");
-        return nullptr;
-    }
-    if ((inode->i_flags & InodeFlags::EXT4_APPEND_FL) && write && !(flags & APPEND)) {
-        _ds->Println("Cannot open append-only file for writing without APPEND flag");
         return nullptr;
     }
 
@@ -1049,6 +1060,10 @@ int64_t GenericEXT4Device::Read(File* file, void* buffer, uint64_t size) {
 }
 
 int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
+    if (readOnly) {
+        _ds->Println("Can't Write, Read Only");
+        return 0;
+    }
     if ((file->flags & WRONLY) || (file->flags & RDWR)) {
         Inode* inode = ReadInode(file->node->nodeId);
 
@@ -1141,6 +1156,8 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
         uint64_t remaining = size - (blockSize - tailOffset);
         uint64_t blocksNeeded = (remaining + blockSize - 1) / blockSize;
 
+        uint64_t superblockCount = ((uint64_t)superblock->s_free_blocks_count_hi << 32) | superblock->s_free_blocks_count_lo;
+
         uint64_t bufOff = 0;
 
         while (true) {
@@ -1214,6 +1231,26 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
             if (!AddExtent(file->node, inode, ee)) {
                 _ds->Println("Failed to Add Extent");
             }
+
+            uint64_t blocksCount = (uint64_t)inode->i_blocks_lo;
+
+            if (superblock->s_creator_os == CreatorOSIDs::Linux) {
+                blocksCount = ((uint64_t)inode->i_osd2.linux2.l_i_blocks_high << 32) | inode->i_blocks_lo;
+            } else if (superblock->s_creator_os == CreatorOSIDs::AstralOS) {
+                blocksCount = ((uint64_t)inode->i_osd2.astral2.a_i_blocks_high << 32) | inode->i_blocks_lo;
+            }
+
+            blocksCount += count * sectorsPerBlock;
+
+            inode->i_blocks_lo = blocksCount & 0xFFFFFFFF;
+
+            if (superblock->s_creator_os == CreatorOSIDs::Linux) {
+                inode->i_osd2.linux2.l_i_blocks_high = blocksCount >> 32;
+            } else if (superblock->s_creator_os == CreatorOSIDs::AstralOS) {
+                inode->i_osd2.astral2.a_i_blocks_high = blocksCount >> 32;
+            }
+
+            superblockCount -= count;
         }
 
         uint64_t newSize = file->node->size + size;
@@ -1222,16 +1259,28 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
         file->node->size = newSize;
 
         WriteInode(file->node->nodeId, inode);
+
+        superblock->s_free_blocks_count_hi = superblockCount >> 32;
+        superblock->s_free_blocks_count_lo = superblockCount & 0xFFFFFFFF;
+        UpdateSuperblock();
+
         return size;
     } else if ((file->flags & CREATE)) {
-
+        if (file->node->type == FsNodeType::Directory) {
+            //CreateDir();
+        }
     } else {
-
+        _ds->Println("Unknown Flag");
+        return -1;
     }
     return 0;
 }
 
 bool GenericEXT4Device::Chmod(FsNode* node, uint32_t mode) {
+    if (readOnly) {
+        _ds->Println("Can't Chmod, Read Only");
+        return false;
+    }
     if (!node) return false;
 
     Inode* ind = ReadInode(node->nodeId);
@@ -1247,6 +1296,10 @@ bool GenericEXT4Device::Chmod(FsNode* node, uint32_t mode) {
 }
 
 bool GenericEXT4Device::Chown(FsNode* node, uint32_t uid, uint32_t gid) {
+    if (readOnly) {
+        _ds->Println("Can't Chown, Read Only");
+        return false;
+    }
     if (!node) return false;
 
     Inode* ind = ReadInode(node->nodeId);
@@ -1275,6 +1328,10 @@ bool GenericEXT4Device::Chown(FsNode* node, uint32_t uid, uint32_t gid) {
 }
 
 bool GenericEXT4Device::Utimes(FsNode* node, uint64_t atime, uint64_t mtime, uint64_t ctime) {
+    if (readOnly) {
+        _ds->Println("Can't Utimes, Read Only");
+        return false;
+    }
     if (!node) return false;
 
     Inode* ind = ReadInode(node->nodeId);

@@ -215,3 +215,12 @@ I was able to fix the Write function, but the 7zip doesn't show the full data th
 ![WriteFuncP2](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/WriteFuncP2.png?raw=true)
 
 **Total time spent: 3h 17m**
+
+# January 11th: Added Write funcs - Part 3
+
+So I was able to fix the write function, except for the wrong block count in `fsck`. I still need to figure out how to create a file, and how to implement a create file function. There are also a few conditions I haven't accounted for in the `AddExtent` function, because while adding an Extent seems easy, it is a difficult algorithm to implement.
+
+![WriteFuncP3](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/WriteFuncP3.png?raw=true)
+![WriteFuncP3.3](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/WriteFuncP3.3.png?raw=true)
+
+**Total time spent: 2h 34m**

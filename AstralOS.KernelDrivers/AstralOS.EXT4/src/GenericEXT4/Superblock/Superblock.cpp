@@ -1,14 +1,11 @@
 #include "../GenericEXT4.h"
 
 bool GenericEXT4Device::HasSuperblockBKP(uint32_t group) {
-    if (group == 0 || group == 1) return true;
+    if (group <= 1) return true;
+    if (!(group & 1)) return false;
     if (!(superblock->s_feature_ro_compat & ROFeatures::RO_COMPAT_SPARSE_SUPER)) return true;
 
-    if (isPower(group, 3)) return true;
-    if (isPower(group, 5)) return true;
-    if (isPower(group, 7)) return true;
-
-    return false;
+    return (isPower(group, 7) || isPower(group, 5) || isPower(group, 3));
 }
 
 /*
@@ -57,7 +54,7 @@ void GenericEXT4Device::UpdateSuperblock() {
             }
         }
 
-        EXT4_Superblock* sup = (EXT4_Superblock*)bufVirt + Offset;
+        EXT4_Superblock* sup = (EXT4_Superblock*)((uint8_t*)bufVirt + Offset);
 
         memcpy((uint8_t*)bufVirt + Offset, superblock, superblockSize);
 
@@ -72,20 +69,27 @@ void GenericEXT4Device::UpdateSuperblock() {
 
     writeSuperblock(SuperblockOffset / blockSize);
 
-    if (superblock->s_feature_ro_compat & ROFeatures::RO_COMPAT_SPARSE_SUPER != 0) {
+    /*
+     * This backup superblock writing code is broken.
+     * Usually, the backup superblock isn't supposed 
+     * to be written to.
+    */
+    /*
+    if ((superblock->s_feature_ro_compat & ROFeatures::RO_COMPAT_SPARSE_SUPER) != 0) {
         uint64_t blocks = superblock->s_blocks_count_lo;
         blocks |= ((uint64_t)superblock->s_blocks_count_hi) << 32;
 
         uint32_t totalBlockGroups = (blocks + superblock->s_blocks_per_group - 1) / superblock->s_blocks_per_group;
         for (uint32_t bg = 0; bg < totalBlockGroups; bg++) {
-            if (bg == 0 || bg == 1 || bg % 3 == 0 || bg % 5 == 0 || bg % 7 == 0) {
-                uint64_t backupBlock = bg * superblock->s_blocks_per_group + superblock->s_first_data_block;
+            if (HasSuperblockBKP(bg)) {
+                    _ds->Println(to_hstridng(bg));
+                uint64_t backupBlock = (bg == 0) ? superblock->s_first_data_block : bg * superblock->s_blocks_per_group;
                 if (backupBlock != SuperblockOffset / blockSize) {
-                    writeSuperblock(backupBlock);
+                    //writeSuperblock(backupBlock);
                 }
             }
         }
     } else {
         _ds->Println("Filesystem does not use sparse superblocks, no backups written");
-    }
+    }*/
 }
