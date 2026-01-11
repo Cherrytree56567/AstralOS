@@ -261,11 +261,6 @@ uint32_t GenericEXT4Device::AllocateBlocks(FsNode* parent, uint64_t& count) {
             uint64_t GlobalBlock = (uint64_t)BlockGroup * BlocksPerGroup + i;
             uint64_t GroupStart = (uint64_t)BlockGroup * BlocksPerGroup;
 
-            if (GlobalBlock == 0) {
-                run_len = 0;
-                continue;
-            }
-
             uint64_t blockBitmap = ((uint64_t)GroupDesc->bg_block_bitmap_hi << 32) | GroupDesc->bg_block_bitmap_lo;
             uint64_t inodeBitmap = ((uint64_t)GroupDesc->bg_inode_bitmap_hi << 32) | GroupDesc->bg_inode_bitmap_lo;
             uint64_t inodeTable = ((uint64_t)GroupDesc->bg_inode_table_hi << 32) | GroupDesc->bg_inode_table_lo;
