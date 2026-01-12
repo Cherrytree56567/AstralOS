@@ -144,9 +144,10 @@ Path VFS::ResolvePath(const char* pat) {
     };
 }
 
-File* VFS::open(const char* path, FileFlags flags) {
+File* VFS::open(const char* path, uint32_t flags) {
     Path* p = (Path*)ks->heapAllocator.malloc(sizeof(Path));
     *p = ResolvePath(path);
+    ks->basicConsole.Println("Creating");
     
     Array<BaseDriver*> FSDriver = ks->driverMan.GetDevices(DriverType::FilesystemDriver);
     for (size_t i = 0; i < FSDriver.size(); i++) {
@@ -154,11 +155,15 @@ File* VFS::open(const char* path, FileFlags flags) {
 
         if (bldev->GetParentLayer()->GetParentLayer()->GetDrive() != p->disk) continue;
         if (bldev->GetParentLayer()->GetPartition() != p->partition) continue;
+    ks->basicConsole.Println("Creating");
 
         if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
+    ks->basicConsole.Println("Creating");
 
-        File* f = bldev->Open(p->path.c_str(), static_cast<uint32_t>(flags));
+        File* f = bldev->Open(p->path.c_str(), flags);
+    ks->basicConsole.Println("Creating");
         f->path = p;
+        f->data = 0x0;
         return f;
     }
     ks->basicConsole.Println("Failed to get File*");
@@ -211,6 +216,7 @@ bool VFS::write(File* file, void* buffer, size_t& size) {
 
 bool VFS::close(File* file) {
     Array<BaseDriver*> FSDriver = ks->driverMan.GetDevices(DriverType::FilesystemDriver);
+    ks->basicConsole.Println("F");
     for (size_t i = 0; i < FSDriver.size(); i++) {
         FilesystemDevice* bldev = static_cast<FilesystemDevice*>(FSDriver[i]);
 
@@ -221,8 +227,156 @@ bool VFS::close(File* file) {
 
         return bldev->Close(file);
     }
+    if (file->data != 0x0) {
+        FsNode** LFSN = (FsNode**)file->data;
+        ks->basicConsole.Println(to_hstring(file->node->size));
+        for (uint64_t i = 0; i < file->node->size; i++) {
+            FsNode* CLFsN = LFSN[i];
+            free(CLFsN);
+        }
+        free(LFSN);
+    }
     ks->basicConsole.Println("Failed to get File*");
     return false;
+}
+
+File* VFS::mkdir(const char* path) {
+    Path resPath = ResolvePath(path);
+    size_t size = 0;
+    char** p = str_split(strdup(resPath.path.c_str()), '/', &size);
+
+    uint64_t newSize = 0;
+    for (size_t i = 0; i < (size - 1); i++) {
+        if ((size - 1) == 1) {
+            newSize += strlen(p[i - 1]);
+        } else {
+            newSize += strlen(p[i - 1]) + 1;
+        }
+    }
+
+    char* newPath = (char*)ks->heapAllocator.malloc(newSize);
+    
+    for (size_t i = 0; i < (size - 1); i++) {
+        if ((size - 1) == 1) {
+            strcat(newPath, p[i]);
+        } else {
+            strcat(newPath, p[i]);
+            strcat(newPath, "/");
+        }
+    }
+
+    char* newDir = p[size - 1];
+
+    Array<BaseDriver*> FSDriver = ks->driverMan.GetDevices(DriverType::FilesystemDriver);
+    for (size_t i = 0; i < FSDriver.size(); i++) {
+        FilesystemDevice* bldev = static_cast<FilesystemDevice*>(FSDriver[i]);
+
+        if (bldev->GetParentLayer()->GetParentLayer()->GetDrive() != resPath.disk) continue;
+        if (bldev->GetParentLayer()->GetPartition() != resPath.partition) continue;
+
+        if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
+
+        FsNode* fsN = bldev->FindDir(bldev->GetParentLayer()->GetMountNode(), newPath);
+
+        File* file = (File*)ks->heapAllocator.malloc(sizeof(File));
+
+        FsNode* CfsN = bldev->CreateDir(fsN, newDir);
+        if (!CfsN) {
+            ks->basicConsole.Println("Failed to Create dir");
+            return nullptr;
+        }
+
+        Path* rPath = (Path*)ks->heapAllocator.malloc(sizeof(Path));
+        rPath->device = resPath.device;
+        rPath->disk = resPath.disk;
+        rPath->FSID = resPath.FSID;
+        rPath->partition = resPath.partition;
+        rPath->path = resPath.path;
+
+        file->flags = RD;
+        file->node = CfsN;
+        file->path = rPath;
+        file->position = 0;
+        file->data = 0;
+        return file;
+    }
+
+    return nullptr;
+}
+
+File* VFS::listdir(File* file) {
+    if (file->data == 0x0) {
+        Array<BaseDriver*> FSDriver = ks->driverMan.GetDevices(DriverType::FilesystemDriver);
+        for (size_t i = 0; i < FSDriver.size(); i++) {
+            FilesystemDevice* bldev = static_cast<FilesystemDevice*>(FSDriver[i]);
+
+            if (bldev->GetParentLayer()->GetParentLayer()->GetDrive() != file->path->disk) continue;
+            if (bldev->GetParentLayer()->GetPartition() != file->path->partition) continue;
+
+            if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
+
+            size_t count = 0;
+            FsNode** LfsN = bldev->ListDir(file->node, &count);
+
+            file->node->size = count;
+            file->data = (uint64_t)LfsN;
+            file->position = 0;
+
+            char* newDirName = (char*)ks->heapAllocator.malloc(file->path->path.size() + String(LfsN[file->position]->name).size() + 2);
+            newDirName[0] = '\0';
+            strcat(newDirName, file->path->path.c_str());
+            strcat(newDirName, "/");
+            strcat(newDirName, LfsN[file->position]->name);
+
+            File* newDir = (File*)ks->heapAllocator.malloc(sizeof(File));
+            newDir->data = 0;
+            newDir->flags = file->flags;
+            newDir->node = LfsN[file->position];
+            newDir->position = 0;
+            
+            Path* newDirPath = (Path*)ks->heapAllocator.malloc(sizeof(Path));
+            newDirPath->device = file->path->device;
+            newDirPath->disk = file->path->disk;
+            newDirPath->FSID = file->path->FSID;
+            newDirPath->partition = file->path->partition;
+            newDirPath->path = newDirName;
+
+            newDir->path = newDirPath;
+
+            file->position++;
+
+            return newDir;
+        }
+    } else {
+        if (file->position > file->node->size) {
+            return nullptr;
+        }
+        FsNode** LfsN = (FsNode**)file->data;
+        char* newDirName = (char*)ks->heapAllocator.malloc(file->path->path.size() + String(LfsN[file->position]->name).size() + 2);
+        newDirName[0] = '\0';
+        strcat(newDirName, file->path->path.c_str());
+        strcat(newDirName, "/");
+        strcat(newDirName, LfsN[file->position]->name);
+
+        File* newDir = (File*)ks->heapAllocator.malloc(sizeof(File));
+        newDir->data = 0;
+        newDir->flags = file->flags;
+        newDir->node = LfsN[file->position];
+        newDir->position = 0;
+            
+        Path* newDirPath = (Path*)ks->heapAllocator.malloc(sizeof(Path));
+        newDirPath->device = file->path->device;
+        newDirPath->disk = file->path->disk;
+        newDirPath->FSID = file->path->FSID;
+        newDirPath->partition = file->path->partition;
+        newDirPath->path = newDirName;
+
+        newDir->path = newDirPath;
+
+        file->position++;
+
+        return newDir;
+    }
 }
 
 bool VFS::chmod(File* file, uint32_t mode) {

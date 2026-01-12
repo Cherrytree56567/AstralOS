@@ -9,9 +9,11 @@
 class VFS {
 public:
     bool mount(const char* source, const char* target);
-    File* open(const char* path, FileFlags flags);
+    File* open(const char* path, uint32_t flags);
     bool close(File* file);
     void* read(File* file, size_t& size);
+    File* mkdir(const char* path);
+    File* listdir(File* file);
     bool write(File* file, void* buffer, size_t& size);
     bool chmod(File* file, uint32_t mode);
     bool chown(File* file, uint32_t uid, uint32_t gid);

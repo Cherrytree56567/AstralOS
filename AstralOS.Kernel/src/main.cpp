@@ -476,7 +476,7 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
         kernelServices.basicConsole.Println("Failed to Mount");
     }
 
-    File* f = kernelServices.vfs.open("/AstralOS/System64/hello.txt", FileFlags::RDWR);
+    File* f = kernelServices.vfs.open("/AstralOS/System64/hello.txt", RD | WR | APPEND);
 
     uint64_t size = 0;
     char* hello = (char*)kernelServices.vfs.read(f, size);
@@ -493,7 +493,25 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
     kernelServices.vfs.close(f);
 
+    File* dir = kernelServices.vfs.mkdir("/AstralOS/System64/TestDir");
+
+    File* dirent = nullptr;
+
+    while ((dirent = kernelServices.vfs.listdir(dir)) != nullptr) {
+        kernelServices.basicConsole.Println(dirent->node->name);
+    }
+
     kernelServices.basicConsole.Println("Written");
+
+    kernelServices.vfs.close(dir);
+
+    File* newFile = kernelServices.vfs.open("/AstralOS/System64/test.txt", CREATE);
+    kernelServices.basicConsole.Println("Creating");
+
+    size_t newFileCount = 0;
+    kernelServices.vfs.write(newFile, nullptr, newFileCount);
+    
+    kernelServices.vfs.close(newFile);
 
     while (true) {
         

@@ -224,3 +224,11 @@ So I was able to fix the write function, except for the wrong block count in `fs
 ![WriteFuncP3.3](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/WriteFuncP3.3.png?raw=true)
 
 **Total time spent: 2h 34m**
+
+# January 12th: Added Write funcs - Part 4
+
+So now you can List Directories and Create Dirs. I haven't yet implemented creating a file (which is very easy) or removing files/dirs yet, so thats for tomorrow. I also noticed some other errors, like the List Dir not printing the right name. Right now, It is just stuck at closing the newly created dir, Ill fix that tomorrow or maybe even the day after because Im going to be taking a break;
+
+![WriteFuncP4](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/WriteFuncP4.png?raw=true)
+
+**Total time spent: 2h 34m**

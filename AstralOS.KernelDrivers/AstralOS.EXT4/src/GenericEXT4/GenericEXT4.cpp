@@ -10,6 +10,15 @@ size_t strlen(const char *str) {
     return count;
 }
 
+char *
+strcat(char *s, const char *append)
+{
+	char *save = s;
+	for (; *s; ++s);
+	while ((*s++ = *append++) != '\0');
+	return(save);
+}
+
 char* strchr(const char* s, int c) {
     while (*s) {
         if (*s == (char)c)
@@ -892,39 +901,48 @@ File* GenericEXT4Device::Open(const char* name, uint32_t flags) {
         return nullptr;
     }
 
-    bool write = flags & (WRONLY | RDWR);
+    bool write = flags & (WR | APPEND | CREATE);
 
-    FsNode* node = FindDir(&rootNode, name);
-    Inode* inode = ReadInode(node->nodeId);
+    if (flags & CREATE) {
+        _ds->Println("Creating File");
+        _ds->Println(to_hstridng(flags));
+        file->node = (FsNode*)_ds->malloc(sizeof(FsNode));
+        file->node->name = _ds->strdup(name);
+    } else {
+        _ds->Println("Not Creating File");
+        FsNode* node = FindDir(&rootNode, name);
+        Inode* inode = ReadInode(node->nodeId);
 
-    if ((inode->i_flags & InodeFlags::EXT4_IMMUTABLE_FL) && write) {
-        _ds->Println("Cannot open immutable file for writing");
-        return nullptr;
+        if ((inode->i_flags & InodeFlags::EXT4_IMMUTABLE_FL) && write) {
+            _ds->Println("Cannot open immutable file for writing");
+            return nullptr;
+        }
+
+        if ((inode->i_flags & InodeFlags::EXT4_APPEND_FL) && write && !(flags & APPEND)) {
+            _ds->Println("Cannot open append-only file for writing without APPEND flag");
+            return nullptr;
+        }
+
+        if (node->type == FsNodeType::Directory && write) {
+            _ds->Println("Cannot open directory for writing");
+            return nullptr;
+        }
+        if ((flags & TRUNC) && node->type != FsNodeType::File) {
+            _ds->Println("Cannot truncate non-file node");
+            return nullptr;
+        }
+
+        _ds->Print("Opening File: ");
+        _ds->Println(to_hstridng(node->nodeId));
+
+        file->node = node;
     }
-
-    if ((inode->i_flags & InodeFlags::EXT4_APPEND_FL) && write && !(flags & APPEND)) {
-        _ds->Println("Cannot open append-only file for writing without APPEND flag");
-        return nullptr;
-    }
-
-    _ds->Print("Opening File: ");
-    _ds->Println(to_hstridng(node->nodeId));
 
     if (write && readOnly) {
         _ds->Println("Cannot Write when Read Only Mode is enabled!");
         return nullptr;
     }
 
-    if (node->type == FsNodeType::Directory && write) {
-        _ds->Println("Cannot open directory for writing");
-        return nullptr;
-    }
-    if ((flags & TRUNC) && node->type != FsNodeType::File) {
-        _ds->Println("Cannot truncate non-file node");
-        return nullptr;
-    }
-
-    file->node = node;
     file->flags = flags;
     file->position = 0;
     return file;
@@ -952,7 +970,7 @@ int64_t GenericEXT4Device::Read(File* file, void* buffer, uint64_t size) {
         return fileSize - file->position;
     }
 
-    if (!(file->flags & RDONLY) && !(file->flags & RDWR)) {
+    if (!(file->flags & RD) && !(file->flags & (RD | WR))) {
         _ds->Println("Read: File not opened for reading");
         return -1;
     }
@@ -1064,7 +1082,7 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
         _ds->Println("Can't Write, Read Only");
         return 0;
     }
-    if ((file->flags & WRONLY) || (file->flags & RDWR)) {
+    if ((file->flags & (WR | APPEND)) == (WR | APPEND)) {
         Inode* inode = ReadInode(file->node->nodeId);
 
         uint64_t blockSize = 1024ull << superblock->s_log_block_size;
@@ -1266,8 +1284,133 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
 
         return size;
     } else if ((file->flags & CREATE)) {
-        if (file->node->type == FsNodeType::Directory) {
-            //CreateDir();
+        if (file->node->type == FsNodeType::File) {
+            size_t size = 0;
+            char** p = str_split(_ds, _ds->strdup(file->node->name), '/', &size);
+
+            uint64_t newSize = 0;
+            for (size_t i = 0; i < (size - 1); i++) {
+                if ((size - 1) == 1) {
+                    newSize += strlen(p[i - 1]);
+                } else {
+                    newSize += strlen(p[i - 1]) + 1;
+                }
+            }
+
+            char* newPath = (char*)_ds->malloc(newSize);
+            
+            for (size_t i = 0; i < (size - 1); i++) {
+                if ((size - 1) == 1) {
+                    strcat(newPath, p[i]);
+                } else {
+                    strcat(newPath, p[i]);
+                    strcat(newPath, "/");
+                }
+            }
+
+            char* newFile = p[size - 1];
+
+            _ds->Print("Create File");
+            _ds->Println(newPath);
+            _ds->Println(newFile);
+
+/*
+            uint32_t InodeNum = AllocateInode(parent);
+            
+            uint32_t inodeIndex = InodeNum - 1;
+            uint32_t inodesPerGroup = superblock->s_inodes_per_group;
+            uint32_t indexInGroup = inodeIndex % inodesPerGroup;
+            uint64_t inodeSize = superblock->s_inode_size;
+            uint64_t byteOffset = indexInGroup * inodeSize;
+            uint64_t offsetInBlock = byteOffset % blockSize;
+
+            void* buf = _ds->RequestPage();
+            uint64_t bufPhys = (uint64_t)buf;
+            uint64_t bufVirt = bufPhys + 0xFFFFFFFF00000000;
+            _ds->MapMemory((void*)bufVirt, (void*)bufPhys, false);
+            memset((void*)bufVirt, 0, 4096);
+
+            Inode* newInode = (Inode*)_ds->malloc(sizeof(Inode));
+            newInode->i_mode |= 0x4000;
+            newInode->i_mode |= 0755;
+
+            newInode->i_uid = 0;
+            newInode->i_gid = 0;
+
+            uint32_t now = 0xFFAABBCC; // TODO: CurrentTime();
+            newInode->i_atime = now;
+            newInode->i_mtime = now;
+            newInode->i_ctime = now;
+            newInode->i_crtime = now;
+            newInode->i_dtime = 0;
+
+            newInode->i_links_count = 2;
+            newInode->i_blocks_lo = blockSize / 512;
+            newInode->i_flags = 0;
+            newInode->i_osd1.linux1.l_i_version = 0;
+            for (int i = 0; i < 15; i++) {
+                newInode->i_block[i] = 0;
+            }
+
+            /*
+            * TODO: Add Inode Checksum
+            /
+            if (superblock->s_creator_os == CreatorOSIDs::AstralOS) {
+                newInode->i_osd2.astral2.a_i_blocks_high = 0;
+                newInode->i_osd2.astral2.a_i_checksum_lo = 0;
+                newInode->i_osd2.astral2.a_i_easteregg = 0xA574A105;
+                newInode->i_osd2.astral2.a_i_uid_high = 0;
+                newInode->i_osd2.astral2.a_i_gid_high = 0;
+            } else if (superblock->s_creator_os == CreatorOSIDs::Linux) {
+                newInode->i_osd2.linux2.l_i_blocks_high = 0;
+                newInode->i_osd2.linux2.l_i_checksum_lo = 0;
+                newInode->i_osd2.linux2.l_i_reserved = 0;
+                newInode->i_osd2.linux2.l_i_uid_high = 0;
+                newInode->i_osd2.linux2.l_i_gid_high = 0;
+            } else if (superblock->s_creator_os == CreatorOSIDs::GNUHurd) {
+                newInode->i_osd2.hurd2.h_i_author = 0;
+                newInode->i_osd2.hurd2.h_i_gid_high = 0;
+                newInode->i_osd2.hurd2.h_i_mode_high = 0;
+                newInode->i_osd2.hurd2.h_i_reserved1 = 0;
+                newInode->i_osd2.hurd2.h_i_uid_high = 0;
+            } else if (superblock->s_creator_os == CreatorOSIDs::MASIX) {
+                newInode->i_osd2.masix2.m_i_file_acl_high = 0;
+                newInode->i_osd2.masix2.h_i_reserved1 = 0;
+                newInode->i_osd2.masix2.m_i_reserved2[0] = 0;
+                newInode->i_osd2.masix2.m_i_reserved2[1] = 0;
+            }
+            
+            
+            newInode->i_checksum_hi = 0;
+
+            newInode->i_generation = 0;
+            newInode->i_file_acl_lo = 0;
+            newInode->i_obso_faddr = 0;
+            newInode->i_size_high = 0;
+            newInode->i_extra_isize = superblock->s_inode_size - 128;
+            newInode->i_ctime_extra = 0;
+            newInode->i_mtime_extra = 0;
+            newInode->i_atime_extra = 0;
+            newInode->i_version_hi = 0;
+            newInode->i_projid = 0;
+            newInode->i_crtime_extra = 0;
+
+            newInode->i_size_lo = blockSize;
+
+            /*
+            * Our Ext4 FS can use a feature called Extents,
+            * where a dir is basically a file with its contents
+            * being a list of subdirs and files.
+            /
+            if (superblock->s_feature_incompat & IncompatFeatures::INCOMPAT_EXTENTS) {
+                ExtentHeader* extHdr = (ExtentHeader*)newInode->i_block;
+                _ds->Print(to_hstridng(extHdr->eh_magic));
+                extHdr->eh_magic = 0xF30A;
+                extHdr->eh_entries = 1;
+                extHdr->eh_max = 4;
+                extHdr->eh_depth = 0;
+                extHdr->eh_generation = newInode->i_generation;
+            }*/
         }
     } else {
         _ds->Println("Unknown Flag");

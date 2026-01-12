@@ -30,13 +30,13 @@ struct File {
     uint64_t position;
     uint32_t flags;
     uint64_t path;
+    uint64_t data;
 };
 
 enum FileFlags {
-    RDONLY = 1,
-    WRONLY = 2,
-    RDWR = 3,
-    APPEND = 4,
-    CREATE = 5,
-    TRUNC = 6
+    RD = 0x01,
+    WR = 0x02,
+    APPEND = 0x04,
+    CREATE = 0x08,
+    TRUNC = 0x10
 };
