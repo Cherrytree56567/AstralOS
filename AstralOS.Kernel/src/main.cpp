@@ -493,23 +493,26 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
     kernelServices.vfs.close(f);
 
-    File* dir = kernelServices.vfs.mkdir("/AstralOS/System64/TestDir");
+    File* dir = kernelServices.vfs.open("/AstralOS/System64/", RD);
 
     File* dirent = nullptr;
 
     while ((dirent = kernelServices.vfs.listdir(dir)) != nullptr) {
-        kernelServices.basicConsole.Println(dirent->node->name);
+        if (dirent){
+            kernelServices.basicConsole.Print("Dir: ");
+            kernelServices.basicConsole.Println(dirent->node->name);
+        }
     }
 
     kernelServices.basicConsole.Println("Written");
 
     kernelServices.vfs.close(dir);
 
-    File* newFile = kernelServices.vfs.open("/AstralOS/System64/test.txt", CREATE);
+    File* newFile = kernelServices.vfs.open("/AstralOS/System64/test.txt", CREATE | RD | WR);
     kernelServices.basicConsole.Println("Creating");
 
-    size_t newFileCount = 0;
-    kernelServices.vfs.write(newFile, nullptr, newFileCount);
+    size_t siz = 0;
+    kernelServices.vfs.write(newFile, nullptr, siz);
     
     kernelServices.vfs.close(newFile);
 

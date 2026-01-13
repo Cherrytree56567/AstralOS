@@ -431,6 +431,7 @@ FsNode** GenericEXT4Device::ListDir(FsNode* node, size_t* outCount) {
     uint64_t sectorSize = pdev->SectorSize();
     uint64_t sectorsInBlock = blockSize / pdev->SectorSize();
     if (!isMounted) {
+        _ds->Println("FS Isnt Mounted");
         return nullptr;
     }
     if (node->type != FsNodeType::Directory) {
@@ -484,6 +485,10 @@ FsNode** GenericEXT4Device::ListDir(FsNode* node, size_t* outCount) {
  * to find the file and return the FsNode*.
 */
 FsNode* GenericEXT4Device::FindDir(FsNode* node, const char* path) {
+    if (!isMounted) {
+        _ds->Println("FS Isnt Mounted");
+        return nullptr;
+    }
     size_t cont = 0;
 
     char** parts = str_split(_ds, _ds->strdup(path), '/', &cont);
@@ -546,6 +551,10 @@ FsNode* GenericEXT4Device::FindDir(FsNode* node, const char* path) {
  * 11. Create and Pass the FsNode*
 */
 FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
+    if (!isMounted) {
+        _ds->Println("FS Isnt Mounted");
+        return nullptr;
+    }
     if (readOnly) {
         _ds->Println("Can't Create Dir, Read Only");
         return nullptr;
@@ -867,6 +876,10 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
 }
 
 bool GenericEXT4Device::Remove(FsNode* node) {
+    if (!isMounted) {
+        _ds->Println("FS Isnt Mounted");
+        return false;
+    }
     if (node->type == FsNodeType::Directory) {
         if (node->nodeId == 2) {
             _ds->Println("Cannot remove root directory");
@@ -895,6 +908,10 @@ bool GenericEXT4Device::Remove(FsNode* node) {
 }
 
 File* GenericEXT4Device::Open(const char* name, uint32_t flags) {
+    if (!isMounted) {
+        _ds->Println("FS Isnt Mounted");
+        return nullptr;
+    }
     File* file = (File*)_ds->malloc(sizeof(File));
     if (!file) {
         _ds->Println("Failed to allocate File struct");
@@ -907,9 +924,9 @@ File* GenericEXT4Device::Open(const char* name, uint32_t flags) {
         _ds->Println("Creating File");
         _ds->Println(to_hstridng(flags));
         file->node = (FsNode*)_ds->malloc(sizeof(FsNode));
+        file->node->nodeId = 0;
         file->node->name = _ds->strdup(name);
     } else {
-        _ds->Println("Not Creating File");
         FsNode* node = FindDir(&rootNode, name);
         Inode* inode = ReadInode(node->nodeId);
 
@@ -949,6 +966,10 @@ File* GenericEXT4Device::Open(const char* name, uint32_t flags) {
 }
 
 bool GenericEXT4Device::Close(File* file) {
+    if (!isMounted) {
+        _ds->Println("FS Isnt Mounted");
+        return false;
+    }
     _ds->free(file->node);
     _ds->free(file);
     file = nullptr;
@@ -959,6 +980,10 @@ bool GenericEXT4Device::Close(File* file) {
  * Some of it is GPT Generated
 */
 int64_t GenericEXT4Device::Read(File* file, void* buffer, uint64_t size) {
+    if (!isMounted) {
+        _ds->Println("FS Isnt Mounted");
+        return -1;
+    }
     if (!file) return -3;
 
     if (buffer == nullptr && size == 0) {
@@ -1078,16 +1103,21 @@ int64_t GenericEXT4Device::Read(File* file, void* buffer, uint64_t size) {
 }
 
 int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
+    if (!isMounted) {
+        _ds->Println("FS Isnt Mounted");
+        return -1;
+    }
     if (readOnly) {
         _ds->Println("Can't Write, Read Only");
-        return 0;
+        return -1;
     }
+
+    uint64_t blockSize = 1024ull << superblock->s_log_block_size;
+    uint64_t sectorSize = pdev->SectorSize();
+    uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
+
     if ((file->flags & (WR | APPEND)) == (WR | APPEND)) {
         Inode* inode = ReadInode(file->node->nodeId);
-
-        uint64_t blockSize = 1024ull << superblock->s_log_block_size;
-        uint64_t sectorSize = pdev->SectorSize();
-        uint64_t sectorsPerBlock = blockSize / pdev->SectorSize();
 
         void* buf = _ds->RequestPage();
         uint64_t bufPhys = (uint64_t)buf;
@@ -1310,12 +1340,17 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
 
             char* newFile = p[size - 1];
 
-            _ds->Print("Create File");
+            _ds->Print("Create File: ");
             _ds->Println(newPath);
             _ds->Println(newFile);
 
-/*
-            uint32_t InodeNum = AllocateInode(parent);
+            FsNode* fsN = FindDir(pdev->GetMountNode(), newPath);
+            if (!fsN) {
+                _ds->Println("Failed to Find Dir");
+                return -1;
+            }
+
+            uint32_t InodeNum = AllocateInode(fsN);
             
             uint32_t inodeIndex = InodeNum - 1;
             uint32_t inodesPerGroup = superblock->s_inodes_per_group;
@@ -1331,7 +1366,7 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
             memset((void*)bufVirt, 0, 4096);
 
             Inode* newInode = (Inode*)_ds->malloc(sizeof(Inode));
-            newInode->i_mode |= 0x4000;
+            newInode->i_mode |= InodeMode::S_IFREG;
             newInode->i_mode |= 0755;
 
             newInode->i_uid = 0;
@@ -1344,8 +1379,8 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
             newInode->i_crtime = now;
             newInode->i_dtime = 0;
 
-            newInode->i_links_count = 2;
-            newInode->i_blocks_lo = blockSize / 512;
+            newInode->i_links_count = 1;
+            newInode->i_blocks_lo = 0;
             newInode->i_flags = 0;
             newInode->i_osd1.linux1.l_i_version = 0;
             for (int i = 0; i < 15; i++) {
@@ -1354,7 +1389,7 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
 
             /*
             * TODO: Add Inode Checksum
-            /
+            */
             if (superblock->s_creator_os == CreatorOSIDs::AstralOS) {
                 newInode->i_osd2.astral2.a_i_blocks_high = 0;
                 newInode->i_osd2.astral2.a_i_checksum_lo = 0;
@@ -1380,7 +1415,6 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
                 newInode->i_osd2.masix2.m_i_reserved2[1] = 0;
             }
             
-            
             newInode->i_checksum_hi = 0;
 
             newInode->i_generation = 0;
@@ -1395,22 +1429,142 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
             newInode->i_projid = 0;
             newInode->i_crtime_extra = 0;
 
-            newInode->i_size_lo = blockSize;
+            newInode->i_size_lo = 0;
 
             /*
             * Our Ext4 FS can use a feature called Extents,
             * where a dir is basically a file with its contents
             * being a list of subdirs and files.
-            /
+            */
             if (superblock->s_feature_incompat & IncompatFeatures::INCOMPAT_EXTENTS) {
                 ExtentHeader* extHdr = (ExtentHeader*)newInode->i_block;
                 _ds->Print(to_hstridng(extHdr->eh_magic));
                 extHdr->eh_magic = 0xF30A;
-                extHdr->eh_entries = 1;
+                extHdr->eh_entries = 0;
                 extHdr->eh_max = 4;
                 extHdr->eh_depth = 0;
                 extHdr->eh_generation = newInode->i_generation;
-            }*/
+
+                newInode->i_flags = InodeFlags::EXT4_EXTENTS_FL;
+            }
+
+            WriteInode(InodeNum, newInode);
+
+            Inode* ParentInode = ReadInode(fsN->nodeId);
+
+            ExtentHeader* hdr = (ExtentHeader*)((uint8_t*)ParentInode->i_block);
+
+            if (hdr->eh_magic != 0xF30A) { 
+                _ds->Println("Parent Inode has Bad Extent Header");
+                return -2;
+            }
+
+            uint64_t ExtentsCount = 0;
+            Extent** exts = GetExtents(hdr, ExtentsCount);
+
+            Extent* LastExtent = exts[ExtentsCount - 1];
+            uint32_t logicalFirst = LastExtent->ee_block;
+            uint32_t logicalLen = LastExtent->ee_len;
+            uint32_t logicalLast = logicalFirst + logicalLen - 1;
+
+            uint64_t extentStart = ((uint64_t)LastExtent->ee_start_hi << 32) | (uint64_t)LastExtent->ee_start_lo;
+            uint64_t physicalLast = extentStart + (logicalLast - logicalFirst);
+
+            for (uint64_t i = 0; i < sectorsPerBlock; i++) {
+                if (!pdev->ReadSector(physicalLast * sectorsPerBlock + i, (void*)((uint8_t*)bufPhys + i * pdev->SectorSize()))) {
+                    _ds->Println("Failed to read sector");
+                }
+            }
+
+            bool Inserted = false;
+
+            /*
+            * I could not figure out this part so 
+            * this is written with GPT
+            */
+            uint16_t newTotalSize = (uint16_t)((8 + strlen(newFile) + 3) & ~3);
+            DirectoryEntry2* entry = (DirectoryEntry2*)bufVirt;
+            while ((uint8_t*)entry < (uint8_t*)bufVirt + blockSize) {
+                if (entry->rec_len == 0) break;
+
+                uint16_t min_len = (uint16_t)((8 + entry->name_len + 3) & ~3);
+                uint16_t slack = entry->rec_len - min_len;
+
+                if (slack >= newTotalSize) {
+                    uint16_t original_total = entry->rec_len;
+                    entry->rec_len = min_len;
+
+                    DirectoryEntry2* newEntry = (DirectoryEntry2*)((uint8_t*)entry + min_len);
+                    newEntry->inode = InodeNum;
+                    newEntry->name_len = strlen(newFile);
+                    newEntry->file_type = DirectoryEntryType::EXT4_FT_REG_FIL;
+                    memcpy(newEntry->name, newFile, newEntry->name_len);
+                    
+                    newEntry->rec_len = original_total - min_len;
+
+                    Inserted = true;
+                    break;
+                }
+
+                entry = (DirectoryEntry2*)((uint8_t*)entry + entry->rec_len);
+            }
+
+            if (!Inserted) {
+                uint32_t newParentBlock = AllocateBlock(fsN);
+
+                if (hdr->eh_entries >= hdr->eh_max) {
+                    _ds->Println("No room for new extent in inode (need tree promotion) - aborting");
+                    return -2;
+                }
+
+                Extent* newExt = (Extent*)((uint8_t*)LastExtent + sizeof(Extent));
+                newExt->ee_block = LastExtent->ee_block + LastExtent->ee_len;
+                newExt->ee_len = 1;
+                newExt->ee_start_lo = newParentBlock & 0xFFFFFFFF;
+                newExt->ee_start_hi = (newParentBlock >> 32) & 0xFFFF;
+
+                hdr->eh_entries++;
+
+                ParentInode->i_blocks_lo += sectorsPerBlock;
+                ParentInode->i_size_lo += blockSize;
+
+                memset((void*)bufVirt, 0, blockSize);
+
+                DirectoryEntry2* newEntry = (DirectoryEntry2*)bufVirt;
+                newEntry->inode = InodeNum;
+                newEntry->name_len = strlen(newFile);
+                newEntry->file_type = DirectoryEntryType::EXT4_FT_REG_FIL;
+                memcpy(newEntry->name, newFile, newEntry->name_len);
+                newEntry->rec_len = ((8 + newEntry->name_len) + 3) & ~3u;
+
+                for (uint64_t i = 0; i < sectorsPerBlock; i++) {
+                    if (!pdev->WriteSector(newParentBlock * sectorsPerBlock + i, (uint8_t*)bufPhys + i * pdev->SectorSize())) {
+                        _ds->Println("Failed to write sector");
+                    }
+                }
+
+                WriteInode(fsN->nodeId, ParentInode);
+                return 0;
+            }
+
+            for (uint64_t i = 0; i < sectorsPerBlock; i++) {
+                if (!pdev->WriteSector(physicalLast * sectorsPerBlock + i, (void*)((uint8_t*)bufPhys + i * pdev->SectorSize()))) {
+                    _ds->Println("Failed to write sector");
+                }
+            }
+
+            if (buffer) {
+                if (file->flags & WR) {
+                    uint64_t old = file->flags;
+                    file->flags = WR | APPEND;
+                    int64_t res = Write(file, buffer, size);
+                    file->flags = old;
+                    return res;
+                } else {
+                    _ds->Println("Cannot Write to file w/o WR flag");
+                    return -1;
+                }
+            }
         }
     } else {
         _ds->Println("Unknown Flag");
@@ -1420,6 +1574,10 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
 }
 
 bool GenericEXT4Device::Chmod(FsNode* node, uint32_t mode) {
+    if (!isMounted) {
+        _ds->Println("FS Isnt Mounted");
+        return false;
+    }
     if (readOnly) {
         _ds->Println("Can't Chmod, Read Only");
         return false;
@@ -1439,6 +1597,10 @@ bool GenericEXT4Device::Chmod(FsNode* node, uint32_t mode) {
 }
 
 bool GenericEXT4Device::Chown(FsNode* node, uint32_t uid, uint32_t gid) {
+    if (!isMounted) {
+        _ds->Println("FS Isnt Mounted");
+        return false;
+    }
     if (readOnly) {
         _ds->Println("Can't Chown, Read Only");
         return false;
@@ -1471,6 +1633,10 @@ bool GenericEXT4Device::Chown(FsNode* node, uint32_t uid, uint32_t gid) {
 }
 
 bool GenericEXT4Device::Utimes(FsNode* node, uint64_t atime, uint64_t mtime, uint64_t ctime) {
+    if (!isMounted) {
+        _ds->Println("FS Isnt Mounted");
+        return false;
+    }
     if (readOnly) {
         _ds->Println("Can't Utimes, Read Only");
         return false;

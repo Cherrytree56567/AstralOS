@@ -147,7 +147,6 @@ Path VFS::ResolvePath(const char* pat) {
 File* VFS::open(const char* path, uint32_t flags) {
     Path* p = (Path*)ks->heapAllocator.malloc(sizeof(Path));
     *p = ResolvePath(path);
-    ks->basicConsole.Println("Creating");
     
     Array<BaseDriver*> FSDriver = ks->driverMan.GetDevices(DriverType::FilesystemDriver);
     for (size_t i = 0; i < FSDriver.size(); i++) {
@@ -155,13 +154,10 @@ File* VFS::open(const char* path, uint32_t flags) {
 
         if (bldev->GetParentLayer()->GetParentLayer()->GetDrive() != p->disk) continue;
         if (bldev->GetParentLayer()->GetPartition() != p->partition) continue;
-    ks->basicConsole.Println("Creating");
 
         if (bldev->GetParentLayer()->SectorCount() == 0 || bldev->GetParentLayer()->SectorSize() == 0) continue;
-    ks->basicConsole.Println("Creating");
 
         File* f = bldev->Open(p->path.c_str(), flags);
-    ks->basicConsole.Println("Creating");
         f->path = p;
         f->data = 0x0;
         return f;

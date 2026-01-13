@@ -232,3 +232,11 @@ So now you can List Directories and Create Dirs. I haven't yet implemented creat
 ![WriteFuncP4](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/WriteFuncP4.png?raw=true)
 
 **Total time spent: 2h 34m**
+
+# January 13th: Added Write funcs - Part 5
+
+Im probably not going to work on the EXT4 Driver anymore, bc it was supposed to be a really basic driver, that can just read. And since it can read, we probably don't need to do anything else. Also it can now create files. Im going to start working on multithreading tomorrow.
+
+![WriteFuncP5](https://github.com/Cherrytree56567/AstralOS/blob/main/Demos/WriteFuncP5.png?raw=true)
+
+**Total time spent: 2h 43m**
