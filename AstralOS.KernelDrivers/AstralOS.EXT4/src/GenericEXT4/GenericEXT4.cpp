@@ -1208,6 +1208,11 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
 
         uint64_t bufOff = 0;
 
+        if (tailOffset == 0) {
+            remaining = size;
+            blocksNeeded = (remaining + blockSize - 1) / blockSize;
+        }
+
         while (true) {
             if (remaining == 0) break;
             if (blocksNeeded == 0) break;
@@ -1229,7 +1234,7 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
             _ds->Println(to_hstridng(remaining));
 
             Extent ee;
-            ee.ee_block = ((size - (blockSize - tailOffset)) + bufOff) / blockSize;
+            ee.ee_block = file->node->size / blockSize;
             ee.ee_len = count;
             ee.ee_start_lo = (uint32_t)(blocks & 0xFFFFFFFF);
             ee.ee_start_hi = (uint16_t)((blocks >> 32) & 0xFFFF);
@@ -1437,7 +1442,9 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
             * being a list of subdirs and files.
             */
             if (superblock->s_feature_incompat & IncompatFeatures::INCOMPAT_EXTENTS) {
-                ExtentHeader* extHdr = (ExtentHeader*)newInode->i_block;
+                uint32_t newBlk = AllocateBlock(fsN);
+                
+                ExtentHeader* extHdr = (ExtentHeader*)((uint8_t*)newInode->i_block);
                 _ds->Print(to_hstridng(extHdr->eh_magic));
                 extHdr->eh_magic = 0xF30A;
                 extHdr->eh_entries = 0;
@@ -1517,11 +1524,13 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
                     return -2;
                 }
 
-                Extent* newExt = (Extent*)((uint8_t*)LastExtent + sizeof(Extent));
-                newExt->ee_block = LastExtent->ee_block + LastExtent->ee_len;
-                newExt->ee_len = 1;
-                newExt->ee_start_lo = newParentBlock & 0xFFFFFFFF;
-                newExt->ee_start_hi = (newParentBlock >> 32) & 0xFFFF;
+                Extent newExt;
+                newExt.ee_block = LastExtent->ee_block + LastExtent->ee_len;
+                newExt.ee_len = 1;
+                newExt.ee_start_lo = newParentBlock & 0xFFFFFFFF;
+                newExt.ee_start_hi = (newParentBlock >> 32) & 0xFFFF;
+
+                AddExtent(fsN, ParentInode, newExt);
 
                 hdr->eh_entries++;
 
@@ -1544,6 +1553,35 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
                 }
 
                 WriteInode(fsN->nodeId, ParentInode);
+
+                FsNode* newfsN = (FsNode*)_ds->malloc(sizeof(FsNode));
+                newfsN->atime = newInode->i_atime;
+                newfsN->blocks = newInode->i_blocks_lo;
+                newfsN->ctime = newInode->i_ctime;
+                newfsN->gid = newInode->i_gid;
+                newfsN->mode = newInode->i_mode;
+                newfsN->mtime = newInode->i_mtime;
+                newfsN->name = _ds->strdup(newFile);
+                newfsN->nodeId = InodeNum;
+                newfsN->size = 0;
+                newfsN->type = FsNodeType::File;
+                newfsN->uid = newInode->i_uid;
+                file->node = newfsN;
+                file->position = 0;
+
+                if (buffer) {
+                    if (file->flags & WR) {
+                        uint64_t old = file->flags;
+                        file->flags = WR | APPEND;
+                        int64_t res = Write(file, buffer, size);
+                        file->flags = old;
+                        return res;
+                    } else {
+                        _ds->Println("Cannot Write to file w/o WR flag");
+                        return -1;
+                    }
+                }
+                
                 return 0;
             }
 
@@ -1552,6 +1590,21 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
                     _ds->Println("Failed to write sector");
                 }
             }
+            
+            FsNode* newfsN = (FsNode*)_ds->malloc(sizeof(FsNode));
+            newfsN->atime = newInode->i_atime;
+            newfsN->blocks = newInode->i_blocks_lo;
+            newfsN->ctime = newInode->i_ctime;
+            newfsN->gid = newInode->i_gid;
+            newfsN->mode = newInode->i_mode;
+            newfsN->mtime = newInode->i_mtime;
+            newfsN->name = _ds->strdup(newFile);
+            newfsN->nodeId = InodeNum;
+            newfsN->size = 0;
+            newfsN->type = FsNodeType::File;
+            newfsN->uid = newInode->i_uid;
+            file->node = newfsN;
+            file->position = 0;
 
             if (buffer) {
                 if (file->flags & WR) {

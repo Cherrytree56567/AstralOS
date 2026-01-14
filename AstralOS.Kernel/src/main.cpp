@@ -511,8 +511,9 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     File* newFile = kernelServices.vfs.open("/AstralOS/System64/test.txt", CREATE | RD | WR);
     kernelServices.basicConsole.Println("Creating");
 
-    size_t siz = 0;
-    kernelServices.vfs.write(newFile, nullptr, siz);
+    String wr = strdup("We have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have wrikkkkkkk");
+    size_t siwr = wr.size();
+    kernelServices.vfs.write(newFile, (void*)wr.c_str(), siwr);
     
     kernelServices.vfs.close(newFile);
 
