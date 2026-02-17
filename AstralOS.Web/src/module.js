@@ -11,8 +11,6 @@ Module['arguments'] = [
     '-cpu', 'qemu64', 
     '-m', '1G',
     '-L', '/pack-rom/',
-    '-nographic',
-    '-append', 'console=ttyS0',
     '-serial', 'mon:stdio',
     '-drive', 'file=/writableh/AstralOS.qcow2',
     '-drive', 'if=pflash,format=raw,unit=1,file=/writable/OVMF_VARS-pure-efi.fd',
