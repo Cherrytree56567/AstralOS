@@ -143,6 +143,19 @@ build/fast:
 .PHONY : build/fast
 
 #=============================================================================
+# Target rules for targets named initweb
+
+# Build rule for target.
+initweb: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 initweb
+.PHONY : initweb
+
+# fast build rule for target.
+initweb/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/initweb.dir/build.make CMakeFiles/initweb.dir/build
+.PHONY : initweb/fast
+
+#=============================================================================
 # Target rules for targets named buildweb
 
 # Build rule for target.
@@ -193,6 +206,7 @@ help:
 	@echo "... build"
 	@echo "... buildweb"
 	@echo "... init"
+	@echo "... initweb"
 	@echo "... run"
 .PHONY : help
 

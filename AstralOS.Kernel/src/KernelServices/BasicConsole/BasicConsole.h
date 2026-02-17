@@ -25,11 +25,19 @@ public:
 
 	void Print(const char* str, unsigned int colour = 0xffffffff);
 	void Println(const char* str, unsigned int colour = 0xffffffff);
+	char* Input();
+	void FinishInput();
+	void SubmitText(char* text);
+	void Backspace();
 	Point CursorPosition;
+	bool shift = false;
 public:
 	void putChar(unsigned int colour, char chr, unsigned int xOff, unsigned int yOff);
 	void ClearLines(unsigned int lineCount);
 
 	FrameBuffer pFramebuffer;
+	bool finished = false;
+	char* input = nullptr;
+	bool inputActive = false;
 };
 

@@ -1,5 +1,6 @@
 #include "BasicConsole.h"
 #include "../../Utils/cpu.h"
+#include "../KernelServices.h"
 
 BasicConsole::BasicConsole(FrameBuffer fb) : pFramebuffer(fb) {
     CursorPosition.X = 10;
@@ -104,5 +105,40 @@ void BasicConsole::ClearLines(unsigned int lineCount) {
         for (unsigned int x = 0; x < pFramebuffer.Width; x++) {
             ((uint32_t*)pFramebuffer.BaseAddress)[y * pFramebuffer.PixelsPerScanLine + x] = 0x000000;
         }
+    }
+}
+
+char* BasicConsole::Input() {
+    inputActive = true;
+    finished = false;
+    input = strdup("");
+    while (!finished);
+    inputActive = false;
+    return input;
+}
+void BasicConsole::FinishInput() {
+    finished = true;
+}
+void BasicConsole::SubmitText(char* text) {
+    if (inputActive) {
+        char* oldInp = input;
+
+        input = (char*)malloc(strlen(oldInp) + strlen(text) + 1);
+        if (oldInp) {
+            memcpy(input, oldInp, strlen(oldInp));
+            free(oldInp);
+        }
+        memcpy(input + strlen(oldInp), text, strlen(text));
+        input[strlen(oldInp) + strlen(text)] = 0;
+    }
+}
+void BasicConsole::Backspace() {
+    if (inputActive) {
+        size_t len = strlen(input);
+        char ol = input[len - 1];
+        if (len == 0) return;
+        input[len - 1] = '\0';
+        CursorPosition.X -= 8;
+        putChar(0, ol, CursorPosition.X, CursorPosition.Y);
     }
 }

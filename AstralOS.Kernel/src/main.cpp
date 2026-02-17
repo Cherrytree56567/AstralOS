@@ -11,9 +11,47 @@
  * how the kernel works.
  * Read the comments.
 */
-extern "C" void irq1_handler() {
+//static bool shiftHeld = false;
+const char scancodeKeys[200] = {
+                                                                   // backspace = `
+    0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 2,
+    0, 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 3, 
+    0, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '"', 0, 0,
+    0, 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, 0, 0, ' '
+};
+const char CAPSscancodeKeys[200] = {
+                                                                   // backspace = `
+    0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '_', '+', 2,
+    0, 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', 3, 
+    0, 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', 0, 0,
+    0, 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0, 0, 0, ' '
+};
+extern "C" void irq1_handler() {///Key press!
     uint8_t scancode = inb(0x60);
-    ks->basicConsole.Println("Key press!");
+    if (scancode == 0x2A || scancode == 0x36) {
+        ks->basicConsole.shift = true;
+    } else if (scancode == 0xAA || scancode == 0xB6) {
+        ks->basicConsole.shift = false;
+    }
+    if (scancode > 58) {
+
+    } else if (scancodeKeys[scancode] == 2) {
+        ks->basicConsole.Backspace();
+    } else if (scancodeKeys[scancode] == 3) {
+        ks->basicConsole.FinishInput();
+        ks->basicConsole.Print("\n");
+    } else if (scancodeKeys[scancode] == 0) {
+    } else {
+        if (ks->basicConsole.shift) {
+            char str[2] = { CAPSscancodeKeys[scancode], 0 };
+            ks->basicConsole.Print(str);
+            ks->basicConsole.SubmitText(str);
+        } else {
+            char str[2] = { scancodeKeys[scancode], 0 };
+            ks->basicConsole.Print(str);
+            ks->basicConsole.SubmitText(str);
+        }
+    }
     ks->apic.WriteAPIC(APICRegs::EOI, 0);
 }
 
@@ -485,7 +523,6 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
 
     String write = strdup("We have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have writtenWe have wrikkkkkkk");
     size_t sizeWrite = write.size();
-    kernelServices.basicConsole.Println(to_hstring(sizeWrite));
 
     if (!kernelServices.vfs.write(f, (void*)write.c_str(), sizeWrite)) {
         kernelServices.basicConsole.Println("Failed to write");
@@ -518,7 +555,48 @@ extern "C" int start(KernelServices& kernelServices, BootInfo* pBootInfo) {
     kernelServices.vfs.close(newFile);
 
     while (true) {
-        
+        kernelServices.basicConsole.Println("[Commands: read/write]");
+        kernelServices.basicConsole.Print(">>> ");
+        char* inp = kernelServices.basicConsole.Input();
+        if ((strcmp(inp, "READ") == 0) || (strcmp(inp, "read") == 0)) {
+            kernelServices.basicConsole.Print("File>>> ");
+            char* file = kernelServices.basicConsole.Input();
+
+            File* fR = kernelServices.vfs.open(file, RD | WR | APPEND);
+
+            uint64_t sizeR = 0;
+            char* tex = (char*)kernelServices.vfs.read(fR, sizeR);
+
+            kernelServices.basicConsole.Println(tex);
+
+            kernelServices.vfs.close(fR);
+        } else if ((strcmp(inp, "WRITE") == 0) || (strcmp(inp, "write") == 0)) {
+            kernelServices.basicConsole.Print("File>>> ");
+            char* file = kernelServices.basicConsole.Input();
+            kernelServices.basicConsole.Print("Data>>> ");
+            char* data = kernelServices.basicConsole.Input();
+
+            File* fR = kernelServices.vfs.open(file, RD | WR | APPEND);
+
+            size_t datasize = strlen(data);
+            char* dat = strdup(data);
+            kernelServices.vfs.write(fR, (void*)dat, datasize);
+
+            kernelServices.vfs.close(fR);
+        } else if ((strcmp(inp, "CREATE") == 0) || (strcmp(inp, "create") == 0)) {
+            kernelServices.basicConsole.Print("File>>> ");
+            char* file = kernelServices.basicConsole.Input();
+            kernelServices.basicConsole.Print("Data>>> ");
+            char* data = kernelServices.basicConsole.Input();
+
+            File* fR = kernelServices.vfs.open(file, CREATE | RD | WR);
+
+            size_t datasize = strlen(data);
+            char* dat = strdup(data);
+            kernelServices.vfs.write(fR, (void*)dat, datasize);
+
+            kernelServices.vfs.close(fR);
+        }
     }
     return 0;
 }

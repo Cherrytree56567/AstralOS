@@ -5,25 +5,25 @@ EDK II
 UEFI v2.70 (EDK II, 0x00010000)
 [1m[33m[40mMapping table[0m[37m[40m
 [1m[33m[40m      FS0:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40mHD0a65535a1:;BLK1:
-          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(1,GPT,2D01F33C-0A3A-4ADE-9358-55E64BBE8BB5,0x800,0x2F000)
+          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(1,GPT,EA3E44ED-92F5-4497-A699-B5A858D65CD6,0x800,0x2F000)
 [1m[33m[40m     BLK0:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
           PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)
 [1m[33m[40m     BLK3:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
           PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x2,0xFFFF,0x0)
 [1m[33m[40m     BLK2:[0m[37m[40m [1m[37m[40mAlias(s):[0m[37m[40m
-          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(2,GPT,0AE8EE39-107E-4A1F-BFD3-9AF075F3341D,0x2F800,0x13D0000)
-[15;01HPress [1m[37m[40mESC[0m[37m[40m in 5 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.
+          PciRoot(0x0)/Pci(0x1F,0x2)/Sata(0x0,0xFFFF,0x0)/HD(2,GPT,89489669-7F3B-4485-9A10-07D1D1CA31B3,0x2F800,0x13D0000)
+[15;01HPress [1m[37m[40mESC[0m[37m[40m in 5 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 4 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 3 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 2 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.[15;01HPress [1m[37m[40mESC[0m[37m[40m in 1 seconds to skip [1m[33m[40mstartup.nsh[0m[37m[40m or any other key to continue.
 [1m[33m[40mShell> [0m[37m[40mfs0:\efi\boot\bootx64.efi
 Found ACPI 2.0 RSDP at: 0x7FB7E014
 Volume label is ''
-Offset: 0x1000Addr: 0x1000Offset: 0x13000Addr: 0x13000Offset: 0x34000Addr: 0x34000Offset: 0x3A000Addr: 0x3A000initramfs loaded at 0x7E48F018 (199680 bytes)
+Offset: 0x1000Addr: 0x1000Offset: 0x14000Addr: 0x14000Offset: 0x35000Addr: 0x35000Offset: 0x3B000Addr: 0x3B000initramfs loaded at 0x7E48F018 (199680 bytes)
 GOP located
 ss
 Handles freed
 Buffer freed
 nn
 Failed to GGet memory map: Buffer Too Small
-Boot Info Framebuffer Addr: Current Addr: 0xFFFFFFFF000106D6
+Boot Info Framebuffer Addr: Current Addr: 0xFFFFFFFF00010BFC
 RSDP Addr: 0xFFFFFFFF7FB7E014
 RSDP Signature: RSD PTR �BOCHS tз$
 RSDP OEM ID: BOCHS tз$
@@ -66,15 +66,9 @@ Generic AHCI Initialized!
 Initialized Drivers
 Warning: EXT4 Optional Features not supported.
 Mounted disk 0x0, partition 0x1 at /
-Opening File: 0x3F804
 Hi from EXT4
 
-0x6CF
-File Offset: 0xD
-Block: 0x108200
-Extents Count: 0x1
 F
-Opening File: 0x3F802
 Dir: .
 Dir: ..
 Dir: kernel.elf
@@ -82,18 +76,7 @@ Dir: hello.txt
 Dir: 
 Written
 F
-Creating File
-0xB
 Creating
-Create File: AstralOS/System64/
-test.txt
-0x0Count C: 0x0
-Count: 0x1
-Blocks: 0x101FE3
-Blocks Needed: 0x1
-Remaining: 0x3
-Block: 0x0
-Len: 0x1
-Start Low: 0x101FE3
-Start High: 0x0
-F
+0x0F
+[Commands: read/write]
+>>> 

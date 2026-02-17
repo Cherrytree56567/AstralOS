@@ -22,11 +22,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{304834D3-D750-3B89-9658-76692B4715D7}</ProjectGuid>
+    <ProjectGuid>{E3A260F8-E879-3461-8927-28C7FB780EC2}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
     <Platform>x64</Platform>
-    <ProjectName>_clean</ProjectName>
+    <ProjectName>buildweb</ProjectName>
     <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -105,24 +105,14 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Include="D:\AstralOS\build\CMakeFiles\91319d75bf617c9f458e41ee8e4b7dd9\_clean.rule">
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Cleaning all subprojects</Message>
+    <CustomBuild Include="D:\AstralOS\build\CMakeFiles\91319d75bf617c9f458e41ee8e4b7dd9\buildweb.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Website</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
 cd D:\AstralOS
 if %errorlevel% neq 0 goto :cmEnd
 D:
 if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Bootloader &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Kernel &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.KernelDrivers &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Bin &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Testing &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Web &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
+cd D:/AstralOS/AstralOS.Web &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -131,26 +121,16 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\AstralOS\build\CMakeFiles\_clean</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\AstralOS\build\CMakeFiles\buildweb</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
       <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</VerifyInputsAndOutputsExist>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Cleaning all subprojects</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Website</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
 cd D:\AstralOS
 if %errorlevel% neq 0 goto :cmEnd
 D:
 if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Bootloader &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Kernel &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.KernelDrivers &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Bin &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Testing &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Web &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
+cd D:/AstralOS/AstralOS.Web &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -159,26 +139,16 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\AstralOS\build\CMakeFiles\_clean</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\AstralOS\build\CMakeFiles\buildweb</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
       <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</VerifyInputsAndOutputsExist>
-      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Cleaning all subprojects</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Website</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
 cd D:\AstralOS
 if %errorlevel% neq 0 goto :cmEnd
 D:
 if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Bootloader &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Kernel &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.KernelDrivers &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Bin &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Testing &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Web &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
+cd D:/AstralOS/AstralOS.Web &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -187,26 +157,16 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\AstralOS\build\CMakeFiles\_clean</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\AstralOS\build\CMakeFiles\buildweb</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
       <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</VerifyInputsAndOutputsExist>
-      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Cleaning all subprojects</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Website</Message>
       <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
 cd D:\AstralOS
 if %errorlevel% neq 0 goto :cmEnd
 D:
 if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Bootloader &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Kernel &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.KernelDrivers &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Bin &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Testing &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
-if %errorlevel% neq 0 goto :cmEnd
-cd D:/AstralOS/AstralOS.Web &amp;&amp; cmake . &amp;&amp; cmake --build . --target _clean
+cd D:/AstralOS/AstralOS.Web &amp;&amp; cmake . &amp;&amp; cmake --build . --target build
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
@@ -215,7 +175,7 @@ exit /b %1
 :cmDone
 if %errorlevel% neq 0 goto :VCEnd</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\AstralOS\build\CMakeFiles\_clean</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\AstralOS\build\CMakeFiles\buildweb</Outputs>
       <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
       <VerifyInputsAndOutputsExist Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</VerifyInputsAndOutputsExist>
     </CustomBuild>
@@ -278,7 +238,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <None Include="D:\AstralOS\build\CMakeFiles\_clean">
+    <None Include="D:\AstralOS\build\CMakeFiles\buildweb">
     </None>
   </ItemGroup>
   <ItemGroup />

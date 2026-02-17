@@ -653,7 +653,6 @@ FsNode* GenericEXT4Device::CreateDir(FsNode* parent, const char* name) {
     */
     if (superblock->s_feature_incompat & IncompatFeatures::INCOMPAT_EXTENTS) {
         ExtentHeader* extHdr = (ExtentHeader*)newInode->i_block;
-        _ds->Print(to_hstridng(extHdr->eh_magic));
         extHdr->eh_magic = 0xF30A;
         extHdr->eh_entries = 1;
         extHdr->eh_max = 4;
@@ -921,8 +920,6 @@ File* GenericEXT4Device::Open(const char* name, uint32_t flags) {
     bool write = flags & (WR | APPEND | CREATE);
 
     if (flags & CREATE) {
-        _ds->Println("Creating File");
-        _ds->Println(to_hstridng(flags));
         file->node = (FsNode*)_ds->malloc(sizeof(FsNode));
         file->node->nodeId = 0;
         file->node->name = _ds->strdup(name);
@@ -948,9 +945,6 @@ File* GenericEXT4Device::Open(const char* name, uint32_t flags) {
             _ds->Println("Cannot truncate non-file node");
             return nullptr;
         }
-
-        _ds->Print("Opening File: ");
-        _ds->Println(to_hstridng(node->nodeId));
 
         file->node = node;
     }
@@ -1154,13 +1148,6 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
                 }
             }
 
-            _ds->Print("File Offset: ");
-            _ds->Println(to_hstridng(tailOffset));
-            _ds->Print("Block: ");
-            _ds->Println(to_hstridng(block));
-            _ds->Print("Extents Count: ");
-            _ds->Println(to_hstridng(extsCount));
-
             /*
              * Calculate if we need to allocate a new block
              * or just use the current one.
@@ -1222,31 +1209,11 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
 
             uint64_t count = blocksNeeded - countc;
 
-            _ds->Print("Count C: ");
-            _ds->Println(to_hstridng(countc));
-            _ds->Print("Count: ");
-            _ds->Println(to_hstridng(count));
-            _ds->Print("Blocks: ");
-            _ds->Println(to_hstridng(blocks));
-            _ds->Print("Blocks Needed: ");
-            _ds->Println(to_hstridng(blocksNeeded));
-            _ds->Print("Remaining: ");
-            _ds->Println(to_hstridng(remaining));
-
             Extent ee;
             ee.ee_block = file->node->size / blockSize;
             ee.ee_len = count;
             ee.ee_start_lo = (uint32_t)(blocks & 0xFFFFFFFF);
             ee.ee_start_hi = (uint16_t)((blocks >> 32) & 0xFFFF);
-
-            _ds->Print("Block: ");
-            _ds->Println(to_hstridng(ee.ee_block));
-            _ds->Print("Len: ");
-            _ds->Println(to_hstridng(ee.ee_len));
-            _ds->Print("Start Low: ");
-            _ds->Println(to_hstridng(ee.ee_start_lo));
-            _ds->Print("Start High: ");
-            _ds->Println(to_hstridng(ee.ee_start_hi));
 
             /*
              * The Number of bytes in the file that
@@ -1344,10 +1311,6 @@ int64_t GenericEXT4Device::Write(File* file, void* buffer, uint64_t size) {
             }
 
             char* newFile = p[size - 1];
-
-            _ds->Print("Create File: ");
-            _ds->Println(newPath);
-            _ds->Println(newFile);
 
             FsNode* fsN = FindDir(pdev->GetMountNode(), newPath);
             if (!fsN) {
