@@ -27,9 +27,9 @@ cmake --build . --target run
 ```
 
 ## Testing
-If you would like to test the OS. Get the newest release, clone the repo and put the Image in AstralOS.Testing. Then just go inside AstralOS.Testing and run:
+If you would like to test the OS. Get the newest release, clone the repo and put the Image in AstralOS.Testing. Make sure you are in the `AstralOS` git root dir. Then just go inside AstralOS.Testing and run:
 ```
-sudo qemu-system-x86_64 -machine q35 -cpu qemu64 -m 4G -drive file=AstralOS.qcow2 -drive if=pflash,format=raw,unit=0,file="../OVMFbin/OVMF_CODE-pure-efi.fd",readonly=on -drive if=pflash,format=raw,unit=1,file="../OVMFbin/OVMF_VARS-pure-efi.fd" -net none
+sudo qemu-system-x86_64 -machine q35 -cpu qemu64 -m 4G -drive file=AstralOS.qcow2 -drive if=pflash,format=raw,unit=0,file="OVMFbin/OVMF_CODE-pure-efi.fd",readonly=on -drive if=pflash,format=raw,unit=1,file="OVMFbin/OVMF_VARS-pure-efi.fd" -net none
 ```
 
 ## Features
